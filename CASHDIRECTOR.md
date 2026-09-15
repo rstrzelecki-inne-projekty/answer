@@ -8,7 +8,9 @@ Konwencje łatek:
 - jedna funkcjonalność = jeden commit, tytuł z prefiksem `[cd]`; bez poprawek „przy okazji”, bez zmian formatowania cudzych plików;
 - przy nowym wydaniu upstreamu: `git rebase v2.x.y` gałęzi `cashdirector`, konflikty tylko w naszych plikach;
 - `git format-patch upstream/main..cashdirector` = lista tego, czym się różnimy (miara długu — ma być krótka);
-- co się da, oddajemy upstreamowi jako PR; po merge łatka znika stąd.
+- co się da, oddajemy upstreamowi jako PR; po merge łatka znika stąd;
+- każda łatka z logiką w Go ma test jednostkowy (fałszywki repozytoriów, bez bazy — wzór: `internal/service/badge/badge_award_admin_test.go`)
+  albo scenariusz w `answers/dev/smoke.sh`; `go test ./internal/... ./pkg/...` musi przechodzić przed tagiem produkcyjnym.
 
 Tagi produkcyjne: `cd-v<wersja upstreamu>-<numer>` (np. `cd-v2.0.2-1`). Obraz w ECR: `answer:<wersja>-cd<numer>`.
 
