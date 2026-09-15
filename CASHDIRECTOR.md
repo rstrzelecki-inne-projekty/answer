@@ -17,4 +17,5 @@ Pełne wytyczne: `answers/docs/fork-answer-wytyczne.md`. Zadania: Jira AA-26.
 ## Łatki na tej gałęzi
 | # | Commit | Co | Status upstream |
 |---|---|---|---|
+| 2 | Content-Type uploadów | `AvatarThumb` ustawiał `image/<ext>` dla każdego pliku z `/uploads` (`image/svg` → przeglądarki nie renderują SVG); teraz `mime.TypeByExtension` z fallbackiem | PR do upstreamu (AA-30) |
 | 1 | i18n pl_PL | `Polski` w `language_options`, pełne `pl_PL.yaml` (upstream + 393 uzupełnienia), klucze odznak `badge.aoa.*` w en/pl | tłumaczenie do zgłoszenia przez Crowdin; klucze odznak są nasze (nie do upstreamu) |
