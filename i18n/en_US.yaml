@@ -549,6 +549,273 @@ backend:
     tooltip:
       other: "{{ .Names }} and {{ .Count }} more..."
   badge:
+    aoa:
+      wizytowka:
+        name:
+          other: Business card
+        desc:
+          other: Completed your profile.
+      doceniam:
+        name:
+          other: Appreciated
+        desc:
+          other: First up-vote on a post.
+      usmiech:
+        name:
+          other: Smile
+        desc:
+          other: First reaction on a post.
+      podaj-dalej:
+        name:
+          other: Pass it on
+        desc:
+          other: First shared post.
+      korekta:
+        name:
+          other: Correction
+        desc:
+          other: First post edit.
+      zaksiegowane:
+        name:
+          other: Booked
+        desc:
+          other: Accepted an answer on your question for the first time.
+      szeregowy:
+        name:
+          other: Private
+        desc:
+          other: 1 accepted answer.
+      starszy-szeregowy:
+        name:
+          other: Private first class
+        desc:
+          other: 3 accepted answers.
+      kapral:
+        name:
+          other: Corporal
+        desc:
+          other: 6 accepted answers.
+      plutonowy:
+        name:
+          other: Lance sergeant
+        desc:
+          other: 10 accepted answers.
+      sierzant:
+        name:
+          other: Sergeant
+        desc:
+          other: 15 accepted answers.
+      starszy-sierzant:
+        name:
+          other: Staff sergeant
+        desc:
+          other: 22 accepted answers.
+      chorazy:
+        name:
+          other: Warrant officer
+        desc:
+          other: 30 accepted answers.
+      podporucznik:
+        name:
+          other: Second lieutenant
+        desc:
+          other: 45 accepted answers.
+      porucznik:
+        name:
+          other: Lieutenant
+        desc:
+          other: 60 accepted answers.
+      kapitan:
+        name:
+          other: Captain
+        desc:
+          other: 80 accepted answers.
+      major:
+        name:
+          other: Major
+        desc:
+          other: 110 accepted answers.
+      pulkownik:
+        name:
+          other: Colonel
+        desc:
+          other: 150 accepted answers.
+      general:
+        name:
+          other: General
+        desc:
+          other: 200 accepted answers.
+      trafiona-odpowiedz:
+        name:
+          other: On target
+        desc:
+          other: Answer with 3 up-votes.
+      warte-zapamietania:
+        name:
+          other: Worth remembering
+        desc:
+          other: Answer with 6 up-votes.
+      odpowiedz-roku:
+        name:
+          other: Answer of the year
+        desc:
+          other: Answer with 12 up-votes.
+      odpowiedz-do-ramki:
+        name:
+          other: Framed answer
+        desc:
+          other: Answer with 25 up-votes.
+      dobre-pytanie:
+        name:
+          other: Good question
+        desc:
+          other: Question with 3 up-votes.
+      boli-wszystkich:
+        name:
+          other: Everyone's pain
+        desc:
+          other: Question with 6 up-votes.
+      pytanie-roku:
+        name:
+          other: Question of the year
+        desc:
+          other: Question with 12 up-votes.
+      pytanie-stulecia:
+        name:
+          other: Question of the century
+        desc:
+          other: Question with 25 up-votes.
+      straznik-rodo:
+        name:
+          other: GDPR guardian
+        desc:
+          other: First flagged post.
+      zolta-kartka:
+        name:
+          other: Yellow card
+        desc:
+          other: Formal warning from the admin for breaking the rules. −25 reputation. Three cards = suspension.
+      nagroda-prezesa:
+        name:
+          other: CEO award
+        desc:
+          other: Monthly award for helping others.
+      wzor-do-nasladowania:
+        name:
+          other: Role model
+        desc:
+          other: Exemplary conduct, awarded by admin.
+      mentor:
+        name:
+          other: Mentor
+        desc:
+          other: For onboarding and patiently explaining the basics.
+      aniol-rodo:
+        name:
+          other: GDPR angel
+        desc:
+          other: Exemplary care for client data.
+      konstruktywny-krytyk:
+        name:
+          other: Constructive critic
+        desc:
+          other: Turned a complaint into an actionable report.
+      dokumentalista:
+        name:
+          other: Documentarian
+        desc:
+          other: Wrote a step-by-step guide others use.
+      gasnica:
+        name:
+          other: Firefighter
+        desc:
+          other: Helped during an outage or crisis.
+      detektyw:
+        name:
+          other: Detective
+        desc:
+          other: Found the root cause of a hard bug.
+      tlumacz:
+        name:
+          other: Translator
+        desc:
+          other: Explains hard things in plain language.
+      lacznik:
+        name:
+          other: Liaison
+        desc:
+          other: Escalated an issue to the product team and saw it fixed.
+      pierwszy-na-miejscu:
+        name:
+          other: First responder
+        desc:
+          other: Answers new questions fast.
+      zamykacz-spraw:
+        name:
+          other: Case closer
+        desc:
+          other: Makes sure questions get accepted answers.
+      ogrodnik-tagow:
+        name:
+          other: Tag gardener
+        desc:
+          other: Keeps tags, titles and duplicates tidy.
+      debiut-miesiaca:
+        name:
+          other: Rookie of the month
+        desc:
+          other: Best newcomer of the month.
+      ambasador:
+        name:
+          other: Ambassador
+        desc:
+          other: Promotes the portal and brings colleagues in.
+      serce-zespolu:
+        name:
+          other: Heart of the team
+        desc:
+          other: Kindness and support beyond the technical.
+      weteran:
+        name:
+          other: Veteran
+        desc:
+          other: A year of regular help (awarded yearly).
+      ekspert-morganizer:
+        name:
+          other: mOrganizer expert
+        desc:
+          other: Recognised AO/AOA expert for mOrganizer.
+      ekspert-kzz:
+        name:
+          other: KZZ expert
+        desc:
+          other: Recognised AO/AOA expert for KZZ.
+      ekspert-milleksiegowosc:
+        name:
+          other: MilleKsięgowość expert
+        desc:
+          other: Recognised AO/AOA expert for MilleKsięgowość.
+      ekspert-eksiegowosc:
+        name:
+          other: eKsięgowość expert
+        desc:
+          other: Recognised AO/AOA expert for eKsięgowość.
+    aoa_groups:
+      start:
+        name:
+          other: Getting started
+      stopnie:
+        name:
+          other: Ranks
+      jakosc:
+        name:
+          other: Post quality
+      rodo:
+        name:
+          other: GDPR & culture
+      admin:
+        name:
+          other: Distinctions
     default_badges:
       autobiographer:
         name:

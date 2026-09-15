@@ -20,6 +20,9 @@ language_options:
   - label: "English"
     value: "en_US"
     progress: 100
+  - label: "Polski"
+    value: "pl_PL"
+    progress: 98
   - label: "Español"
     value: "es_ES"
     progress: 96
