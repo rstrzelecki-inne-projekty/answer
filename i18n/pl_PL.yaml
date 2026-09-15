@@ -2101,7 +2101,7 @@ ui:
     db_failed: Połączenie z bazą danych nie powiodło się
     db_failed_desc: Oznacza to, że informacje o bazie danych w pliku <1>config.yaml</1> są nieprawidłowe lub że nie można nawiązać połączenia z serwerem bazy danych. Może to oznaczać, że serwer bazy danych wskazanego hosta nie działa.
   counts:
-    views: widoki
+    views: wyświetleń
     votes: głosów
     answers: odpowiedzi
     accepted: Zaakceptowane
