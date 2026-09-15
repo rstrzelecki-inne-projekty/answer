@@ -21,6 +21,7 @@ package badge
 
 import (
 	"context"
+	"time"
 
 	"github.com/apache/answer/internal/base/constant"
 	"github.com/apache/answer/internal/base/handler"
@@ -55,6 +56,7 @@ type BadgeAwardRepo interface {
 	GetByUserIdAndBadgeIdAndAwardKey(ctx context.Context, userID string, badgeID string, awardKey string) (badgeAward *entity.BadgeAward, exists bool, err error)
 
 	DeleteUserBadgeAward(ctx context.Context, userID string) (err error)
+	RevokeBadgeAward(ctx context.Context, userID, badgeID, awardKey string) (revoked bool, err error)
 }
 
 type BadgeAwardService struct {
@@ -299,4 +301,51 @@ func (bs *BadgeAwardService) validateUserByUsername(ctx context.Context, userNam
 		return
 	}
 	return
+}
+
+// AdminAward awards a badge to a user manually (admin action). Unlike Award it reports an error when the badge
+// was already awarded, so the admin gets feedback instead of a silent no-op.
+func (bs *BadgeAwardService) AdminAward(ctx context.Context, req *schema.AdminAwardBadgeReq) (err error) {
+	req.UserID, err = bs.validateUserByUsername(ctx, req.Username)
+	if err != nil {
+		return err
+	}
+	badgeData, exists, err := bs.badgeRepo.GetByID(ctx, req.BadgeID)
+	if err != nil {
+		return err
+	}
+	if !exists || badgeData.Status == entity.BadgeStatusInactive {
+		return errors.BadRequest(reason.BadgeObjectNotFound)
+	}
+	awardKey := req.AwardKey
+	if len(awardKey) == 0 {
+		awardKey = "admin"
+		if badgeData.Single != entity.BadgeSingleAward {
+			awardKey = time.Now().Format("2006-01-02")
+		}
+	}
+	alreadyAwarded, err := bs.badgeAwardRepo.CheckIsAward(ctx, req.BadgeID, req.UserID, awardKey, badgeData.Single)
+	if err != nil {
+		return err
+	}
+	if alreadyAwarded {
+		return errors.BadRequest(reason.BadgeAlreadyAwarded)
+	}
+	return bs.Award(ctx, req.BadgeID, req.UserID, awardKey)
+}
+
+// AdminRevoke removes a badge award from a user (admin action).
+func (bs *BadgeAwardService) AdminRevoke(ctx context.Context, req *schema.AdminRevokeBadgeReq) (err error) {
+	req.UserID, err = bs.validateUserByUsername(ctx, req.Username)
+	if err != nil {
+		return err
+	}
+	revoked, err := bs.badgeAwardRepo.RevokeBadgeAward(ctx, req.UserID, req.BadgeID, req.AwardKey)
+	if err != nil {
+		return err
+	}
+	if !revoked {
+		return errors.BadRequest(reason.BadgeAwardNotFound)
+	}
+	return nil
 }

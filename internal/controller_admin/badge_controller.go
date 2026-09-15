@@ -28,12 +28,14 @@ import (
 )
 
 type BadgeController struct {
-	badgeService *badge.BadgeService
+	badgeService      *badge.BadgeService
+	badgeAwardService *badge.BadgeAwardService
 }
 
-func NewBadgeController(badgeService *badge.BadgeService) *BadgeController {
+func NewBadgeController(badgeService *badge.BadgeService, badgeAwardService *badge.BadgeAwardService) *BadgeController {
 	return &BadgeController{
-		badgeService: badgeService,
+		badgeService:      badgeService,
+		badgeAwardService: badgeAwardService,
 	}
 }
 
@@ -82,5 +84,45 @@ func (b *BadgeController) UpdateBadgeStatus(ctx *gin.Context) {
 	}
 
 	err := b.badgeService.UpdateStatus(ctx, req)
+	handler.HandleResponse(ctx, err, nil)
+}
+
+// AwardBadge award a badge to a user manually
+// @Summary award a badge to a user manually
+// @Description award a badge to a user manually
+// @Tags AdminBadge
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param data body schema.AdminAwardBadgeReq true "AdminAwardBadgeReq"
+// @Success 200 {object} handler.RespBody
+// @Router /answer/admin/api/badge/award [post]
+func (b *BadgeController) AwardBadge(ctx *gin.Context) {
+	req := &schema.AdminAwardBadgeReq{}
+	if handler.BindAndCheck(ctx, req) {
+		return
+	}
+
+	err := b.badgeAwardService.AdminAward(ctx, req)
+	handler.HandleResponse(ctx, err, nil)
+}
+
+// RevokeBadge revoke a badge award from a user
+// @Summary revoke a badge award from a user
+// @Description revoke a badge award from a user
+// @Tags AdminBadge
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param data body schema.AdminRevokeBadgeReq true "AdminRevokeBadgeReq"
+// @Success 200 {object} handler.RespBody
+// @Router /answer/admin/api/badge/award [delete]
+func (b *BadgeController) RevokeBadge(ctx *gin.Context) {
+	req := &schema.AdminRevokeBadgeReq{}
+	if handler.BindAndCheck(ctx, req) {
+		return
+	}
+
+	err := b.badgeAwardService.AdminRevoke(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }

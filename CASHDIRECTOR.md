@@ -17,5 +17,6 @@ Pełne wytyczne: `answers/docs/fork-answer-wytyczne.md`. Zadania: Jira AA-26.
 ## Łatki na tej gałęzi
 | # | Commit | Co | Status upstream |
 |---|---|---|---|
+| 3 | Ręczne odznaki (admin) | API `POST/DELETE /answer/admin/api/badge/award` + komponent `AwardBadgeButton` (profil→Odznaki z cofaniem, strona odznaki, Admin→Odznaki, lista pytań, pytanie/odpowiedzi); powiadomienie w dzwonku przez `BadgeAwardService.Award` | kandydat do PR upstream (AA-34) |
 | 2 | Content-Type uploadów | `AvatarThumb` ustawiał `image/<ext>` dla każdego pliku z `/uploads` (`image/svg` → przeglądarki nie renderują SVG); teraz `mime.TypeByExtension` z fallbackiem | PR https://github.com/apache/answer/pull/1618 (otwarty 2026-09-15); po merge usunąć łatkę przy rebase |
 | 1 | i18n pl_PL | `Polski` w `language_options`, pełne `pl_PL.yaml` (upstream + 393 uzupełnienia), klucze odznak `badge.aoa.*` w en/pl | tłumaczenie do zgłoszenia przez Crowdin; klucze odznak są nasze (nie do upstreamu) |

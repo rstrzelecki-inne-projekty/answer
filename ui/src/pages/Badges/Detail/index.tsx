@@ -23,7 +23,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 
 // import classnames from 'classnames';
 
-import { FormatTime, Pagination } from '@/components';
+import { FormatTime, Pagination, AwardBadgeButton } from '@/components';
 import { usePageTags, useSkeletonControl } from '@/hooks';
 // import { formatCount } from '@/utils';
 import { useGetBadgeInfo, useBadgeDetailList } from '@/services';
@@ -62,7 +62,10 @@ const Index = () => {
 
   return (
     <div className="pt-4 mb-5">
-      <h3 className="mb-4">{t('title')}</h3>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h3 className="mb-0">{t('title')}</h3>
+        <AwardBadgeButton badgeId={badge_id} />
+      </div>
       {isHeaderLoading ? <HeaderLoader /> : <BadgeDetail data={badgeInfo} />}
       <Row>
         {isSkeletonShow ? (

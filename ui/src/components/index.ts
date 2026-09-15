@@ -61,6 +61,7 @@ import SideNav from './SideNav';
 import PluginRender from './PluginRender';
 import HighlightText from './HighlightText';
 import CardBadge from './CardBadge';
+import AwardBadgeButton from './AwardBadgeButton';
 import PinList from './PinList';
 import MobileSideNav from './MobileSideNav';
 import AdminSideNav from './AdminSideNav';
@@ -116,6 +117,7 @@ export {
   PluginRender,
   HighlightText,
   CardBadge,
+  AwardBadgeButton,
   PinList,
   MobileSideNav,
   AdminSideNav,

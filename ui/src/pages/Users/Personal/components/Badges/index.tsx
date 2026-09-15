@@ -18,10 +18,16 @@
  */
 
 import { FC } from 'react';
-import { Row, Col } from 'react-bootstrap';
+import { Row, Col, Button } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
+
+import { useSWRConfig } from 'swr';
 
 import * as Type from '@/common/interface';
-import { CardBadge } from '@/components';
+import { CardBadge, AwardBadgeButton } from '@/components';
+import { useToast } from '@/hooks';
+import { revokeBadge } from '@/services';
+import { loggedUserInfoStore } from '@/stores';
 
 interface IProps {
   data: Type.BadgeListItem[];
@@ -30,23 +36,60 @@ interface IProps {
 }
 
 const Index: FC<IProps> = ({ data, visible, username }) => {
+  const { t } = useTranslation('translation', { keyPrefix: 'badges.award' });
+  const isAdmin = loggedUserInfoStore((state) => state.user?.role_id) === 2;
+  const Toast = useToast();
+  const { mutate } = useSWRConfig();
   if (!visible) {
     return null;
   }
-  return (
-    <Row>
-      {data.map((item) => {
-        return (
-          <Col sm={6} md={4} lg={3} key={item.id} className="mb-4">
-            <CardBadge
-              data={item}
-              urlSearchParams={`username=${username}`}
-              badgePillType="count"
-            />
-          </Col>
+  const handleRevoke = (badgeId: string) => {
+    if (!window.confirm(t('revoke_confirm'))) {
+      return;
+    }
+    revokeBadge({ badge_id: badgeId, username })
+      .then(() => {
+        Toast.onShow({ msg: t('revoked'), variant: 'success' });
+        mutate(
+          (key) =>
+            typeof key === 'string' &&
+            (key.includes('/badge') || key.includes('/badges')),
         );
-      })}
-    </Row>
+      })
+      .catch((err) => Toast.onShow({ msg: err?.msg, variant: 'danger' }));
+  };
+  return (
+    <>
+      {isAdmin && (
+        <div className="d-flex justify-content-end mb-3">
+          <AwardBadgeButton username={username} />
+        </div>
+      )}
+      <Row>
+        {data.map((item) => {
+          return (
+            <Col sm={6} md={4} lg={3} key={item.id} className="mb-4">
+              <CardBadge
+                data={item}
+                urlSearchParams={`username=${username}`}
+                badgePillType="count"
+              />
+              {isAdmin && (
+                <div className="text-center mt-n3 mb-2">
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="text-secondary p-0"
+                    onClick={() => handleRevoke(item.id)}>
+                    {t('revoke')}
+                  </Button>
+                </div>
+              )}
+            </Col>
+          );
+        })}
+      </Row>
+    </>
   );
 };
 

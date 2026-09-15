@@ -339,6 +339,10 @@ backend:
     badge:
       object_not_found:
         other: Badge object not found
+      already_awarded:
+        other: This badge has already been awarded to the user.
+      award_not_found:
+        other: The user does not have this badge award.
   reason:
     spam:
       name:
@@ -2124,6 +2128,22 @@ ui:
     ×_awarded: "{{ number }} awarded"
     can_earn_multiple: You can earn this multiple times.
     earned: Earned
+    award:
+      btn: Award badge
+      title: Award a badge
+      user: User
+      user_placeholder: Type a username or display name…
+      badge: Badge
+      badge_placeholder: Choose a badge…
+      key: Award key (optional)
+      key_placeholder: e.g. 2026-09
+      key_help: Only for badges that can be earned multiple times — a period or date that distinguishes this award.
+      submit: Award
+      success: Badge awarded to {{ username }}.
+      failed: Could not award the badge.
+      revoke: Revoke
+      revoke_confirm: Revoke this badge from the user?
+      revoked: Badge revoked.
 
   admin:
     admin_header:

@@ -339,6 +339,10 @@ backend:
     badge:
       object_not_found:
         other: Nie znaleziono obiektu odznaki
+      already_awarded:
+        other: Ta odznaka jest już przyznana temu użytkownikowi.
+      award_not_found:
+        other: Użytkownik nie ma takiego przyznania odznaki.
   reason:
     spam:
       name:
@@ -2163,6 +2167,22 @@ ui:
     ×_awarded: 'Przyznano: {{ number }}'
     can_earn_multiple: Tę odznakę można zdobyć wielokrotnie.
     earned: Zdobyto
+    award:
+      btn: Przyznaj odznakę
+      title: Przyznaj odznakę
+      user: Użytkownik
+      user_placeholder: Wpisz login lub nazwę…
+      badge: Odznaka
+      badge_placeholder: Wybierz odznakę…
+      key: Klucz przyznania (opcjonalnie)
+      key_placeholder: np. 2026-09
+      key_help: Tylko dla odznak zdobywanych wielokrotnie — okres lub data odróżniająca to przyznanie.
+      submit: Przyznaj
+      success: Odznaka przyznana użytkownikowi {{ username }}.
+      failed: Nie udało się przyznać odznaki.
+      revoke: Cofnij
+      revoke_confirm: Cofnąć tę odznakę użytkownikowi?
+      revoked: Odznaka cofnięta.
   admin:
     admin_header:
       title: Administrator

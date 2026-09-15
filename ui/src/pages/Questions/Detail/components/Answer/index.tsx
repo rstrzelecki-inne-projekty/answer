@@ -26,6 +26,7 @@ import {
   Actions,
   Operate,
   UserCard,
+  AwardBadgeButton,
   Icon,
   Comment,
   htmlRender,
@@ -110,7 +111,7 @@ const Index: FC<Props> = ({
         </Alert>
       )}
       <div className="d-flex justify-content-between mb-3">
-        <div style={{ minWidth: '196px' }}>
+        <div style={{ minWidth: '196px' }} className="d-flex align-items-start">
           <UserCard
             data={data?.user_info}
             time={Number(data.create_time)}
@@ -118,6 +119,11 @@ const Index: FC<Props> = ({
             updateTimePrefix={t('edit')}
             isLogged={isLogged}
             timelinePath={`/posts/${data.question_id}/${data.id}/timeline`}
+          />
+          <AwardBadgeButton
+            username={data?.user_info?.username}
+            variant="icon"
+            className="ms-2"
           />
         </div>
 

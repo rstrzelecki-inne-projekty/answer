@@ -24,7 +24,13 @@ import { useTranslation } from 'react-i18next';
 
 import classNames from 'classnames';
 
-import { Empty, Icon, Pagination, QueryGroup } from '@/components';
+import {
+  Empty,
+  Icon,
+  Pagination,
+  QueryGroup,
+  AwardBadgeButton,
+} from '@/components';
 import * as Type from '@/common/interface';
 import { useQueryBadges, updateBadgeStatus } from '@/services/admin/badges';
 import { useToast } from '@/hooks';
@@ -148,6 +154,12 @@ const Badges: FC = () => {
               <td>{badge.group_name}</td>
               <td>
                 <Link to={`/badges/${badge.id}`}>{badge.award_count}</Link>
+                <AwardBadgeButton
+                  badgeId={badge.id}
+                  variant="icon"
+                  className="ms-2"
+                  onAwarded={() => mutate()}
+                />
               </td>
               <td>
                 <span className={classNames('badge', bgMap[badge.status])}>

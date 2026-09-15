@@ -194,3 +194,32 @@ func (r *badgeAwardRepo) DeleteUserBadgeAward(ctx context.Context, userID string
 	}
 	return
 }
+
+// RevokeBadgeAward removes one award of a badge from a user (the newest one when awardKey is empty)
+// and decrements the badge award counter. Returns false when there was nothing to revoke.
+func (r *badgeAwardRepo) RevokeBadgeAward(ctx context.Context, userID, badgeID, awardKey string) (revoked bool, err error) {
+	_, err = r.data.DB.Transaction(func(session *xorm.Session) (result any, err error) {
+		session = session.Context(ctx)
+		award := &entity.BadgeAward{}
+		query := session.Where("user_id = ? AND badge_id = ?", userID, badgeID)
+		if len(awardKey) > 0 {
+			query = query.And("award_key = ?", awardKey)
+		}
+		exist, err := query.Desc("created_at").Get(award)
+		if err != nil {
+			return nil, err
+		}
+		if !exist {
+			return nil, nil
+		}
+		if _, err = session.ID(award.ID).Delete(&entity.BadgeAward{}); err != nil {
+			return nil, err
+		}
+		revoked = true
+		return session.ID(badgeID).Where("award_count > 0").Decr("award_count", 1).Update(&entity.Badge{})
+	})
+	if err != nil {
+		return false, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+	}
+	return revoked, nil
+}

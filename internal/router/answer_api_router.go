@@ -415,6 +415,8 @@ func (a *AnswerAPIRouter) RegisterAnswerAdminAPIRouter(r *gin.RouterGroup) {
 	// badge
 	r.GET("/badges", a.adminBadgeController.GetBadgeList)
 	r.PUT("/badge/status", a.adminBadgeController.UpdateBadgeStatus)
+	r.POST("/badge/award", a.adminBadgeController.AwardBadge)
+	r.DELETE("/badge/award", a.adminBadgeController.RevokeBadge)
 
 	// api key
 	r.GET("/api-key/all", a.apiKeyController.GetAllAPIKeys)

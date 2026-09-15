@@ -29,6 +29,7 @@ import {
   FormatTime,
   Empty,
   BaseUserCard,
+  AwardBadgeButton,
   QueryGroup,
   QuestionListLoader,
   Counts,
@@ -158,6 +159,11 @@ const QuestionList: FC<Props> = ({
                       data={li.operator}
                       className="me-1"
                       avatarClass="me-1"
+                    />
+                    <AwardBadgeButton
+                      username={li.operator?.username}
+                      variant="icon"
+                      className="me-1"
                     />
                     •
                     <FormatTime

@@ -282,7 +282,7 @@ func initApplication(debug bool, serverConf *conf.Server, dbConf *data.Database,
 	badgeEventService := badge2.NewBadgeEventService(dataData, eventqueueService, badgeRepo, eventRuleRepo, badgeAwardService)
 	badgeService := badge2.NewBadgeService(badgeRepo, badgeGroupRepo, badgeAwardRepo, badgeEventService, siteInfoCommonService)
 	badgeController := controller.NewBadgeController(badgeService, badgeAwardService)
-	controller_adminBadgeController := controller_admin.NewBadgeController(badgeService)
+	controller_adminBadgeController := controller_admin.NewBadgeController(badgeService, badgeAwardService)
 	apiKeyService := apikey.NewAPIKeyService(apiKeyRepo)
 	adminAPIKeyController := controller_admin.NewAdminAPIKeyController(apiKeyService)
 	featureToggleService := feature_toggle.NewFeatureToggleService(siteInfoRepo)

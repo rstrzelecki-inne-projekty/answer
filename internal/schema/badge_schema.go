@@ -175,3 +175,21 @@ type GetUserBadgeAwardListResp struct {
 type BadgeTplData struct {
 	ProfileURL string
 }
+
+// AdminAwardBadgeReq award a badge to a user manually (admin)
+type AdminAwardBadgeReq struct {
+	BadgeID  string `validate:"required" json:"badge_id"`
+	Username string `validate:"required,gt=0,lte=30" json:"username"`
+	// AwardKey distinguishes repeated awards of a multi-award badge (e.g. "2026-09"); optional.
+	AwardKey string `validate:"omitempty,lte=64" json:"award_key"`
+	UserID   string `json:"-"`
+}
+
+// AdminRevokeBadgeReq revoke a manually awarded badge from a user (admin)
+type AdminRevokeBadgeReq struct {
+	BadgeID  string `validate:"required" json:"badge_id"`
+	Username string `validate:"required,gt=0,lte=30" json:"username"`
+	// AwardKey of the award to revoke; when empty the newest award of this badge is revoked.
+	AwardKey string `validate:"omitempty,lte=64" json:"award_key"`
+	UserID   string `json:"-"`
+}

@@ -40,3 +40,19 @@ export const useQueryBadges = (params) => {
 export const updateBadgeStatus = (params) => {
   return request.put('/answer/admin/api/badge/status', params);
 };
+
+export const awardBadge = (params: {
+  badge_id: string;
+  username: string;
+  award_key?: string;
+}) => {
+  return request.post('/answer/admin/api/badge/award', params);
+};
+
+export const revokeBadge = (params: {
+  badge_id: string;
+  username: string;
+  award_key?: string;
+}) => {
+  return request.delete('/answer/admin/api/badge/award', params);
+};
