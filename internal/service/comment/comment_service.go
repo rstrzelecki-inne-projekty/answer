@@ -396,7 +396,8 @@ func (cs *CommentService) GetComment(ctx context.Context, req *schema.GetComment
 	}
 
 	// check if current user vote this comment
-	resp.IsVote = cs.checkIsVote(ctx, req.UserID, resp.CommentID)
+	resp.VoteStatus = cs.voteCommon.GetVoteStatus(ctx, resp.CommentID, req.UserID)
+	resp.IsVote = resp.VoteStatus == constant.ActVoteUp
 
 	resp.MemberActions = permission.GetCommentPermission(ctx, req.UserID, resp.UserID,
 		comment.CreatedAt, req.CanEdit, req.CanDelete)
@@ -499,16 +500,12 @@ func (cs *CommentService) convertCommentEntity2Resp(ctx context.Context, req *sc
 	}
 
 	// check if current user vote this comment
-	commentResp.IsVote = cs.checkIsVote(ctx, req.UserID, commentResp.CommentID)
+	commentResp.VoteStatus = cs.voteCommon.GetVoteStatus(ctx, commentResp.CommentID, req.UserID)
+	commentResp.IsVote = commentResp.VoteStatus == constant.ActVoteUp
 
 	commentResp.MemberActions = permission.GetCommentPermission(ctx,
 		req.UserID, commentResp.UserID, comment.CreatedAt, req.CanEdit, req.CanDelete)
 	return commentResp, nil
-}
-
-func (cs *CommentService) checkIsVote(ctx context.Context, userID, commentID string) (isVote bool) {
-	status := cs.voteCommon.GetVoteStatus(ctx, commentID, userID)
-	return len(status) > 0
 }
 
 // GetCommentPersonalWithPage get personal comment list page

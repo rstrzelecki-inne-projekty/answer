@@ -27,7 +27,12 @@ import unionBy from 'lodash/unionBy';
 
 import * as Types from '@/common/interface';
 import { Modal } from '@/components';
-import { usePageUsers, useReportModal, useCaptchaModal } from '@/hooks';
+import {
+  usePageUsers,
+  useReportModal,
+  useCaptchaModal,
+  useToast,
+} from '@/hooks';
 import {
   matchedUsers,
   parseUserInfo,
@@ -78,6 +83,7 @@ const Comment: FC<IProps> = ({ objectId, mode, commentId, children }) => {
   const editCaptcha = useCaptchaPlugin('edit');
   const dCaptcha = useCaptchaPlugin('delete');
   const vCaptcha = useCaptchaPlugin('vote');
+  const toast = useToast();
 
   const { t } = useTranslation('translation', { keyPrefix: 'comment' });
 
@@ -291,7 +297,9 @@ const Comment: FC<IProps> = ({ objectId, mode, commentId, children }) => {
     });
   };
 
-  const submitVoteComment = (id, is_cancel) => {
+  // [cd] AA-35: comments take up AND down votes; the server answers with the
+  // resulting count and the caller's vote status, so use that instead of +-1.
+  const submitVoteComment = (id, is_cancel, type: 'up' | 'down') => {
     const imgCode: Types.ImgCodeReq = {
       captcha_id: undefined,
       captcha_code: undefined,
@@ -304,17 +312,16 @@ const Comment: FC<IProps> = ({ objectId, mode, commentId, children }) => {
         is_cancel,
         ...imgCode,
       },
-      'up',
+      type,
     )
-      .then(async () => {
+      .then(async (res) => {
         await vCaptcha?.close();
         setComments(
           comments.map((item) => {
             if (item.comment_id === id) {
-              item.vote_count = is_cancel
-                ? item.vote_count - 1
-                : item.vote_count + 1;
-              item.is_vote = !is_cancel;
+              item.vote_count = res.votes;
+              item.vote_status = res.vote_status || '';
+              item.is_vote = item.vote_status === 'vote_up';
             }
             return item;
           }),
@@ -324,20 +331,24 @@ const Comment: FC<IProps> = ({ objectId, mode, commentId, children }) => {
         if (ex.isError) {
           vCaptcha?.handleCaptchaError(ex.list);
         }
+        const errMsg = ex?.value;
+        if (errMsg) {
+          toast.onShow({ msg: errMsg, variant: 'danger' });
+        }
       });
   };
-  const handleVote = (id, is_cancel) => {
+  const handleVote = (id, is_cancel, type: 'up' | 'down' = 'up') => {
     if (!tryNormalLogged(true)) {
       return;
     }
 
     if (!vCaptcha) {
-      submitVoteComment(id, is_cancel);
+      submitVoteComment(id, is_cancel, type);
       return;
     }
 
     vCaptcha.check(() => {
-      submitVoteComment(id, is_cancel);
+      submitVoteComment(id, is_cancel, type);
     });
   };
 
@@ -454,6 +465,7 @@ const Comment: FC<IProps> = ({ objectId, mode, commentId, children }) => {
                   createdAt={item.created_at}
                   voteCount={item.vote_count}
                   isVote={item.is_vote}
+                  voteStatus={item.vote_status}
                   memberActions={item.member_actions}
                   userStatus={item.user_status}
                   onReply={() => {
@@ -462,7 +474,19 @@ const Comment: FC<IProps> = ({ objectId, mode, commentId, children }) => {
                   onAction={(action) => handleAction(action, item)}
                   onVote={(e) => {
                     e.preventDefault();
-                    handleVote(item.comment_id, item.is_vote);
+                    handleVote(
+                      item.comment_id,
+                      item.vote_status === 'vote_up',
+                      'up',
+                    );
+                  }}
+                  onVoteDown={(e) => {
+                    e.preventDefault();
+                    handleVote(
+                      item.comment_id,
+                      item.vote_status === 'vote_down',
+                      'down',
+                    );
                   }}
                 />
               )}

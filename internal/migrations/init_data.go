@@ -353,6 +353,10 @@ var (
 		{ID: 128, Key: "rank.answer.undeleted", Value: `-1`},
 		{ID: 129, Key: "rank.question.undeleted", Value: `-1`},
 		{ID: 130, Key: "rank.tag.undeleted", Value: `-1`},
+		// [cd] AA-35: reputation for comment votes (IDs 901+ to stay clear of upstream additions)
+		{ID: 901, Key: "comment.vote_down", Value: `0`},
+		{ID: 902, Key: "comment.voted_up", Value: `2`},
+		{ID: 903, Key: "comment.voted_down", Value: `-1`},
 		{ID: 131, Key: "ai_config.provider", Value: `[{"default_api_host":"https://api.openai.com","display_name":"OpenAI","name":"openai"},{"default_api_host":"https://generativelanguage.googleapis.com","display_name":"Gemini","name":"gemini"},{"default_api_host":"https://api.anthropic.com","display_name":"Anthropic","name":"anthropic"}]`},
 	}
 

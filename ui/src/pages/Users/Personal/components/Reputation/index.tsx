@@ -52,7 +52,7 @@ const Index: FC<Props> = ({ visible, data }) => {
               <Link
                 className="text-break"
                 to={
-                  item.object_type === 'question'
+                  item.object_type === 'question' || !item.answer_id
                     ? pathFactory.questionLanding(
                         item.question_id,
                         item.url_title,

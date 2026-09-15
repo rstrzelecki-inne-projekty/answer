@@ -1474,6 +1474,7 @@ ui:
     tip_question: Użyj komentarzy, aby poprosić o dodatkowe informacje lub sugerować poprawki. Unikaj udzielania odpowiedzi na pytania w komentarzach.
     tip_answer: Użyj komentarzy, aby odpowiedzieć innym użytkownikom lub powiadomić ich o zmianach. Jeśli dodajesz nowe informacje, edytuj swój post zamiast komentować.
     tip_vote: Dodaje coś wartościowego do posta
+    tip_vote_down: Nie wnosi nic wartościowego lub narusza regulamin
   edit_answer:
     title: Edytuj odpowiedź
     default_reason: Edytuj odpowiedź

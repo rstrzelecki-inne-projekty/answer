@@ -31,6 +31,9 @@ const (
 	AnswerAccepted    = "answer.accepted"
 	AnswerAccept      = "answer.accept"
 	CommentVoteUp     = "comment.vote_up"
+	CommentVoteDown   = "comment.vote_down"  // [cd] AA-35
+	CommentVotedUp    = "comment.voted_up"   // [cd] AA-35
+	CommentVotedDown  = "comment.voted_down" // [cd] AA-35
 	EditAccepted      = "edit.accepted"
 )
 
@@ -47,6 +50,9 @@ var (
 		AnswerAccepted,
 		AnswerAccept,
 		CommentVoteUp,
+		CommentVoteDown,
+		CommentVotedUp,
+		CommentVotedDown,
 	}
 	VoteActivityTypeList = []string{
 		QuestionVoteUp,
@@ -58,6 +64,9 @@ var (
 		AnswerVotedUp,
 		AnswerVotedDown,
 		CommentVoteUp,
+		CommentVoteDown,
+		CommentVotedUp,
+		CommentVotedDown,
 	}
 	ActivityTypeFlagMapping = map[string]string{
 		QuestionVoteUp:    "action_activity_type.upvote",
@@ -71,6 +80,9 @@ var (
 		AnswerAccepted:    "action_activity_type.accepted",
 		AnswerAccept:      "action_activity_type.accept",
 		CommentVoteUp:     "action_activity_type.upvote",
+		CommentVoteDown:   "action_activity_type.downvote",
+		CommentVotedUp:    "action_activity_type.upvoted",
+		CommentVotedDown:  "action_activity_type.downvoted",
 		EditAccepted:      "action_activity_type.edit",
 	}
 )

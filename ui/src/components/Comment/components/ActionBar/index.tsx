@@ -31,14 +31,19 @@ const ActionBar = ({
   username,
   createdAt,
   isVote,
+  voteStatus = '',
   voteCount = 0,
   memberActions,
   onReply,
   onVote,
+  onVoteDown,
   onAction,
   userStatus = '',
 }) => {
   const { t } = useTranslation('translation', { keyPrefix: 'comment' });
+  // [cd] AA-35: comments can be voted down too; `voteStatus` wins over the legacy `isVote`
+  const liked = voteStatus ? voteStatus === 'vote_up' : isVote;
+  const hated = voteStatus === 'vote_down';
 
   return (
     <div className="d-flex justify-content-between flex-wrap small">
@@ -59,14 +64,24 @@ const ActionBar = ({
           title={t('tip_vote')}
           variant="link"
           size="sm"
-          className={`flex-shrink-0 me-3 btn-no-border p-0 ${
-            isVote ? '' : 'link-secondary'
+          className={`flex-shrink-0 me-2 btn-no-border p-0 ${
+            liked ? '' : 'link-secondary'
           }`}
           onClick={onVote}>
           <Icon name="hand-thumbs-up-fill" />
-          {voteCount > 0 && (
-            <span className="ms-2 link-secondary">{voteCount}</span>
-          )}
+        </Button>
+        {voteCount !== 0 && (
+          <span className="me-2 link-secondary">{voteCount}</span>
+        )}
+        <Button
+          title={t('tip_vote_down')}
+          variant="link"
+          size="sm"
+          className={`flex-shrink-0 me-3 btn-no-border p-0 ${
+            hated ? '' : 'link-secondary'
+          }`}
+          onClick={onVoteDown}>
+          <Icon name="hand-thumbs-down-fill" />
         </Button>
         <Button
           variant="link"

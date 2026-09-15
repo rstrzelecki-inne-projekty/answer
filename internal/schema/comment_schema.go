@@ -184,6 +184,8 @@ type GetCommentResp struct {
 	VoteCount int `json:"vote_count"`
 	// current user if already vote this comment
 	IsVote bool `json:"is_vote"`
+	// [cd] AA-35: current user's vote on this comment: "vote_up", "vote_down" or ""
+	VoteStatus string `json:"vote_status"`
 	// original comment content
 	OriginalText string `json:"original_text"`
 	// parsed comment content

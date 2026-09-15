@@ -274,7 +274,13 @@ func (vs *VoteService) getActivities(ctx context.Context, op *schema.VoteOperati
 			actions = []string{activity_type.AnswerVoteDown, activity_type.AnswerVotedDown}
 		}
 	case constant.CommentObjectType:
-		actions = []string{activity_type.CommentVoteUp}
+		// [cd] AA-35: comments get the same up/down + voted_* pairs as questions and answers,
+		// so the comment author earns (or loses) reputation. Missing config keys are skipped below.
+		if op.VoteUp {
+			actions = []string{activity_type.CommentVoteUp, activity_type.CommentVotedUp}
+		} else {
+			actions = []string{activity_type.CommentVoteDown, activity_type.CommentVotedDown}
+		}
 	}
 
 	for _, action := range actions {

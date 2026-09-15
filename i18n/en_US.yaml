@@ -1394,6 +1394,7 @@ ui:
       Use comments to reply to other users or notify them of changes. If you are
       adding new information, edit your post instead of commenting.
     tip_vote: It adds something useful to the post
+    tip_vote_down: It is not useful or breaks the rules
   edit_answer:
     title: Edit Answer
     default_reason: Edit answer
