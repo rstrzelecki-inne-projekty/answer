@@ -43,7 +43,11 @@ const Index = () => {
   const pageSize = 30;
   const { data: badgeInfo, isLoading: isHeaderLoading } =
     useGetBadgeInfo(badge_id);
-  const { data: badges, isLoading: isDetailLoading } = useBadgeDetailList({
+  const {
+    data: badges,
+    isLoading: isDetailLoading,
+    mutate: mutateBadges,
+  } = useBadgeDetailList({
     badge_id: badgeInfo?.id || '',
     page,
     page_size: pageSize,
@@ -64,7 +68,7 @@ const Index = () => {
     <div className="pt-4 mb-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="mb-0">{t('title')}</h3>
-        <AwardBadgeButton badgeId={badge_id} />
+        <AwardBadgeButton badgeId={badge_id} onAwarded={() => mutateBadges()} />
       </div>
       {isHeaderLoading ? <HeaderLoader /> : <BadgeDetail data={badgeInfo} />}
       <Row>

@@ -21,7 +21,7 @@ import { FC, useEffect, useState } from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
-import useSWR, { useSWRConfig } from 'swr';
+import useSWR from 'swr';
 import qs from 'qs';
 
 import { Icon } from '@/components';
@@ -54,7 +54,6 @@ const AwardBadgeButton: FC<Props> = ({
   const { t } = useTranslation('translation', { keyPrefix: 'badges.award' });
   const roleId = loggedUserInfoStore((state) => state.user?.role_id);
   const Toast = useToast();
-  const { mutate } = useSWRConfig();
   const [show, setShow] = useState(false);
   const [user, setUser] = useState(username || '');
   const [query, setQuery] = useState('');
@@ -95,12 +94,6 @@ const AwardBadgeButton: FC<Props> = ({
         });
         setShow(false);
         setAwardKey('');
-        // refresh every badge-related list currently on screen
-        mutate(
-          (key) =>
-            typeof key === 'string' &&
-            (key.includes('/badge') || key.includes('/badges')),
-        );
         onAwarded?.();
       })
       .catch((err) => {

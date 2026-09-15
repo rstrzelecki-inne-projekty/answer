@@ -58,7 +58,11 @@ const Personal: FC = () => {
   const { data: userInfo } = usePersonalInfoByName(username);
   const { data: topData } = usePersonalTop(username, tabName);
 
-  const { data: listData, isLoading = true } = usePersonalListByTabName(
+  const {
+    data: listData,
+    isLoading = true,
+    mutate: mutateList,
+  } = usePersonalListByTabName(
     {
       username,
       page: Number(page),
@@ -124,6 +128,7 @@ const Personal: FC = () => {
             data={list}
             visible={tabName === 'badges'}
             username={username}
+            onChange={() => mutateList()}
           />
           {!list?.length && !isLoading && <Empty />}
 

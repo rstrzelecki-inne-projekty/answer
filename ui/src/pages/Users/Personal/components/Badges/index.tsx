@@ -21,8 +21,6 @@ import { FC } from 'react';
 import { Row, Col, Button } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
-import { useSWRConfig } from 'swr';
-
 import * as Type from '@/common/interface';
 import { CardBadge, AwardBadgeButton } from '@/components';
 import { useToast } from '@/hooks';
@@ -33,13 +31,14 @@ interface IProps {
   data: Type.BadgeListItem[];
   username: string;
   visible: boolean;
+  /** re-fetch the list after an admin awards or revokes a badge */
+  onChange?: () => void;
 }
 
-const Index: FC<IProps> = ({ data, visible, username }) => {
+const Index: FC<IProps> = ({ data, visible, username, onChange }) => {
   const { t } = useTranslation('translation', { keyPrefix: 'badges.award' });
   const isAdmin = loggedUserInfoStore((state) => state.user?.role_id) === 2;
   const Toast = useToast();
-  const { mutate } = useSWRConfig();
   if (!visible) {
     return null;
   }
@@ -50,11 +49,7 @@ const Index: FC<IProps> = ({ data, visible, username }) => {
     revokeBadge({ badge_id: badgeId, username })
       .then(() => {
         Toast.onShow({ msg: t('revoked'), variant: 'success' });
-        mutate(
-          (key) =>
-            typeof key === 'string' &&
-            (key.includes('/badge') || key.includes('/badges')),
-        );
+        onChange?.();
       })
       .catch((err) => Toast.onShow({ msg: err?.msg, variant: 'danger' }));
   };
@@ -62,7 +57,7 @@ const Index: FC<IProps> = ({ data, visible, username }) => {
     <>
       {isAdmin && (
         <div className="d-flex justify-content-end mb-3">
-          <AwardBadgeButton username={username} />
+          <AwardBadgeButton username={username} onAwarded={onChange} />
         </div>
       )}
       <Row>
@@ -75,7 +70,7 @@ const Index: FC<IProps> = ({ data, visible, username }) => {
                 badgePillType="count"
               />
               {isAdmin && (
-                <div className="text-center mt-n3 mb-2">
+                <div className="text-center mt-1 mb-2">
                   <Button
                     variant="link"
                     size="sm"
