@@ -306,6 +306,7 @@ func (bs *BadgeAwardService) validateUserByUsername(ctx context.Context, userNam
 // AdminAward awards a badge to a user manually (admin action). Unlike Award it reports an error when the badge
 // was already awarded, so the admin gets feedback instead of a silent no-op.
 func (bs *BadgeAwardService) AdminAward(ctx context.Context, req *schema.AdminAwardBadgeReq) (err error) {
+	req.BadgeID = uid.DeShortID(req.BadgeID) // UI sends short IDs
 	req.UserID, err = bs.validateUserByUsername(ctx, req.Username)
 	if err != nil {
 		return err
@@ -336,6 +337,7 @@ func (bs *BadgeAwardService) AdminAward(ctx context.Context, req *schema.AdminAw
 
 // AdminRevoke removes a badge award from a user (admin action).
 func (bs *BadgeAwardService) AdminRevoke(ctx context.Context, req *schema.AdminRevokeBadgeReq) (err error) {
+	req.BadgeID = uid.DeShortID(req.BadgeID)
 	req.UserID, err = bs.validateUserByUsername(ctx, req.Username)
 	if err != nil {
 		return err

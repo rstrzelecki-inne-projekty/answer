@@ -27,6 +27,7 @@ import (
 	"github.com/apache/answer/internal/base/pager"
 	"github.com/apache/answer/internal/base/reason"
 	"github.com/apache/answer/internal/entity"
+	"github.com/apache/answer/internal/schema"
 	"github.com/apache/answer/internal/service/badge"
 	"github.com/apache/answer/internal/service/unique"
 	"github.com/segmentfault/pacman/errors"
@@ -213,6 +214,11 @@ func (r *badgeAwardRepo) RevokeBadgeAward(ctx context.Context, userID, badgeID, 
 			return nil, nil
 		}
 		if _, err = session.ID(award.ID).Delete(&entity.BadgeAward{}); err != nil {
+			return nil, err
+		}
+		// the "you earned a badge" notification points at this award — drop it too
+		if _, err = session.Where("object_id = ? AND type = ?", award.ID, schema.NotificationTypeAchievement).
+			Delete(&entity.Notification{}); err != nil {
 			return nil, err
 		}
 		revoked = true
