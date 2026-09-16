@@ -487,6 +487,7 @@ const Comment: FC<IProps> = ({ objectId, mode, commentId, children }) => {
                   voteStatus={item.vote_status}
                   memberActions={item.member_actions}
                   userStatus={item.user_status}
+                  commentId={item.comment_id}
                   onReply={() => {
                     handleReply(item.comment_id);
                   }}

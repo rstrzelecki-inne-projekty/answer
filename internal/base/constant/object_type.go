@@ -20,15 +20,16 @@
 package constant
 
 const (
-	QuestionObjectType   = "question"
-	AnswerObjectType     = "answer"
-	TagObjectType        = "tag"
-	UserObjectType       = "user"
-	CollectionObjectType = "collection"
-	CommentObjectType    = "comment"
-	ReportObjectType     = "report"
-	BadgeObjectType      = "badge"
-	BadgeAwardObjectType = "badge_award"
+	QuestionObjectType     = "question"
+	AnswerObjectType       = "answer"
+	TagObjectType          = "tag"
+	UserObjectType         = "user"
+	CollectionObjectType   = "collection"
+	CommentObjectType      = "comment"
+	ReportObjectType       = "report"
+	BadgeObjectType        = "badge"
+	BadgeAwardObjectType   = "badge_award"
+	AdminMessageObjectType = "admin_message" // [cd] notification object type of admin messages
 )
 
 var (

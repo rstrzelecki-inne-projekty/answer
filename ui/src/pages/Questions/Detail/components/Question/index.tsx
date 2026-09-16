@@ -28,6 +28,7 @@ import {
   Operate,
   BaseUserCard,
   AwardBadgeButton,
+  MessageUserButton,
   Comment,
   FormatTime,
   htmlRender,
@@ -107,6 +108,13 @@ const Index: FC<Props> = ({ data, initPage, hasAnswer, isLogged }) => {
         <BaseUserCard data={data.user_info} className="me-3" />
         <AwardBadgeButton
           username={data.user_info?.username}
+          variant="icon"
+          className="me-3"
+        />
+        <MessageUserButton
+          username={data.user_info?.username}
+          objectId={data.id}
+          objectTitle={data.title}
           variant="icon"
           className="me-3"
         />

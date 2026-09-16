@@ -486,6 +486,8 @@ backend:
         other: invited you to answer
       earned_badge:
         other: You've earned the "{{.BadgeName}}" badge
+      admin_message:
+        other: sent you a message
   email_tpl:
     change_email:
       title:
@@ -1148,11 +1150,13 @@ ui:
     all_read: Mark all as read
     show_more: Show more
     someone: Someone
+    message_context: Go to the post this message is about
     inbox_type:
       all: All
       posts: Posts
       invites: Invites
       votes: Votes
+      messages: Messages
     answer: Answer
     question: Question
     badge_award: Badge
@@ -2114,11 +2118,25 @@ ui:
     ai_settings: AI Settings
     mcp: MCP
     activity_log: Activity log
+    admin_messages: Admin messages
   website_welcome: Welcome to {{site_name}}
   user_center:
     login: Login
     qrcode_login_tip: Please use {{ agentName }} to scan the QR code and log in.
     login_failed_email_tip: Login failed, please allow this app to access your email information before try again.
+  admin_message:
+    btn: Write a message
+    title: Message to a user
+    to: To
+    to_placeholder: username
+    context: About
+    subject: Subject
+    subject_placeholder: short subject
+    body: Message
+    body_placeholder: The user will see this in Notifications → Messages
+    send: Send
+    success: "Message sent to {{username}}."
+    failed: Could not send the message
   badges:
     modal:
       title: Congratulations
@@ -2605,6 +2623,23 @@ ui:
       msg:
         should_be_number: the input should be number
         number_larger_1: number should be equal or larger than 1
+    admin_messages:
+      title: Admin messages
+      total: "{{count}} messages"
+      unread: unread
+      context: About
+      filter:
+        user: User
+        user_placeholder: username
+        range: Sent between
+        search: Search
+        search_placeholder: text, name or e-mail
+      col:
+        sent: Sent
+        from: From
+        to: To
+        message: Message
+        read: Read
     activity_log:
       title: Activity log
       total: "{{count}} entries"
@@ -2659,6 +2694,7 @@ ui:
         review_reject: Review rejected
         reputation_change: Reputation
         comment_reply: Replied to comment
+        message_send: Admin message sent
         question_create: Question asked
         question_update: Question edited
         question_delete: Question deleted

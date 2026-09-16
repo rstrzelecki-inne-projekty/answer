@@ -486,6 +486,8 @@ backend:
         other: zaproszono Cię do odpowiedzi
       earned_badge:
         other: Zdobyłeś odznakę "{{.BadgeName}}"
+      admin_message:
+        other: 'wysłał(a) Ci wiadomość:'
   email_tpl:
     change_email:
       title:
@@ -1243,9 +1245,11 @@ ui:
       posts: Posty
       invites: Zaproszenia
       votes: Głosy
+      messages: Wiadomości
     answer: Odpowiedź
     question: Pytanie
     badge_award: Odznaka
+    message_context: Przejdź do wpisu, którego dotyczy wiadomość
   suspended:
     title: Twoje konto zostało zawieszone
     until_time: Twoje konto zostało zawieszone do {{ time }}.
@@ -2153,6 +2157,7 @@ ui:
     ai_settings: Ustawienia AI
     mcp: MCP
     activity_log: Log aktywności
+    admin_messages: Wiadomości admina
   website_welcome: Witamy w serwisie {{site_name}}
   user_center:
     login: Zaloguj się
@@ -2724,45 +2729,26 @@ ui:
       http_header:
         label: Nagłówek HTTP
         text: Zastąp {key} kluczem API.
-    activity_log:
-      title: Log aktywności
-      total: 'Wpisów: {{count}}'
-      system: System
-      export: Eksport TSV
-      exporting: Eksportuję…
-      export_failed: Eksport się nie powiódł
-      hint: Wejścia na strony są przechowywane 90 dni, pozostałe wpisy bezterminowo. Czas w Twojej strefie czasowej.
-      range:
-        today: Dziś
-        yesterday: Wczoraj
-        7d: 7 dni
-        30d: 30 dni
-        custom: Własny
+    admin_messages:
+      title: Wiadomości admina
+      total: 'Wiadomości: {{count}}'
+      unread: nieprzeczytana
+      context: Dotyczy
       filter:
-        range: Zakres dat
         user: Użytkownik
         user_placeholder: login
-        action: Typ akcji
-        action_all: Wszystkie akcje
-        action_selected: 'Wybrano: {{count}}'
-        action_clear: Wyczyść wybór
-        action_none: Brak wpisów w tym zakresie
+        range: Wysłane między
         search: Szukaj
-        search_placeholder: dowolny tekst z tabeli
+        search_placeholder: treść, nazwa lub e-mail
       col:
-        time: Czas
-        user: Użytkownik
-        action: Akcja
-        object: Obiekt / szczegóły
-        target: Dotyczy
-        points: Punkty
-      detail:
-        reason: powód
-        direction: kierunek
-        method: sposób
-        role: rola
-        reply_to: odpowiedź na
+        sent: Wysłano
+        from: Nadawca
+        to: Odbiorca
+        message: Wiadomość
+        read: Odczytano
+    activity_log:
       action:
+        message_send: Wiadomość od admina
         user_login: Logowanie
         user_update: Zmiana profilu
         user_share: Udostępnienie linku
@@ -2802,6 +2788,43 @@ ui:
         comment_vote_down: Głos w dół na komentarz
         comment_vote_cancel: Cofnięcie głosu na komentarz
         comment_flag: Zgłoszenie komentarza
+      title: Log aktywności
+      total: 'Wpisów: {{count}}'
+      system: System
+      export: Eksport TSV
+      exporting: Eksportuję…
+      export_failed: Eksport się nie powiódł
+      hint: Wejścia na strony są przechowywane 90 dni, pozostałe wpisy bezterminowo. Czas w Twojej strefie czasowej.
+      range:
+        today: Dziś
+        yesterday: Wczoraj
+        7d: 7 dni
+        30d: 30 dni
+        custom: Własny
+      filter:
+        range: Zakres dat
+        user: Użytkownik
+        user_placeholder: login
+        action: Typ akcji
+        action_all: Wszystkie akcje
+        action_selected: 'Wybrano: {{count}}'
+        action_clear: Wyczyść wybór
+        action_none: Brak wpisów w tym zakresie
+        search: Szukaj
+        search_placeholder: dowolny tekst z tabeli
+      col:
+        time: Czas
+        user: Użytkownik
+        action: Akcja
+        object: Obiekt / szczegóły
+        target: Dotyczy
+        points: Punkty
+      detail:
+        reason: powód
+        direction: kierunek
+        method: sposób
+        role: rola
+        reply_to: odpowiedź na
   form:
     optional: (opcjonalne)
     empty: nie może być puste
@@ -2907,3 +2930,16 @@ ui:
     copy: Kopiuj do schowka
     copied: Skopiowano
     external_content_warning: Zewnętrzne obrazy/media nie są wyświetlane.
+  admin_message:
+    btn: Napisz wiadomość
+    title: Wiadomość do użytkownika
+    to: Do
+    to_placeholder: login użytkownika
+    context: Dotyczy
+    subject: Tytuł
+    subject_placeholder: krótki tytuł
+    body: Treść
+    body_placeholder: Użytkownik zobaczy ją w Powiadomienia → Wiadomości
+    send: Wyślij
+    success: Wiadomość wysłana do {{username}}.
+    failed: Nie udało się wysłać wiadomości

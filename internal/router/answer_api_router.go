@@ -64,6 +64,7 @@ type AnswerAPIRouter struct {
 	mcpController                 *controller.MCPController
 	activityLogController         *controller.ActivityLogController
 	adminActivityLogController    *controller_admin.ActivityLogController
+	adminMessageController        *controller.AdminMessageController
 }
 
 func NewAnswerAPIRouter(
@@ -104,6 +105,7 @@ func NewAnswerAPIRouter(
 	mcpController *controller.MCPController,
 	activityLogController *controller.ActivityLogController,
 	adminActivityLogController *controller_admin.ActivityLogController,
+	adminMessageController *controller.AdminMessageController,
 ) *AnswerAPIRouter {
 	return &AnswerAPIRouter{
 		langController:                langController,
@@ -143,6 +145,7 @@ func NewAnswerAPIRouter(
 		mcpController:                 mcpController,
 		activityLogController:         activityLogController,
 		adminActivityLogController:    adminActivityLogController,
+		adminMessageController:        adminMessageController,
 	}
 }
 
@@ -254,6 +257,9 @@ func (a *AnswerAPIRouter) RegisterAnswerAPIRouter(r *gin.RouterGroup) {
 	r.POST("/vote/up", a.voteController.VoteUp)
 	// [cd] page-view beacon (activity log)
 	r.POST("/activity-log/view", a.activityLogController.PageView)
+	// [cd] messages from admins / moderators (AA-47)
+	r.POST("/admin-message", a.adminMessageController.Send)
+	r.GET("/admin-message/page", a.adminMessageController.Page)
 	r.POST("/vote/down", a.voteController.VoteDown)
 
 	// follow

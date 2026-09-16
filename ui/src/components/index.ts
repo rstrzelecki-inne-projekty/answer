@@ -62,6 +62,7 @@ import PluginRender from './PluginRender';
 import HighlightText from './HighlightText';
 import CardBadge from './CardBadge';
 import AwardBadgeButton from './AwardBadgeButton';
+import MessageUserButton from './MessageUserButton';
 import PinList from './PinList';
 import MobileSideNav from './MobileSideNav';
 import AdminSideNav from './AdminSideNav';
@@ -118,6 +119,7 @@ export {
   HighlightText,
   CardBadge,
   AwardBadgeButton,
+  MessageUserButton,
   PinList,
   MobileSideNav,
   AdminSideNav,

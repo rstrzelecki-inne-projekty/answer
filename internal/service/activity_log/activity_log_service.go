@@ -65,7 +65,7 @@ const UserSystem = "0"
 var KnownActions = []string{
 	ActionUserLogin, ActionUserUpdate, ActionUserShare, ActionUserRole, ActionUserSuspend, ActionUserUnsuspend, ActionUserDelete,
 	ActionPageView, ActionBadgeAward, ActionBadgeRevoke, ActionReviewQueued, ActionReviewApprove, ActionReviewReject,
-	ActionReputationChange, ActionCommentReply,
+	ActionReputationChange, ActionCommentReply, "message.send",
 	"question.create", "question.update", "question.delete", "question.vote_up", "question.vote_down", "question.vote_cancel",
 	"question.accept", "question.flag", "question.react",
 	"answer.create", "answer.update", "answer.delete", "answer.vote_up", "answer.vote_down", "answer.vote_cancel",

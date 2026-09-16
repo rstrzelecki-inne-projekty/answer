@@ -118,6 +118,7 @@ export const ADMIN_NAV_MENUS = [
       { name: 'users', pathPrefix: 'users/' },
       { name: 'badges' },
       { name: 'activity_log', path: 'activity-log' },
+      { name: 'admin_messages', path: 'admin-messages' },
       { name: 'rules', path: 'rules/privileges', pathPrefix: 'rules/' },
     ],
   },

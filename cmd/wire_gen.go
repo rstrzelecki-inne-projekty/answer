@@ -39,6 +39,7 @@ import (
 	"github.com/apache/answer/internal/repo/activity"
 	"github.com/apache/answer/internal/repo/activity_common"
 	"github.com/apache/answer/internal/repo/activity_log"
+	"github.com/apache/answer/internal/repo/admin_message"
 	"github.com/apache/answer/internal/repo/ai_conversation"
 	"github.com/apache/answer/internal/repo/answer"
 	"github.com/apache/answer/internal/repo/api_key"
@@ -77,6 +78,7 @@ import (
 	activity_common2 "github.com/apache/answer/internal/service/activity_common"
 	activity_log2 "github.com/apache/answer/internal/service/activity_log"
 	"github.com/apache/answer/internal/service/activityqueue"
+	admin_message2 "github.com/apache/answer/internal/service/admin_message"
 	ai_conversation2 "github.com/apache/answer/internal/service/ai_conversation"
 	"github.com/apache/answer/internal/service/answer_common"
 	"github.com/apache/answer/internal/service/apikey"
@@ -300,7 +302,10 @@ func initApplication(debug bool, serverConf *conf.Server, dbConf *data.Database,
 	activityLogAdminService := activity_log2.NewActivityLogAdminService(activityLogService, activityLogRepo, objService, userCommon, configService)
 	activityLogController := controller.NewActivityLogController(activityLogAdminService)
 	controller_adminActivityLogController := controller_admin.NewActivityLogController(activityLogAdminService)
-	answerAPIRouter := router.NewAnswerAPIRouter(langController, userController, commentController, reportController, voteController, tagController, followController, collectionController, questionController, answerController, searchController, revisionController, rankController, userAdminController, reasonController, themeController, siteInfoController, controllerSiteInfoController, notificationController, dashboardController, uploadController, activityController, roleController, pluginController, permissionController, userPluginController, reviewController, metaController, badgeController, controller_adminBadgeController, adminAPIKeyController, aiController, aiConversationController, aiConversationAdminController, mcpController, activityLogController, controller_adminActivityLogController)
+	adminMessageRepo := admin_message.NewAdminMessageRepo(dataData)
+	adminMessageService := admin_message2.NewAdminMessageService(adminMessageRepo, userCommon, userRoleRelService, objService, noticequeueService, activityLogService)
+	adminMessageController := controller.NewAdminMessageController(adminMessageService)
+	answerAPIRouter := router.NewAnswerAPIRouter(langController, userController, commentController, reportController, voteController, tagController, followController, collectionController, questionController, answerController, searchController, revisionController, rankController, userAdminController, reasonController, themeController, siteInfoController, controllerSiteInfoController, notificationController, dashboardController, uploadController, activityController, roleController, pluginController, permissionController, userPluginController, reviewController, metaController, badgeController, controller_adminBadgeController, adminAPIKeyController, aiController, aiConversationController, aiConversationAdminController, mcpController, activityLogController, controller_adminActivityLogController, adminMessageController)
 	swaggerRouter := router.NewSwaggerRouter(swaggerConf)
 	uiRouter := router.NewUIRouter(controllerSiteInfoController, siteInfoCommonService)
 	authUserMiddleware := middleware.NewAuthUserMiddleware(authService, siteInfoCommonService)
