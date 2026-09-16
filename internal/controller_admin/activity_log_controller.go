@@ -111,6 +111,7 @@ func (c *ActivityLogController) GetActivityLogDaily(ctx *gin.Context) {
 // @Param from query int false "from (unix seconds)"
 // @Param to query int false "to (unix seconds, exclusive)"
 // @Param limit query int false "how many users (default 50)"
+// @Param sort query string false "activity (default) or views"
 // @Success 200 {object} handler.RespBody{data=[]schema.ActivityLogTopUserRow}
 // @Router /answer/admin/api/activity-log/top-users [get]
 func (c *ActivityLogController) GetActivityLogTopUsers(ctx *gin.Context) {

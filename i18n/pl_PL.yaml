@@ -2270,6 +2270,8 @@ ui:
         empty: Brak aktywności w tym zakresie
         hint: Aktywność = pytania + odpowiedzi + komentarze; pozostałe kolumny informacyjnie. TOP 50.
         open_log: Otwórz w logu aktywności
+        title_views: Najbardziej wyszukujący użytkownicy
+        hint_views: Ranking po liczbie wyświetleń stron; pozostałe kolumny informacyjnie. TOP 50.
     flags:
       title: Flagi
       pending: Oczekujące

@@ -63,6 +63,9 @@ const Dashboard: FC = () => {
         <Col lg={12}>
           <TopUsers />
         </Col>
+        <Col lg={12}>
+          <TopUsers mode="views" />
+        </Col>
       </Row>
     </>
   );

@@ -261,18 +261,25 @@ func (s *ActivityLogAdminService) TopUsers(ctx context.Context, req *schema.Acti
 		out = append(out, row)
 		ids = append(ids, id)
 	}
+	byViews := req.Sort == "views"
 	sort.Slice(out, func(i, j int) bool {
-		if out[i].Total != out[j].Total {
-			return out[i].Total > out[j].Total
+		a, b := out[i].Total, out[j].Total
+		ta, tb := out[i].Views, out[j].Views
+		if byViews {
+			a, b, ta, tb = ta, tb, a, b
 		}
-		if out[i].Views != out[j].Views { // tie-break: who read more
-			return out[i].Views > out[j].Views
+		if a != b {
+			return a > b
+		}
+		if ta != tb { // tie-break: the other measure
+			return ta > tb
 		}
 		return out[i].User.ID < out[j].User.ID
 	})
+	// only users who actually did what the list ranks by
 	active := out[:0]
 	for _, row := range out {
-		if row.Total > 0 {
+		if (!byViews && row.Total > 0) || (byViews && row.Views > 0) {
 			active = append(active, row)
 		}
 	}

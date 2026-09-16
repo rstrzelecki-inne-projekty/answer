@@ -103,6 +103,8 @@ type ActivityLogTopUsersReq struct {
 	From  int64 `validate:"omitempty" form:"from"`
 	To    int64 `validate:"omitempty" form:"to"`
 	Limit int   `validate:"omitempty,min=1,max=200" form:"limit"`
+	// Sort "activity" (questions + answers + comments, default) or "views" (page views)
+	Sort string `validate:"omitempty,oneof=activity views" form:"sort"`
 }
 
 // ActivityLogTopUserRow one user's counts in the range

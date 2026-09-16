@@ -2185,6 +2185,8 @@ ui:
         open_log: Open in the activity log
       top_users:
         title: Most active users
+        title_views: Users who browse the most
+        hint_views: Ranked by page views; the other columns are for context. Top 50.
         today: Today
         last_days: "Last {{count}} days"
         user: User

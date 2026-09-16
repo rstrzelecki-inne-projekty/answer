@@ -131,6 +131,7 @@ export const useQueryActivityLogTopUsers = (params: {
   from?: number;
   to?: number;
   limit?: number;
+  sort?: 'activity' | 'views';
 }) => {
   const apiUrl = `/answer/admin/api/activity-log/top-users?${query(params)}`;
   const { data, error } = useSWR<ActivityLogTopUserRow[], Error>(

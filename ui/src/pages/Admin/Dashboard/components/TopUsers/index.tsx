@@ -38,7 +38,12 @@ const COLUMNS: { key: string; actions: string }[] = [
 ];
 const PRESETS = [1, 7, 14, 30];
 
-const TopUsers: FC = () => {
+interface Props {
+  /** 'activity' ranks by questions + answers + comments, 'views' by page views */
+  mode?: 'activity' | 'views';
+}
+
+const TopUsers: FC<Props> = ({ mode = 'activity' }) => {
   const { t } = useTranslation('translation', {
     keyPrefix: 'admin.dashboard.top_users',
   });
@@ -51,6 +56,7 @@ const TopUsers: FC = () => {
     from: fromUnix,
     to: toUnix,
     limit: 50,
+    sort: mode,
   });
 
   const applyPreset = (days: number) => {
@@ -79,7 +85,9 @@ const TopUsers: FC = () => {
     <Card className="mb-4">
       <Card.Body>
         <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-          <h6 className="mb-0">{t('title')}</h6>
+          <h6 className="mb-0">
+            {t(mode === 'views' ? 'title_views' : 'title')}
+          </h6>
           <div className="d-flex flex-wrap align-items-center gap-2">
             <ButtonGroup size="sm">
               {PRESETS.map((d) => (
@@ -175,7 +183,9 @@ const TopUsers: FC = () => {
             ) : null}
           </tbody>
         </Table>
-        <div className="small text-secondary mt-2">{t('hint')}</div>
+        <div className="small text-secondary mt-2">
+          {t(mode === 'views' ? 'hint_views' : 'hint')}
+        </div>
       </Card.Body>
     </Card>
   );
