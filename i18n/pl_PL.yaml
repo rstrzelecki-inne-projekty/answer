@@ -2151,6 +2151,7 @@ ui:
     ai_assistant: Asystent AI
     ai_settings: Ustawienia AI
     mcp: MCP
+    activity_log: Log aktywności
   website_welcome: Witamy w serwisie {{site_name}}
   user_center:
     login: Zaloguj się
@@ -2711,6 +2712,84 @@ ui:
       http_header:
         label: Nagłówek HTTP
         text: Zastąp {key} kluczem API.
+    activity_log:
+      title: Log aktywności
+      total: 'Wpisów: {{count}}'
+      system: System
+      export: Eksport TSV
+      exporting: Eksportuję…
+      export_failed: Eksport się nie powiódł
+      hint: Wejścia na strony są przechowywane 90 dni, pozostałe wpisy bezterminowo. Czas w Twojej strefie czasowej.
+      range:
+        today: Dziś
+        yesterday: Wczoraj
+        7d: 7 dni
+        30d: 30 dni
+        custom: Własny
+      filter:
+        range: Zakres dat
+        user: Użytkownik
+        user_placeholder: login
+        action: Typ akcji
+        action_all: Wszystkie akcje
+        action_selected: 'Wybrano: {{count}}'
+        action_clear: Wyczyść wybór
+        action_none: Brak wpisów w tym zakresie
+        search: Szukaj
+        search_placeholder: dowolny tekst z tabeli
+      col:
+        time: Czas
+        user: Użytkownik
+        action: Akcja
+        object: Obiekt / szczegóły
+        target: Dotyczy
+        points: Punkty
+      detail:
+        reason: powód
+        direction: kierunek
+        method: sposób
+        role: rola
+        reply_to: odpowiedź na
+      action:
+        user_login: Logowanie
+        user_update: Zmiana profilu
+        user_share: Udostępnienie linku
+        user_role: Zmiana roli
+        user_suspend: Blokada użytkownika
+        user_unsuspend: Odblokowanie użytkownika
+        user_delete: Usunięcie użytkownika
+        page_view: Wejście na stronę
+        badge_award: Przyznanie odznaki
+        badge_revoke: Cofnięcie odznaki
+        review_queued: Do kwarantanny (review)
+        review_approve: 'Kwarantanna: zatwierdzono'
+        review_reject: 'Kwarantanna: odrzucono'
+        reputation_change: Reputacja
+        comment_reply: Odpowiedź na komentarz
+        question_create: Nowe pytanie
+        question_update: Edycja pytania
+        question_delete: Usunięcie pytania
+        question_vote_up: Głos w górę na pytanie
+        question_vote_down: Głos w dół na pytanie
+        question_vote_cancel: Cofnięcie głosu na pytanie
+        question_accept: Akceptacja odpowiedzi
+        question_flag: Zgłoszenie pytania
+        question_react: Reakcja na pytanie
+        answer_create: Nowa odpowiedź
+        answer_update: Edycja odpowiedzi
+        answer_delete: Usunięcie odpowiedzi
+        answer_vote_up: Głos w górę na odpowiedź
+        answer_vote_down: Głos w dół na odpowiedź
+        answer_vote_cancel: Cofnięcie głosu na odpowiedź
+        answer_flag: Zgłoszenie odpowiedzi
+        answer_react: Reakcja na odpowiedź
+        comment_create: Nowy komentarz
+        comment_update: Edycja komentarza
+        comment_delete: Usunięcie komentarza
+        comment_vote_up: Głos w górę na komentarz
+        comment_vote_down: Głos w dół na komentarz
+        comment_vote_cancel: Cofnięcie głosu na komentarz
+        comment_flag: Zgłoszenie komentarza
   form:
     optional: (opcjonalne)
     empty: nie może być puste

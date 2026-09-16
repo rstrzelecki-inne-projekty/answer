@@ -318,7 +318,7 @@ func initApplication(debug bool, serverConf *conf.Server, dbConf *data.Database,
 	sidebarController := controller.NewSidebarController()
 	pluginAPIRouter := router.NewPluginAPIRouter(connectorController, userCenterController, captchaController, embedController, renderController, sidebarController)
 	ginEngine := server.NewHTTPServer(debug, staticRouter, answerAPIRouter, swaggerRouter, uiRouter, authUserMiddleware, avatarMiddleware, shortIDMiddleware, templateRouter, pluginAPIRouter, uiConf)
-	scheduledTaskManager := cron.NewScheduledTaskManager(siteInfoCommonService, questionService, fileRecordService, userAdminService, serviceConf)
+	scheduledTaskManager := cron.NewScheduledTaskManager(siteInfoCommonService, questionService, fileRecordService, userAdminService, serviceConf, activityLogService)
 	application := newApplication(serverConf, ginEngine, scheduledTaskManager)
 	return application, func() {
 		cleanup2()
