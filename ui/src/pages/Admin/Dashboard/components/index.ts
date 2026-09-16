@@ -22,5 +22,13 @@ import Statistics from './Statistics';
 import AnswerLinks from './AnswerLinks';
 import HealthStatus from './HealthStatus';
 import DailyActivity from './DailyActivity';
+import TopUsers from './TopUsers';
 
-export { SystemInfo, Statistics, AnswerLinks, HealthStatus, DailyActivity };
+export {
+  SystemInfo,
+  Statistics,
+  AnswerLinks,
+  HealthStatus,
+  DailyActivity,
+  TopUsers,
+};

@@ -42,7 +42,7 @@ func (f *fakeRepo) Iterate(context.Context, *Query, int, func([]*entity.Activity
 	return nil
 }
 func (f *fakeRepo) ActionCounts(context.Context, *Query) (map[string]int64, error) { return nil, nil }
-func (f *fakeRepo) ListActionsSince(context.Context, time.Time) ([]*entity.ActivityLog, error) {
+func (f *fakeRepo) ListActionsBetween(context.Context, time.Time, time.Time) ([]*entity.ActivityLog, error) {
 	return nil, nil
 }
 func (f *fakeRepo) SearchUserIDs(context.Context, string, int) ([]string, error) { return nil, nil }

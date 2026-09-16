@@ -434,6 +434,7 @@ func (a *AnswerAPIRouter) RegisterAnswerAdminAPIRouter(r *gin.RouterGroup) {
 	r.GET("/activity-log", a.adminActivityLogController.GetActivityLogPage)
 	r.GET("/activity-log/actions", a.adminActivityLogController.GetActivityLogActions)
 	r.GET("/activity-log/daily", a.adminActivityLogController.GetActivityLogDaily)
+	r.GET("/activity-log/top-users", a.adminActivityLogController.GetActivityLogTopUsers)
 	r.GET("/activity-log/export", a.adminActivityLogController.ExportActivityLog)
 	r.DELETE("/badge/award", a.adminBadgeController.RevokeBadge)
 

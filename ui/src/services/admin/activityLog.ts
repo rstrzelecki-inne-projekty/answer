@@ -115,6 +115,31 @@ export const useQueryActivityLogDaily = (days = 14) => {
   return { data, isLoading: !data && !error, error };
 };
 
+export interface ActivityLogTopUserRow {
+  user: ActivityLogUser;
+  questions: number;
+  answers: number;
+  comments: number;
+  reviews: number;
+  badges: number;
+  views: number;
+  logins: number;
+  total: number;
+}
+
+export const useQueryActivityLogTopUsers = (params: {
+  from?: number;
+  to?: number;
+  limit?: number;
+}) => {
+  const apiUrl = `/answer/admin/api/activity-log/top-users?${query(params)}`;
+  const { data, error } = useSWR<ActivityLogTopUserRow[], Error>(
+    apiUrl,
+    request.instance.get,
+  );
+  return { data, isLoading: !data && !error, error };
+};
+
 // the export needs the Authorization header and a raw (non-JSON) body, so bypass the
 // JSON-unwrapping interceptor and hand the blob to the browser as a download
 export const exportActivityLog = async (params: ActivityLogParams) => {

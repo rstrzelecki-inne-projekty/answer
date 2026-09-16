@@ -29,6 +29,7 @@ import {
   Statistics,
   SystemInfo,
   DailyActivity,
+  TopUsers,
 } from './components';
 
 const Dashboard: FC = () => {
@@ -58,6 +59,9 @@ const Dashboard: FC = () => {
         </Col>
         <Col lg={12}>
           <DailyActivity />
+        </Col>
+        <Col lg={12}>
+          <TopUsers />
         </Col>
       </Row>
     </>

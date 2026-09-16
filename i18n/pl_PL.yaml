@@ -2255,6 +2255,21 @@ ui:
         badges: Odznaczenia
         views: Wyświetlenia
         open_log: Otwórz w logu aktywności
+      top_users:
+        title: Najbardziej aktywni użytkownicy
+        today: Dziś
+        last_days: Ostatnie {{count}} dni
+        user: Użytkownik
+        questions: Pytania
+        answers: Odpowiedzi
+        comments: Komentarze
+        reviews: Do zatwierdzenia
+        badges: Odznaczenia
+        views: Wyświetlenia
+        total: Aktywność
+        empty: Brak aktywności w tym zakresie
+        hint: Aktywność = pytania + odpowiedzi + komentarze; pozostałe kolumny informacyjnie. TOP 50.
+        open_log: Otwórz w logu aktywności
     flags:
       title: Flagi
       pending: Oczekujące

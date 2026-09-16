@@ -183,10 +183,14 @@ func (r *activityLogRepo) SearchUserIDs(ctx context.Context, text string, limit 
 	return ids, nil
 }
 
-// ListActionsSince created_at + action only, for the dashboard's daily buckets
-func (r *activityLogRepo) ListActionsSince(ctx context.Context, t time.Time) ([]*entity.ActivityLog, error) {
+// ListActionsBetween a few columns only, for the dashboard aggregations
+func (r *activityLogRepo) ListActionsBetween(ctx context.Context, from, to time.Time) ([]*entity.ActivityLog, error) {
 	rows := make([]*entity.ActivityLog, 0)
-	err := r.data.DB.Context(ctx).Cols("created_at", "action").Where("created_at >= ?", t).Find(&rows)
+	session := r.data.DB.Context(ctx).Cols("created_at", "action", "user_id", "target_user_id").Where("created_at >= ?", from)
+	if !to.IsZero() {
+		session = session.And("created_at < ?", to)
+	}
+	err := session.Find(&rows)
 	if err != nil {
 		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 	}

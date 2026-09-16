@@ -2183,6 +2183,21 @@ ui:
         badges: Badges
         views: Page views
         open_log: Open in the activity log
+      top_users:
+        title: Most active users
+        today: Today
+        last_days: "Last {{count}} days"
+        user: User
+        questions: Questions
+        answers: Answers
+        comments: Comments
+        reviews: To review
+        badges: Badges
+        views: Page views
+        total: Activity
+        empty: No activity in this range
+        hint: Activity = questions + answers + comments; the other columns are for context. Top 50.
+        open_log: Open in the activity log
       site_statistics: Site statistics
       questions: "Questions:"
       resolved: "Resolved:"

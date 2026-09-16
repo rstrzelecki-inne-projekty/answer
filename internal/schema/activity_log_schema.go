@@ -96,3 +96,24 @@ type ActivityLogDailyRow struct {
 	Logins    int64            `json:"logins"`
 	Actions   map[string]int64 `json:"actions"` // every action key → count (for future columns)
 }
+
+// ActivityLogTopUsersReq most active users in a range (dashboard); From / To unix seconds, To exclusive.
+// When both are missing the range is the last 24 hours.
+type ActivityLogTopUsersReq struct {
+	From  int64 `validate:"omitempty" form:"from"`
+	To    int64 `validate:"omitempty" form:"to"`
+	Limit int   `validate:"omitempty,min=1,max=200" form:"limit"`
+}
+
+// ActivityLogTopUserRow one user's counts in the range
+type ActivityLogTopUserRow struct {
+	User      *ActivityLogUser `json:"user"`
+	Questions int64            `json:"questions"`
+	Answers   int64            `json:"answers"`
+	Comments  int64            `json:"comments"`
+	Reviews   int64            `json:"reviews"`
+	Badges    int64            `json:"badges"`
+	Views     int64            `json:"views"`
+	Logins    int64            `json:"logins"`
+	Total     int64            `json:"total"`
+}
