@@ -52,7 +52,7 @@ type AdminMessageUser struct {
 
 // AdminMessageItem one row of the admin list
 type AdminMessageItem struct {
-	ID          int64             `json:"id"`
+	ID          string            `json:"id"`
 	CreatedAt   int64             `json:"created_at"`
 	ReadAt      int64             `json:"read_at"` // 0 = unread
 	Sender      *AdminMessageUser `json:"sender"`

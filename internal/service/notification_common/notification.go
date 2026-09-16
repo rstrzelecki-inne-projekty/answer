@@ -129,10 +129,8 @@ func (ns *NotificationCommon) AddNotification(ctx context.Context, msg *schema.N
 		objectMap["badge_id"] = msg.ExtraInfo["badge_id"]
 		req.ObjectInfo.ObjectMap = objectMap
 	} else if msg.ObjectType == constant.AdminMessageObjectType {
-		// [cd] admin message: no post behind it, the message itself is the object (its id is a plain
-		// autoincrement, not a short id — DeShortID above would turn it into 0)
+		// [cd] admin message: no post behind it, the message itself is the object
 		req.ObjectInfo.Title = msg.Title
-		req.ObjectInfo.ObjectID = msg.ObjectID
 		req.ObjectInfo.ObjectMap = msg.ExtraInfo
 	} else {
 		objInfo, err = ns.objectInfoService.GetInfo(ctx, req.ObjectInfo.ObjectID)

@@ -34,15 +34,16 @@ const (
 
 var (
 	ObjectTypeStrMapping = map[string]int{
-		QuestionObjectType:   1,
-		AnswerObjectType:     2,
-		TagObjectType:        3,
-		UserObjectType:       4,
-		CollectionObjectType: 6,
-		CommentObjectType:    7,
-		ReportObjectType:     8,
-		BadgeObjectType:      9,
-		BadgeAwardObjectType: 10,
+		QuestionObjectType:     1,
+		AnswerObjectType:       2,
+		TagObjectType:          3,
+		UserObjectType:         4,
+		CollectionObjectType:   6,
+		CommentObjectType:      7,
+		ReportObjectType:       8,
+		BadgeObjectType:        9,
+		BadgeAwardObjectType:   10,
+		AdminMessageObjectType: 11, // [cd]
 	}
 
 	ObjectTypeNumberMapping = map[int]string{

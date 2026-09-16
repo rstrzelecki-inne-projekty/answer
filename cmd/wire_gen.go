@@ -303,7 +303,7 @@ func initApplication(debug bool, serverConf *conf.Server, dbConf *data.Database,
 	activityLogController := controller.NewActivityLogController(activityLogAdminService)
 	controller_adminActivityLogController := controller_admin.NewActivityLogController(activityLogAdminService)
 	adminMessageRepo := admin_message.NewAdminMessageRepo(dataData)
-	adminMessageService := admin_message2.NewAdminMessageService(adminMessageRepo, userCommon, userRoleRelService, objService, noticequeueService, activityLogService)
+	adminMessageService := admin_message2.NewAdminMessageService(adminMessageRepo, uniqueIDRepo, userCommon, userRoleRelService, objService, noticequeueService, activityLogService)
 	adminMessageController := controller.NewAdminMessageController(adminMessageService)
 	answerAPIRouter := router.NewAnswerAPIRouter(langController, userController, commentController, reportController, voteController, tagController, followController, collectionController, questionController, answerController, searchController, revisionController, rankController, userAdminController, reasonController, themeController, siteInfoController, controllerSiteInfoController, notificationController, dashboardController, uploadController, activityController, roleController, pluginController, permissionController, userPluginController, reviewController, metaController, badgeController, controller_adminBadgeController, adminAPIKeyController, aiController, aiConversationController, aiConversationAdminController, mcpController, activityLogController, controller_adminActivityLogController, adminMessageController)
 	swaggerRouter := router.NewSwaggerRouter(swaggerConf)

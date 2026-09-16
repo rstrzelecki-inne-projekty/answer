@@ -53,7 +53,7 @@ const Index: FC = () => {
   const [userOptions, setUserOptions] = useState<
     { username: string; display_name: string }[]
   >([]);
-  const [expanded, setExpanded] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => setQInput(q), [q]);
   useEffect(() => setUserInput(username), [username]);

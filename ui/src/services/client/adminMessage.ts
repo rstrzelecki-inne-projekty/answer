@@ -34,7 +34,7 @@ export interface AdminMessageUser {
 }
 
 export interface AdminMessageItem {
-  id: number;
+  id: string;
   created_at: number;
   read_at: number;
   sender: AdminMessageUser;

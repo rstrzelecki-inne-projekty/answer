@@ -21,7 +21,6 @@ package admin_message
 
 import (
 	"context"
-	"strconv"
 	"strings"
 	"time"
 
@@ -34,6 +33,7 @@ import (
 	"github.com/apache/answer/internal/service/noticequeue"
 	"github.com/apache/answer/internal/service/object_info"
 	"github.com/apache/answer/internal/service/role"
+	"github.com/apache/answer/internal/service/unique"
 	usercommon "github.com/apache/answer/internal/service/user_common"
 	"github.com/apache/answer/pkg/htmltext"
 	"github.com/apache/answer/pkg/uid"
@@ -55,6 +55,7 @@ type AdminMessageRepo interface {
 // AdminMessageService [cd] messages from admins / moderators to users
 type AdminMessageService struct {
 	repo               AdminMessageRepo
+	uniqueIDRepo       unique.UniqueIDRepo
 	userCommon         *usercommon.UserCommon
 	userRoleService    *role.UserRoleRelService
 	objectService      *object_info.ObjService
@@ -65,13 +66,14 @@ type AdminMessageService struct {
 // NewAdminMessageService new service
 func NewAdminMessageService(
 	repo AdminMessageRepo,
+	uniqueIDRepo unique.UniqueIDRepo,
 	userCommon *usercommon.UserCommon,
 	userRoleService *role.UserRoleRelService,
 	objectService *object_info.ObjService,
 	notificationQueue noticequeue.Service,
 	activityLogService *activity_log.ActivityLogService,
 ) *AdminMessageService {
-	return &AdminMessageService{repo: repo, userCommon: userCommon, userRoleService: userRoleService,
+	return &AdminMessageService{repo: repo, uniqueIDRepo: uniqueIDRepo, userCommon: userCommon, userRoleService: userRoleService,
 		objectService: objectService, notificationQueue: notificationQueue, activityLogService: activityLogService}
 }
 
@@ -99,7 +101,11 @@ func (s *AdminMessageService) Send(ctx context.Context, req *schema.SendAdminMes
 	if !exist {
 		return nil, errors.BadRequest(reason.UserNotFound)
 	}
-	m := &entity.AdminMessage{SenderUserID: req.LoginUserID, ReceiverUserID: receiver.ID,
+	id, err := s.uniqueIDRepo.GenUniqueIDStr(ctx, constant.AdminMessageObjectType)
+	if err != nil {
+		return nil, err
+	}
+	m := &entity.AdminMessage{ID: id, SenderUserID: req.LoginUserID, ReceiverUserID: receiver.ID,
 		Title: strings.TrimSpace(req.Title), Body: strings.TrimSpace(req.Body), ObjectID: "0", QuestionID: "0", AnswerID: "0"}
 	if req.ObjectID != "" {
 		if info, err := s.objectService.GetInfo(ctx, uid.DeShortID(req.ObjectID)); err == nil && info != nil {
@@ -121,15 +127,15 @@ func (s *AdminMessageService) Send(ctx context.Context, req *schema.SendAdminMes
 		ReceiverUserID:      receiver.ID,
 		Type:                schema.NotificationTypeInbox,
 		Title:               m.Title,
-		ObjectID:            idStr(m.ID),
+		ObjectID:            m.ID,
 		ObjectType:          constant.AdminMessageObjectType,
 		NotificationAction:  constant.NotificationAdminMessage,
 		NoNeedPushAllFollow: true,
-		ExtraInfo: map[string]string{"message": idStr(m.ID), "body": m.Body,
+		ExtraInfo: map[string]string{"message": m.ID, "body": m.Body,
 			"question": zeroToEmpty(m.QuestionID), "answer": zeroToEmpty(m.AnswerID), "context_type": m.ObjectType},
 	})
 	s.activityLogService.LogDetail(ctx, &entity.ActivityLog{UserID: req.LoginUserID, Action: ActionMessageSend,
-		ObjectType: constant.AdminMessageObjectType, ObjectID: idStr(m.ID), QuestionID: zeroToEmpty(m.QuestionID),
+		ObjectType: constant.AdminMessageObjectType, ObjectID: m.ID, QuestionID: zeroToEmpty(m.QuestionID),
 		AnswerID: zeroToEmpty(m.AnswerID), TargetUserID: receiver.ID},
 		activity_log.Detail{"title": m.Title, "excerpt": excerpt(m.Body)})
 	items := s.decorate(ctx, []*entity.AdminMessage{m})
@@ -223,8 +229,6 @@ func (s *AdminMessageService) decorate(ctx context.Context, rows []*entity.Admin
 	}
 	return items
 }
-
-func idStr(id int64) string { return strconv.FormatInt(id, 10) }
 
 func zeroToEmpty(id string) string {
 	if id == "0" {

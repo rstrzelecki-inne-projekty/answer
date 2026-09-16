@@ -23,7 +23,7 @@ import "time"
 
 // AdminMessage [cd] a message written by an admin / moderator to one user, delivered as a notification
 type AdminMessage struct {
-	ID             int64      `xorm:"not null pk autoincr BIGINT(20) id"`
+	ID             string     `xorm:"not null pk BIGINT(20) id"` // unique id (type 11) — a plain autoincrement would be mangled by uid.DeShortID in the notification path
 	CreatedAt      time.Time  `xorm:"created not null default CURRENT_TIMESTAMP TIMESTAMP index created_at"`
 	SenderUserID   string     `xorm:"not null default 0 BIGINT(20) index sender_user_id"`
 	ReceiverUserID string     `xorm:"not null default 0 BIGINT(20) index receiver_user_id"`
