@@ -159,6 +159,12 @@ func (s *ActivityLogService) Log(ctx context.Context, entry *entity.ActivityLog)
 	if entry.CreatedAt.IsZero() {
 		entry.CreatedAt = time.Now()
 	}
+	// bigint columns: PostgreSQL rejects "" (SQLite does not)
+	for _, f := range []*string{&entry.UserID, &entry.ObjectID, &entry.QuestionID, &entry.AnswerID, &entry.TargetUserID} {
+		if *f == "" {
+			*f = "0"
+		}
+	}
 	s.writeQueue.Send(context.Background(), entry)
 }
 

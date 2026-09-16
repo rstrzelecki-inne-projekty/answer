@@ -95,7 +95,7 @@ func (r *activityLogRepo) cond(q *activity_log.Query) builder.Cond {
 // Page returns one page of rows (newest first) and the total count
 func (r *activityLogRepo) Page(ctx context.Context, q *activity_log.Query, page, pageSize int) (rows []*entity.ActivityLog, total int64, err error) {
 	rows = make([]*entity.ActivityLog, 0)
-	session := r.data.DB.Context(ctx).Where(r.cond(q)).Desc("id")
+	session := r.data.DB.Context(ctx).Where(r.cond(q)).Desc("created_at").Desc("id")
 	if page < 1 {
 		page = 1
 	}
@@ -109,22 +109,18 @@ func (r *activityLogRepo) Page(ctx context.Context, q *activity_log.Query, page,
 	return
 }
 
-// Iterate walks matching rows newest first in batches; stops when fn returns false or limit is reached
+// Iterate walks matching rows newest first in batches (same order as Page); stops when fn returns false or limit is reached
 func (r *activityLogRepo) Iterate(ctx context.Context, q *activity_log.Query, limit int, fn func(rows []*entity.ActivityLog) bool) error {
 	const batch = 1000
-	var lastID int64
 	sent := 0
 	for sent < limit {
 		rows := make([]*entity.ActivityLog, 0, batch)
-		session := r.data.DB.Context(ctx).Where(r.cond(q))
-		if lastID > 0 {
-			session = session.And(builder.Lt{"id": lastID})
-		}
 		size := batch
 		if limit-sent < size {
 			size = limit - sent
 		}
-		if err := session.Desc("id").Limit(size).Find(&rows); err != nil {
+		err := r.data.DB.Context(ctx).Where(r.cond(q)).Desc("created_at").Desc("id").Limit(size, sent).Find(&rows)
+		if err != nil {
 			return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 		}
 		if len(rows) == 0 {
@@ -134,7 +130,9 @@ func (r *activityLogRepo) Iterate(ctx context.Context, q *activity_log.Query, li
 			return nil
 		}
 		sent += len(rows)
-		lastID = rows[len(rows)-1].ID
+		if len(rows) < size {
+			return nil
+		}
 	}
 	return nil
 }

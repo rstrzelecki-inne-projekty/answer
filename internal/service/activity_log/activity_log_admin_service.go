@@ -162,9 +162,9 @@ func (s *ActivityLogAdminService) decorate(ctx context.Context, rows []*entity.A
 			log.Error(err)
 		}
 	}
-	toUser := func(id string) *schema.ActivityLogUser {
-		if id == "" {
-			return nil
+	toUser := func(id string, actor bool) *schema.ActivityLogUser {
+		if id == "" || (id == UserSystem && !actor) {
+			return nil // no target
 		}
 		if id == UserSystem {
 			return &schema.ActivityLogUser{ID: UserSystem, Username: "system", DisplayName: "System"}
@@ -179,8 +179,8 @@ func (s *ActivityLogAdminService) decorate(ctx context.Context, rows []*entity.A
 	for _, r := range rows {
 		detail := DecodeDetail(r.Detail)
 		item := &schema.ActivityLogItem{
-			ID: r.ID, CreatedAt: r.CreatedAt.Unix(), Action: r.Action, User: toUser(r.UserID), Target: toUser(r.TargetUserID),
-			ObjectType: r.ObjectType, ObjectID: r.ObjectID, QuestionID: r.QuestionID, AnswerID: r.AnswerID,
+			ID: r.ID, CreatedAt: r.CreatedAt.Unix(), Action: r.Action, User: toUser(r.UserID, true), Target: toUser(r.TargetUserID, false),
+			ObjectType: r.ObjectType, ObjectID: zeroToEmpty(r.ObjectID), QuestionID: zeroToEmpty(r.QuestionID), AnswerID: zeroToEmpty(r.AnswerID),
 			RankDelta: r.RankDelta, Detail: detail, IP: r.IP,
 		}
 		if t, ok := detail["title"].(string); ok {
@@ -194,8 +194,8 @@ func (s *ActivityLogAdminService) decorate(ctx context.Context, rows []*entity.A
 			delete(detail, "activity_type")
 		}
 		// reputation rows carry only the object id → look the title up
-		if item.Title == "" && r.ObjectID != "" && r.ObjectID != "0" && r.ObjectType != "page" && r.ObjectType != "user" && r.ObjectType != "badge_award" && s.objectService != nil {
-			if info, err := s.objectService.GetInfo(ctx, r.ObjectID); err == nil && info != nil {
+		if item.Title == "" && item.ObjectID != "" && r.ObjectType != "page" && r.ObjectType != "user" && r.ObjectType != "badge_award" && s.objectService != nil {
+			if info, err := s.objectService.GetInfo(ctx, item.ObjectID); err == nil && info != nil {
 				item.Title = info.Title
 				if item.QuestionID == "" {
 					item.QuestionID = info.QuestionID
@@ -251,6 +251,14 @@ func (s *ActivityLogAdminService) Export(ctx context.Context, req *schema.Activi
 		return err
 	}
 	return writeErr
+}
+
+// zeroToEmpty "0" (no object) → "" so the UI does not build links to /questions/0
+func zeroToEmpty(id string) string {
+	if id == "0" {
+		return ""
+	}
+	return id
 }
 
 func userCol(u *schema.ActivityLogUser, login bool) string {
