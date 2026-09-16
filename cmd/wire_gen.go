@@ -38,6 +38,7 @@ import (
 	"github.com/apache/answer/internal/controller_admin"
 	"github.com/apache/answer/internal/repo/activity"
 	"github.com/apache/answer/internal/repo/activity_common"
+	"github.com/apache/answer/internal/repo/activity_log"
 	"github.com/apache/answer/internal/repo/ai_conversation"
 	"github.com/apache/answer/internal/repo/answer"
 	"github.com/apache/answer/internal/repo/api_key"
@@ -74,6 +75,7 @@ import (
 	"github.com/apache/answer/internal/service/action"
 	activity2 "github.com/apache/answer/internal/service/activity"
 	activity_common2 "github.com/apache/answer/internal/service/activity_common"
+	activity_log2 "github.com/apache/answer/internal/service/activity_log"
 	"github.com/apache/answer/internal/service/activityqueue"
 	ai_conversation2 "github.com/apache/answer/internal/service/ai_conversation"
 	"github.com/apache/answer/internal/service/answer_common"
@@ -221,7 +223,9 @@ func initApplication(debug bool, serverConf *conf.Server, dbConf *data.Database,
 	reportService := report2.NewReportService(reportRepo, objService, userCommon, answerRepo, questionRepo, commentCommonRepo, reportHandle, configService, eventqueueService)
 	reportController := controller.NewReportController(reportService, rankService, captchaService)
 	contentVoteRepo := activity.NewVoteRepo(dataData, activityRepo, userRankRepo, noticequeueService)
-	voteService := content.NewVoteService(contentVoteRepo, configService, questionRepo, answerRepo, commentCommonRepo, objService, eventqueueService)
+	activityLogRepo := activity_log.NewActivityLogRepo(dataData)
+	activityLogService := activity_log2.NewActivityLogService(activityLogRepo, objService, userCommon, commentCommonRepo, eventqueueService)
+	voteService := content.NewVoteService(contentVoteRepo, configService, questionRepo, answerRepo, commentCommonRepo, objService, eventqueueService, activityLogService)
 	voteController := controller.NewVoteController(voteService, rankService, captchaService)
 	tagController := controller.NewTagController(tagService, tagCommonService, rankService)
 	followFollowRepo := activity.NewFollowRepo(dataData, uniqueIDRepo, activityRepo)
