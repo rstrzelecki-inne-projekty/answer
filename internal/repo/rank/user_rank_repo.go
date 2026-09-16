@@ -62,10 +62,10 @@ func (ur *UserRankRepo) logRankChange(ctx context.Context, userID string, delta 
 	}
 	rc := activity_log.RankContextFrom(ctx)
 	detail := activity_log.Detail{}
+	// no DB reads here: this runs inside the caller's transaction (on SQLite a read on another
+	// connection would wait for the write lock forever). The key is resolved when the log is displayed.
 	if rc.ActivityType > 0 {
-		if cfg, err := ur.configService.GetConfigByID(ctx, rc.ActivityType); err == nil && cfg != nil {
-			detail["activity"] = cfg.Key
-		}
+		detail["activity_type"] = rc.ActivityType
 	}
 	entry := &entity.ActivityLog{UserID: activity_log.UserSystem, Action: activity_log.ActionReputationChange,
 		TargetUserID: userID, RankDelta: delta, ObjectID: rc.ObjectID}

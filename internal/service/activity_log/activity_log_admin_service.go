@@ -30,6 +30,7 @@ import (
 	"github.com/apache/answer/internal/base/pager"
 	"github.com/apache/answer/internal/entity"
 	"github.com/apache/answer/internal/schema"
+	"github.com/apache/answer/internal/service/config"
 	"github.com/apache/answer/internal/service/object_info"
 	usercommon "github.com/apache/answer/internal/service/user_common"
 	"github.com/apache/answer/pkg/htmltext"
@@ -47,6 +48,7 @@ type ActivityLogAdminService struct {
 	repo          ActivityLogRepo
 	objectService *object_info.ObjService
 	userCommon    *usercommon.UserCommon
+	configService *config.ConfigService
 }
 
 // NewActivityLogAdminService new admin service
@@ -55,9 +57,11 @@ func NewActivityLogAdminService(
 	repo ActivityLogRepo,
 	objectService *object_info.ObjService,
 	userCommon *usercommon.UserCommon,
+	configService *config.ConfigService,
 ) *ActivityLogAdminService {
 	logService.Attach(objectService, userCommon)
-	return &ActivityLogAdminService{logService: logService, repo: repo, objectService: objectService, userCommon: userCommon}
+	return &ActivityLogAdminService{logService: logService, repo: repo, objectService: objectService,
+		userCommon: userCommon, configService: configService}
 }
 
 // buildQuery turns the request into repo filters (usernames / free text resolved to user ids)
@@ -181,6 +185,13 @@ func (s *ActivityLogAdminService) decorate(ctx context.Context, rows []*entity.A
 		}
 		if t, ok := detail["title"].(string); ok {
 			item.Title = t
+		}
+		// reputation rows store the activity config id (written inside a transaction) → resolve the key here
+		if id, ok := detail["activity_type"].(float64); ok && id > 0 && s.configService != nil {
+			if cfg, err := s.configService.GetConfigByID(ctx, int(id)); err == nil && cfg != nil {
+				detail["activity"] = cfg.Key
+			}
+			delete(detail, "activity_type")
 		}
 		// reputation rows carry only the object id → look the title up
 		if item.Title == "" && r.ObjectID != "" && r.ObjectID != "0" && r.ObjectType != "page" && r.ObjectType != "user" && r.ObjectType != "badge_award" && s.objectService != nil {
