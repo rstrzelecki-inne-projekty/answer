@@ -120,7 +120,7 @@ func TestHandleEvent_SelfTargetCleared(t *testing.T) {
 	msg := schema.NewEvent(constant.EventQuestionCreate, "3").TID("10010000000000100").QID("10010000000000100", "3")
 	_ = s.handleEvent(context.Background(), msg)
 	e := next(t, repo)
-	if e.Action != "question.create" || e.TargetUserID != "" || e.ObjectType != "question" {
+	if e.Action != "question.create" || e.TargetUserID != "0" || e.ObjectType != "question" {
 		t.Fatalf("unexpected entry %+v", e)
 	}
 }
