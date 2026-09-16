@@ -48,6 +48,7 @@ export const QUESTION_ORDER_KEYS: Type.QuestionOrderBy[] = [
   'recommend',
   'frequent',
   'score',
+  'views',
 ];
 interface Props {
   source: 'questions' | 'tag' | 'linked';
