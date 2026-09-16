@@ -2239,6 +2239,17 @@ ui:
       disabled: Wyłączone
       writable: Zapis i odczyt
       not_writable: Nie można zapisać
+      daily_activity:
+        title: Aktywność w ostatnich 14 dniach
+        day: Dzień
+        today: dziś
+        questions: Pytania
+        answers: Odpowiedzi
+        comments: Komentarze
+        reviews: Do review
+        badges: Odznaczenia
+        views: Wyświetlenia
+        open_log: Otwórz w logu aktywności
     flags:
       title: Flagi
       pending: Oczekujące
