@@ -21,6 +21,7 @@ package controller_admin
 
 import (
 	"github.com/apache/answer/internal/base/handler"
+	"github.com/apache/answer/internal/base/middleware"
 	"github.com/apache/answer/internal/base/pager"
 	"github.com/apache/answer/internal/schema"
 	"github.com/apache/answer/internal/service/badge"
@@ -102,6 +103,7 @@ func (b *BadgeController) AwardBadge(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
+	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
 
 	err := b.badgeAwardService.AdminAward(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
@@ -122,6 +124,7 @@ func (b *BadgeController) RevokeBadge(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
+	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
 
 	err := b.badgeAwardService.AdminRevoke(ctx, req)
 	handler.HandleResponse(ctx, err, nil)

@@ -167,3 +167,20 @@ func (r *activityLogRepo) DeletePageViewsBefore(ctx context.Context, t time.Time
 	}
 	return n, nil
 }
+
+// SearchUserIDs ids of users whose username / display name / e-mail contains text (for the free-text filter)
+func (r *activityLogRepo) SearchUserIDs(ctx context.Context, text string, limit int) ([]string, error) {
+	like := "%" + text + "%"
+	users := make([]*entity.User, 0)
+	err := r.data.DB.Context(ctx).Cols("id").
+		Where(builder.Or(builder.Like{"username", like}, builder.Like{"display_name", like}, builder.Like{"e_mail", like})).
+		Limit(limit).Find(&users)
+	if err != nil {
+		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+	}
+	ids := make([]string, 0, len(users))
+	for _, u := range users {
+		ids = append(ids, u.ID)
+	}
+	return ids, nil
+}

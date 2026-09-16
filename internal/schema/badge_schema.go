@@ -183,6 +183,8 @@ type AdminAwardBadgeReq struct {
 	// AwardKey distinguishes repeated awards of a multi-award badge (e.g. "2026-09"); optional.
 	AwardKey string `validate:"omitempty,lte=64" json:"award_key"`
 	UserID   string `json:"-"`
+	// LoginUserID admin performing the action (activity log)
+	LoginUserID string `json:"-"`
 }
 
 // AdminRevokeBadgeReq revoke a manually awarded badge from a user (admin)
@@ -192,4 +194,6 @@ type AdminRevokeBadgeReq struct {
 	// AwardKey of the award to revoke; when empty the newest award of this badge is revoked.
 	AwardKey string `validate:"omitempty,lte=64" json:"award_key"`
 	UserID   string `json:"-"`
+	// LoginUserID admin performing the action (activity log)
+	LoginUserID string `json:"-"`
 }

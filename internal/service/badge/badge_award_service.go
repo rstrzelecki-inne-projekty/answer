@@ -29,6 +29,7 @@ import (
 	"github.com/apache/answer/internal/base/translator"
 	"github.com/apache/answer/internal/entity"
 	"github.com/apache/answer/internal/schema"
+	"github.com/apache/answer/internal/service/activity_log"
 	"github.com/apache/answer/internal/service/noticequeue"
 	"github.com/apache/answer/internal/service/object_info"
 	usercommon "github.com/apache/answer/internal/service/user_common"
@@ -65,6 +66,7 @@ type BadgeAwardService struct {
 	userCommon               *usercommon.UserCommon
 	objectInfoService        *object_info.ObjService
 	notificationQueueService noticequeue.Service
+	activityLogService       *activity_log.ActivityLogService
 }
 
 func NewBadgeAwardService(
@@ -73,6 +75,7 @@ func NewBadgeAwardService(
 	userCommon *usercommon.UserCommon,
 	objectInfoService *object_info.ObjService,
 	notificationQueueService noticequeue.Service,
+	activityLogService *activity_log.ActivityLogService,
 ) *BadgeAwardService {
 	return &BadgeAwardService{
 		badgeAwardRepo:           badgeAwardRepo,
@@ -80,6 +83,7 @@ func NewBadgeAwardService(
 		userCommon:               userCommon,
 		objectInfoService:        objectInfoService,
 		notificationQueueService: notificationQueueService,
+		activityLogService:       activityLogService,
 	}
 }
 
@@ -149,6 +153,11 @@ func (bs *BadgeAwardService) GetBadgeAwardList(
 
 // Award award badge
 func (bs *BadgeAwardService) Award(ctx context.Context, badgeID string, userID string, awardKey string) (err error) {
+	return bs.award(ctx, badgeID, userID, awardKey, activity_log.UserSystem)
+}
+
+// award grants a badge; actorID is the admin for manual awards, UserSystem for badge rules ([cd] activity log)
+func (bs *BadgeAwardService) award(ctx context.Context, badgeID, userID, awardKey, actorID string) (err error) {
 	badgeData, exists, err := bs.badgeRepo.GetByID(ctx, badgeID)
 	if err != nil {
 		return err
@@ -189,6 +198,9 @@ func (bs *BadgeAwardService) Award(ctx context.Context, badgeID string, userID s
 		NotificationAction: constant.NotificationEarnedBadge,
 	}
 	bs.notificationQueueService.Send(ctx, msg)
+	bs.activityLogService.LogDetail(ctx, &entity.ActivityLog{UserID: actorID, Action: activity_log.ActionBadgeAward,
+		ObjectType: constant.BadgeAwardObjectType, ObjectID: badgeAward.ID, TargetUserID: userID},
+		activity_log.Detail{"badge": badgeData.Name, "badge_id": badgeData.ID, "award_key": awardKey})
 	return nil
 }
 
@@ -332,7 +344,11 @@ func (bs *BadgeAwardService) AdminAward(ctx context.Context, req *schema.AdminAw
 	if alreadyAwarded {
 		return errors.BadRequest(reason.BadgeAlreadyAwarded)
 	}
-	return bs.Award(ctx, req.BadgeID, req.UserID, awardKey)
+	actor := req.LoginUserID
+	if actor == "" {
+		actor = activity_log.UserSystem
+	}
+	return bs.award(ctx, req.BadgeID, req.UserID, awardKey, actor)
 }
 
 // AdminRevoke removes a badge award from a user (admin action).
@@ -349,5 +365,11 @@ func (bs *BadgeAwardService) AdminRevoke(ctx context.Context, req *schema.AdminR
 	if !revoked {
 		return errors.BadRequest(reason.BadgeAwardNotFound)
 	}
+	detail := activity_log.Detail{"badge_id": req.BadgeID, "award_key": req.AwardKey}
+	if badgeData, exists, err := bs.badgeRepo.GetByID(ctx, req.BadgeID); err == nil && exists {
+		detail["badge"] = badgeData.Name
+	}
+	bs.activityLogService.LogDetail(ctx, &entity.ActivityLog{UserID: req.LoginUserID, Action: activity_log.ActionBadgeRevoke,
+		ObjectType: constant.BadgeAwardObjectType, ObjectID: req.BadgeID, TargetUserID: req.UserID}, detail)
 	return nil
 }

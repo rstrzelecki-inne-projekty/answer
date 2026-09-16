@@ -61,6 +61,19 @@ const (
 // UserSystem is the actor of automatic actions (badge rules, reviewer bot)
 const UserSystem = "0"
 
+// KnownActions every action key the log can contain (labels come from i18n ui.admin.activity_log.action.*)
+var KnownActions = []string{
+	ActionUserLogin, ActionUserUpdate, ActionUserShare, ActionUserRole, ActionUserSuspend, ActionUserUnsuspend, ActionUserDelete,
+	ActionPageView, ActionBadgeAward, ActionBadgeRevoke, ActionReviewQueued, ActionReviewApprove, ActionReviewReject,
+	ActionReputationChange, ActionCommentReply,
+	"question.create", "question.update", "question.delete", "question.vote_up", "question.vote_down", "question.vote_cancel",
+	"question.accept", "question.flag", "question.react",
+	"answer.create", "answer.update", "answer.delete", "answer.vote_up", "answer.vote_down", "answer.vote_cancel",
+	"answer.flag", "answer.react",
+	"comment.create", "comment.update", "comment.delete", "comment.vote_up", "comment.vote_down", "comment.vote_cancel",
+	"comment.flag",
+}
+
 const (
 	pageViewDedupWindow = 10 * time.Second
 	excerptLen          = 160
@@ -84,6 +97,8 @@ type ActivityLogRepo interface {
 	Iterate(ctx context.Context, q *Query, limit int, fn func(rows []*entity.ActivityLog) bool) error
 	ActionCounts(ctx context.Context, q *Query) (map[string]int64, error)
 	DeletePageViewsBefore(ctx context.Context, t time.Time) (int64, error)
+	// SearchUserIDs ids of users whose username / display name / e-mail contains text
+	SearchUserIDs(ctx context.Context, text string, limit int) ([]string, error)
 }
 
 // Detail is the free-form part of an entry (stored as JSON)
@@ -101,21 +116,19 @@ type ActivityLogService struct {
 	pvLastSeen map[string]time.Time // userID+path → last page view (dedup)
 }
 
-// NewActivityLogService new service; subscribes to the event queue next to the badge handler
+// NewActivityLogService new service; subscribes to the event queue next to the badge handler.
+// Object / user lookups are attached later (Attach) because the repos that log into this
+// service (user, rank) sit below object_info / user_common in the dependency graph.
 func NewActivityLogService(
 	repo ActivityLogRepo,
-	objectService *object_info.ObjService,
-	userCommon *usercommon.UserCommon,
 	commentRepo comment_common.CommentCommonRepo,
 	eventQueueService eventqueue.Service,
 ) *ActivityLogService {
 	s := &ActivityLogService{
-		repo:          repo,
-		objectService: objectService,
-		userCommon:    userCommon,
-		commentRepo:   commentRepo,
-		writeQueue:    queue.New[*entity.ActivityLog]("activity_log", 1024),
-		pvLastSeen:    make(map[string]time.Time),
+		repo:        repo,
+		commentRepo: commentRepo,
+		writeQueue:  queue.New[*entity.ActivityLog]("activity_log", 1024),
+		pvLastSeen:  make(map[string]time.Time),
 	}
 	s.writeQueue.RegisterHandler(func(ctx context.Context, entry *entity.ActivityLog) error {
 		return s.repo.Add(ctx, entry)
@@ -124,9 +137,15 @@ func NewActivityLogService(
 	return s
 }
 
+// Attach wires the lookups used to enrich entries (called once by the admin service)
+func (s *ActivityLogService) Attach(objectService *object_info.ObjService, userCommon *usercommon.UserCommon) {
+	s.objectService = objectService
+	s.userCommon = userCommon
+}
+
 // Log records an entry asynchronously. IP and user agent are taken from the gin context when available.
 func (s *ActivityLogService) Log(ctx context.Context, entry *entity.ActivityLog) {
-	if entry == nil || entry.Action == "" {
+	if s == nil || entry == nil || entry.Action == "" {
 		return
 	}
 	if ginCtx, ok := ctx.(*gin.Context); ok && ginCtx != nil && ginCtx.Request != nil {
@@ -145,6 +164,9 @@ func (s *ActivityLogService) Log(ctx context.Context, entry *entity.ActivityLog)
 
 // LogDetail is Log with a detail map
 func (s *ActivityLogService) LogDetail(ctx context.Context, entry *entity.ActivityLog, detail Detail) {
+	if s == nil || entry == nil {
+		return
+	}
 	entry.Detail = encodeDetail(detail)
 	s.Log(ctx, entry)
 }

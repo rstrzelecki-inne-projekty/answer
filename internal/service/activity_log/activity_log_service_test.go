@@ -42,6 +42,7 @@ func (f *fakeRepo) Iterate(context.Context, *Query, int, func([]*entity.Activity
 	return nil
 }
 func (f *fakeRepo) ActionCounts(context.Context, *Query) (map[string]int64, error) { return nil, nil }
+func (f *fakeRepo) SearchUserIDs(context.Context, string, int) ([]string, error)   { return nil, nil }
 func (f *fakeRepo) DeletePageViewsBefore(context.Context, time.Time) (int64, error) {
 	return 0, nil
 }
@@ -67,7 +68,7 @@ func (f *fakeCommentRepo) UpdateCommentStatus(context.Context, string, int) erro
 func newTestService(t *testing.T, reply string) (*ActivityLogService, *fakeRepo) {
 	t.Helper()
 	repo := &fakeRepo{added: make(chan *entity.ActivityLog, 10)}
-	s := NewActivityLogService(repo, nil, nil, &fakeCommentRepo{reply: reply}, eventqueue.NewService())
+	s := NewActivityLogService(repo, &fakeCommentRepo{reply: reply}, eventqueue.NewService())
 	return s, repo
 }
 
