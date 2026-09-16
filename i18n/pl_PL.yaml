@@ -224,7 +224,7 @@ backend:
       already_deleted:
         other: Ten post został usunięty.
       under_review:
-        other: Twój post oczekuje na recenzje. Będzie widoczny po jej akceptacji.
+        other: Twój wpis czeka na zatwierdzenie przez moderatora. Będzie widoczny po zatwierdzeniu.
       not_found:
         other: Pytanie nie zostało odnalezione.
       cannot_deleted:
@@ -1562,7 +1562,7 @@ ui:
       setting: Ustawienia
       logout: Wyloguj
       admin: Administrator
-      review: Recenzja
+      review: Do zatwierdzenia
       bookmark: Zakładki
       moderation: Moderacja
     search:
@@ -2201,7 +2201,7 @@ ui:
       votes: 'Głosy:'
       users: 'Użytkownicy:'
       flags: 'Flagi:'
-      reviews: 'Do przeglądu:'
+      reviews: 'Do zatwierdzenia:'
       site_health: Stan witryny
       version: 'Wersja:'
       https: 'HTTPS:'
@@ -2226,7 +2226,7 @@ ui:
       documents: Dokumenty
       feedback: Opinie
       support: Wsparcie
-      review: Przegląd
+      review: Do zatwierdzenia
       config: Konfiguracja
       update_to: Zaktualizuj do
       latest: Najnowszej
@@ -2246,7 +2246,7 @@ ui:
         questions: Pytania
         answers: Odpowiedzi
         comments: Komentarze
-        reviews: Do review
+        reviews: Do zatwierdzenia
         badges: Odznaczenia
         views: Wyświetlenia
         open_log: Otwórz w logu aktywności
@@ -2258,7 +2258,7 @@ ui:
       flagged_type: Oznaczone {{ type }}
       created: Utworzone
       action: Akcja
-      review: Przegląd
+      review: Zatwierdzanie
     user_role_modal:
       title: Zmień rolę użytkownika na...
       btn_cancel: Anuluj
@@ -2810,7 +2810,7 @@ ui:
     not_found_props: Nie znaleziono wymaganej właściwości {{ key }}.
     select: Wybierz
   page_review:
-    review: Przegląd
+    review: Do zatwierdzenia
     proposed: zaproponowany
     question_edit: Edycja pytania
     answer_edit: Edycja odpowiedzi
@@ -2889,7 +2889,7 @@ ui:
     post_reopen: Ten post został ponownie otwarty.
     post_list: Ten wpis został umieszczony na liście.
     post_unlist: Ten wpis został usunięty z listy.
-    post_pending: Twój wpis oczekuje na recenzje. Będzie widoczny po jej akceptacji.
+    post_pending: Twój wpis czeka na zatwierdzenie przez moderatora. Będzie widoczny po zatwierdzeniu.
     post_closed: Wpis został zamknięty.
     answer_deleted: Odpowiedź została usunięta.
     answer_cancel_deleted: Odpowiedź została przywrócona.
