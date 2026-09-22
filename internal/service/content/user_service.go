@@ -23,7 +23,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/apache/answer/internal/service/eventqueue"
@@ -877,6 +879,26 @@ func (us *UserService) UserRanking(ctx context.Context) (resp *schema.UserRankin
 	return resp, nil
 }
 
+// rankingExcludedUsernames [cd] accounts that post on behalf of the system are kept out of the
+// public rankings; override with RANKING_EXCLUDED_USERNAMES (comma separated usernames).
+var rankingExcludedUsernames = func() map[string]bool {
+	raw := os.Getenv("RANKING_EXCLUDED_USERNAMES")
+	if raw == "" {
+		raw = "baza-wiedzy"
+	}
+	excluded := make(map[string]bool)
+	for _, name := range strings.Split(raw, ",") {
+		if name = strings.ToLower(strings.TrimSpace(name)); name != "" {
+			excluded[name] = true
+		}
+	}
+	return excluded
+}()
+
+func excludedFromRanking(userInfo *entity.User) bool {
+	return userInfo == nil || rankingExcludedUsernames[strings.ToLower(userInfo.Username)]
+}
+
 // getTopRankUsers [cd] users with the highest reputation of all time
 func (us *UserService) getTopRankUsers(ctx context.Context, limit int, userIDExist map[string]bool) (
 	rankStat []*entity.ActivityUserRankStat, userIDs []string, err error) {
@@ -886,7 +908,7 @@ func (us *UserService) getTopRankUsers(ctx context.Context, limit int, userIDExi
 		return nil, nil, err
 	}
 	for _, user := range userList {
-		if userIDExist[user.ID] {
+		if userIDExist[user.ID] || excludedFromRanking(user) {
 			continue
 		}
 		rankStat = append(rankStat, &entity.ActivityUserRankStat{UserID: user.ID, Rank: user.Rank})
@@ -928,12 +950,16 @@ func (us *UserService) fillRankingPrestige(ctx context.Context, userInfoMapping 
 	decorate(resp.Staffs)
 
 	sort.SliceStable(resp.UsersWithTheMostReputation, func(i, j int) bool {
-		a, b := resp.UsersWithTheMostReputation[i], resp.UsersWithTheMostReputation[j]
-		if a.Rank != b.Rank {
-			return a.Rank > b.Rank
-		}
-		return rankAmountOf(a) > rankAmountOf(b)
+		return higherRanking(resp.UsersWithTheMostReputation[i], resp.UsersWithTheMostReputation[j])
 	})
+}
+
+// higherRanking [cd] puts the highest insignia on top, reputation breaks the tie
+func higherRanking(a, b *schema.UserRankingSimpleInfo) bool {
+	if rankAmountOf(a) != rankAmountOf(b) {
+		return rankAmountOf(a) > rankAmountOf(b)
+	}
+	return a.Rank > b.Rank
 }
 
 func rankAmountOf(info *schema.UserRankingSimpleInfo) int {
@@ -1108,7 +1134,8 @@ func (us *UserService) warpStatRankingResp(
 		if stat.Rank <= 0 {
 			continue
 		}
-		if userInfo := userInfoMapping[stat.UserID]; userInfo != nil && userInfo.Status != entity.UserStatusDeleted {
+		if userInfo := userInfoMapping[stat.UserID]; userInfo != nil && userInfo.Status != entity.UserStatusDeleted &&
+			!excludedFromRanking(userInfo) {
 			resp.UsersWithTheMostReputation = append(resp.UsersWithTheMostReputation, &schema.UserRankingSimpleInfo{
 				Username:    userInfo.Username,
 				Rank:        stat.Rank,
@@ -1121,7 +1148,8 @@ func (us *UserService) warpStatRankingResp(
 		if stat.VoteCount <= 0 {
 			continue
 		}
-		if userInfo := userInfoMapping[stat.UserID]; userInfo != nil && userInfo.Status != entity.UserStatusDeleted {
+		if userInfo := userInfoMapping[stat.UserID]; userInfo != nil && userInfo.Status != entity.UserStatusDeleted &&
+			!excludedFromRanking(userInfo) {
 			resp.UsersWithTheMostVote = append(resp.UsersWithTheMostVote, &schema.UserRankingSimpleInfo{
 				Username:    userInfo.Username,
 				VoteCount:   stat.VoteCount,
@@ -1131,7 +1159,8 @@ func (us *UserService) warpStatRankingResp(
 		}
 	}
 	for _, rel := range userRoleRels {
-		if userInfo := userInfoMapping[rel.UserID]; userInfo != nil && userInfo.Status != entity.UserStatusDeleted {
+		if userInfo := userInfoMapping[rel.UserID]; userInfo != nil && userInfo.Status != entity.UserStatusDeleted &&
+			!excludedFromRanking(userInfo) {
 			resp.Staffs = append(resp.Staffs, &schema.UserRankingSimpleInfo{
 				Username:    userInfo.Username,
 				Rank:        userInfo.Rank,
