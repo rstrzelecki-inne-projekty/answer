@@ -27,6 +27,8 @@ export const useQueryContributeUsers = () => {
   return useSWR<{
     users_with_the_most_reputation: Type.User[];
     users_with_the_most_vote: Type.User[];
+    most_active_users: Type.User[];
+    most_viewing_users: Type.User[];
     staffs: Type.User[];
   }>(apiUrl, request.instance.get);
 };

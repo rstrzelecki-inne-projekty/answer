@@ -2884,9 +2884,13 @@ ui:
     title: Users
     users_with_the_most_reputation: Users with the highest reputation
     users_with_the_most_vote: Users who voted the most
+    most_active_users: Most active users this week
+    most_viewing_users: Users who read the most this week
     staffs: Our community staff
     reputation: reputation
     votes: votes
+    activities: activities
+    views: views
   prestige:
     rank: Rank
     rank_title: "{{name}} — {{num}} accepted answers"

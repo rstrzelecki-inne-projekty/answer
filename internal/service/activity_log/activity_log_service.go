@@ -22,6 +22,7 @@ package activity_log
 import (
 	"context"
 	"encoding/json"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -387,4 +388,118 @@ func truncate(s string, n int) string {
 		return s
 	}
 	return string(r[:n]) + "…"
+}
+
+// TopUsers the most active users in a range (dashboard); activity = questions + answers + comments,
+// the other columns are shown for context only
+func (s *ActivityLogService) TopUsers(ctx context.Context, req *schema.ActivityLogTopUsersReq) ([]*schema.ActivityLogTopUserRow, error) {
+	limit := req.Limit
+	if limit <= 0 {
+		limit = 50
+	}
+	var from, to time.Time
+	if req.From > 0 {
+		from = time.Unix(req.From, 0)
+	} else {
+		from = time.Now().Add(-24 * time.Hour)
+	}
+	if req.To > 0 {
+		to = time.Unix(req.To, 0)
+	}
+	rows, err := s.repo.ListActionsBetween(ctx, from, to)
+	if err != nil {
+		return nil, err
+	}
+	byUser := map[string]*schema.ActivityLogTopUserRow{}
+	get := func(id string) *schema.ActivityLogTopUserRow {
+		if id == "" || id == "0" {
+			return nil
+		}
+		row, ok := byUser[id]
+		if !ok {
+			row = &schema.ActivityLogTopUserRow{User: &schema.ActivityLogUser{ID: id}}
+			byUser[id] = row
+		}
+		return row
+	}
+	for _, r := range rows {
+		var row *schema.ActivityLogTopUserRow
+		switch r.Action {
+		case "question.create":
+			if row = get(r.UserID); row != nil {
+				row.Questions++
+			}
+		case "answer.create":
+			if row = get(r.UserID); row != nil {
+				row.Answers++
+			}
+		case "comment.create", ActionCommentReply:
+			if row = get(r.UserID); row != nil {
+				row.Comments++
+			}
+		case ActionReviewQueued: // the author whose post went to review
+			if row = get(r.TargetUserID); row != nil {
+				row.Reviews++
+			}
+		case ActionBadgeAward: // the user who received the badge
+			if row = get(r.TargetUserID); row != nil {
+				row.Badges++
+			}
+		case ActionPageView:
+			if row = get(r.UserID); row != nil {
+				row.Views++
+			}
+		case ActionUserLogin:
+			if row = get(r.UserID); row != nil {
+				row.Logins++
+			}
+		}
+	}
+	out := make([]*schema.ActivityLogTopUserRow, 0, len(byUser))
+	ids := make([]string, 0, len(byUser))
+	for id, row := range byUser {
+		row.Total = row.Questions + row.Answers + row.Comments
+		out = append(out, row)
+		ids = append(ids, id)
+	}
+	byViews := req.Sort == "views"
+	sort.Slice(out, func(i, j int) bool {
+		a, b := out[i].Total, out[j].Total
+		ta, tb := out[i].Views, out[j].Views
+		if byViews {
+			a, b, ta, tb = ta, tb, a, b
+		}
+		if a != b {
+			return a > b
+		}
+		if ta != tb { // tie-break: the other measure
+			return ta > tb
+		}
+		return out[i].User.ID < out[j].User.ID
+	})
+	// only users who actually did what the list ranks by
+	active := out[:0]
+	for _, row := range out {
+		if (!byViews && row.Total > 0) || (byViews && row.Views > 0) {
+			active = append(active, row)
+		}
+	}
+	out = active
+	if len(out) > limit {
+		out = out[:limit]
+	}
+	if s.userCommon == nil {
+		return out, nil
+	}
+	if users, err := s.userCommon.BatchUserBasicInfoByID(ctx, ids); err == nil {
+		for _, row := range out {
+			if u := users[row.User.ID]; u != nil {
+				row.User = &schema.ActivityLogUser{ID: u.ID, Username: u.Username, DisplayName: u.DisplayName,
+					Avatar: u.Avatar, Status: u.Status, Prestige: u.Prestige, Rank: u.Rank}
+			} else {
+				row.User.DisplayName = "#" + row.User.ID
+			}
+		}
+	}
+	return out, nil
 }

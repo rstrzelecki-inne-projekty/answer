@@ -25,9 +25,24 @@ import { Fragment } from 'react';
 import { usePageTags } from '@/hooks';
 import { useQueryContributeUsers } from '@/services';
 import { Avatar, UserPrestige } from '@/components';
+import type * as Type from '@/common/interface';
 
 const Users = () => {
   const { t } = useTranslation('translation', { keyPrefix: 'users' });
+
+  // [cd] every section ranks by something else, so each one prints its own measure
+  const countLabel = (key: string, user: Type.User) => {
+    if (key === 'users_with_the_most_vote') {
+      return `${user.vote_count} ${t('votes')}`;
+    }
+    if (key === 'most_active_users') {
+      return `${user.activity_count} ${t('activities')}`;
+    }
+    if (key === 'most_viewing_users') {
+      return `${user.view_count} ${t('views')}`;
+    }
+    return `${user.rank} ${t('reputation')}`;
+  };
 
   const { data: users } = useQueryContributeUsers();
 
@@ -84,9 +99,7 @@ const Users = () => {
                           {user.display_name}
                         </Link>
                         <div className="text-secondary small">
-                          {key === 'users_with_the_most_vote'
-                            ? `${user.vote_count} ${t('votes')}`
-                            : `${user.rank} ${t('reputation')}`}
+                          {countLabel(key, user)}
                         </div>
                         <UserPrestige
                           prestige={user.prestige}

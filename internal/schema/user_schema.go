@@ -433,7 +433,10 @@ type UserVerifyEmailSendReq struct {
 type UserRankingResp struct {
 	UsersWithTheMostReputation []*UserRankingSimpleInfo `json:"users_with_the_most_reputation"`
 	UsersWithTheMostVote       []*UserRankingSimpleInfo `json:"users_with_the_most_vote"`
-	Staffs                     []*UserRankingSimpleInfo `json:"staffs"`
+	// [cd] last week's activity, the same aggregation the dashboard cards use
+	MostActiveUsers  []*UserRankingSimpleInfo `json:"most_active_users"`
+	MostViewingUsers []*UserRankingSimpleInfo `json:"most_viewing_users"`
+	Staffs           []*UserRankingSimpleInfo `json:"staffs"`
 }
 
 // UserRankingSimpleInfo user ranking simple info
@@ -448,6 +451,10 @@ type UserRankingSimpleInfo struct {
 	DisplayName string `json:"display_name"`
 	// avatar
 	Avatar string `json:"avatar"`
+	// [cd] questions + answers + comments in the ranked period
+	ActivityCount int `json:"activity_count"`
+	// [cd] pages opened in the ranked period
+	ViewCount int `json:"view_count"`
 	// [cd] rank insignia, badge count and yellow cards
 	Prestige *UserPrestige `json:"prestige,omitempty"`
 }

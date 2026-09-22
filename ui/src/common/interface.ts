@@ -140,6 +140,10 @@ export interface User {
   username: string;
   rank: number;
   vote_count: number;
+  /** [cd] questions + answers + comments in the ranked period */
+  activity_count?: number;
+  /** [cd] pages opened in the ranked period */
+  view_count?: number;
   display_name: string;
   avatar: string;
   /** [cd] rank insignia, badge count and yellow cards */

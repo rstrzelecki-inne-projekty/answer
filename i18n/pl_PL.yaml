@@ -2914,6 +2914,10 @@ ui:
     staffs: Nasz personel społeczności
     reputation: reputacja
     votes: głosy
+    most_active_users: Najbardziej aktywni użytkownicy w tym tygodniu
+    most_viewing_users: Najbardziej wyszukujący użytkownicy w tym tygodniu
+    activities: aktywności
+    views: wyświetleń
   prompt:
     leave_page: Czy na pewno chcesz opuścić stronę?
     changes_not_save: Twoje zmiany mogą nie zostać zapisane.

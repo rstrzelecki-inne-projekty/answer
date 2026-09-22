@@ -43,6 +43,7 @@ import (
 	"github.com/apache/answer/internal/schema"
 	"github.com/apache/answer/internal/service/activity"
 	"github.com/apache/answer/internal/service/activity_common"
+	"github.com/apache/answer/internal/service/activity_log"
 	"github.com/apache/answer/internal/service/auth"
 	"github.com/apache/answer/internal/service/export"
 	"github.com/apache/answer/internal/service/file_record"
@@ -72,7 +73,9 @@ type UserService struct {
 	userNotificationConfigService *user_notification_config.UserNotificationConfigService
 	questionService               *questioncommon.QuestionCommon
 	eventQueueService             eventqueue.Service
-	fileRecordService             *file_record.FileRecordService
+	// [cd] the last-week rankings on the users page reuse the activity log aggregation
+	activityLogService *activity_log.ActivityLogService
+	fileRecordService  *file_record.FileRecordService
 }
 
 func NewUserService(userRepo usercommon.UserRepo,
@@ -88,6 +91,7 @@ func NewUserService(userRepo usercommon.UserRepo,
 	userNotificationConfigService *user_notification_config.UserNotificationConfigService,
 	questionService *questioncommon.QuestionCommon,
 	eventQueueService eventqueue.Service,
+	activityLogService *activity_log.ActivityLogService,
 	fileRecordService *file_record.FileRecordService,
 ) *UserService {
 	return &UserService{
@@ -104,6 +108,7 @@ func NewUserService(userRepo usercommon.UserRepo,
 		userNotificationConfigService: userNotificationConfigService,
 		questionService:               questionService,
 		eventQueueService:             eventQueueService,
+		activityLogService:            activityLogService,
 		fileRecordService:             fileRecordService,
 	}
 }
@@ -876,7 +881,49 @@ func (us *UserService) UserRanking(ctx context.Context) (resp *schema.UserRankin
 	}
 	resp = us.warpStatRankingResp(userInfoMapping, rankStat, voteStat, userRoleRels)
 	us.fillRankingPrestige(ctx, userInfoMapping, resp)
+	us.fillActivityRankings(ctx, resp, limit)
 	return resp, nil
+}
+
+// fillActivityRankings [cd] the two sections the dashboard also shows: who did the most
+// (questions + answers + comments) and who read the most, over the last seven days.
+// These decorations are optional: a failure leaves the sections empty, never breaks the page.
+func (us *UserService) fillActivityRankings(ctx context.Context, resp *schema.UserRankingResp, limit int) {
+	if us.activityLogService == nil {
+		return
+	}
+	from := time.Now().AddDate(0, 0, -7).Unix()
+	for _, section := range []struct {
+		sort string
+		fill *[]*schema.UserRankingSimpleInfo
+	}{
+		{sort: "activity", fill: &resp.MostActiveUsers},
+		{sort: "views", fill: &resp.MostViewingUsers},
+	} {
+		rows, err := us.activityLogService.TopUsers(ctx, &schema.ActivityLogTopUsersReq{
+			From: from, Limit: limit, Sort: section.sort,
+		})
+		if err != nil {
+			log.Errorf("get top users (%s) failed: %v", section.sort, err)
+			continue
+		}
+		list := make([]*schema.UserRankingSimpleInfo, 0, len(rows))
+		for _, row := range rows {
+			if row.User == nil || row.User.Username == "" || excludedUsername(row.User.Username) {
+				continue
+			}
+			list = append(list, &schema.UserRankingSimpleInfo{
+				Username:      row.User.Username,
+				DisplayName:   row.User.DisplayName,
+				Avatar:        row.User.Avatar,
+				Rank:          row.User.Rank,
+				ActivityCount: int(row.Total),
+				ViewCount:     int(row.Views),
+				Prestige:      row.User.Prestige,
+			})
+		}
+		*section.fill = list
+	}
 }
 
 // rankingExcludedUsernames [cd] accounts that post on behalf of the system are kept out of the
@@ -896,7 +943,11 @@ var rankingExcludedUsernames = func() map[string]bool {
 }()
 
 func excludedFromRanking(userInfo *entity.User) bool {
-	return userInfo == nil || rankingExcludedUsernames[strings.ToLower(userInfo.Username)]
+	return userInfo == nil || excludedUsername(userInfo.Username)
+}
+
+func excludedUsername(username string) bool {
+	return rankingExcludedUsernames[strings.ToLower(username)]
 }
 
 // getTopRankUsers [cd] users with the highest reputation of all time
