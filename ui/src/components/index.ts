@@ -40,6 +40,7 @@ import Toast from './Toast';
 import AccordionNav from './AccordionNav';
 import Empty from './Empty';
 import BaseUserCard from './BaseUserCard';
+import UserPrestige from './UserPrestige';
 import FollowingTags from './FollowingTags';
 import QueryGroup from './QueryGroup';
 import BrandUpload from './BrandUpload';
@@ -95,6 +96,7 @@ export {
   AccordionNav,
   Empty,
   BaseUserCard,
+  UserPrestige,
   FollowingTags,
   htmlRender,
   QueryGroup,

@@ -68,6 +68,7 @@ import (
 	"github.com/apache/answer/internal/service/uploader"
 	"github.com/apache/answer/internal/service/user_admin"
 	usercommon "github.com/apache/answer/internal/service/user_common"
+	"github.com/apache/answer/internal/service/user_prestige"
 	"github.com/apache/answer/internal/service/user_external_login"
 	"github.com/apache/answer/internal/service/user_notification_config"
 	"github.com/apache/answer/internal/service/vector_sync"
@@ -92,6 +93,10 @@ var ProviderSetService = wire.NewSet(
 	export.NewEmailService,
 	tagcommon.NewTagCommonService,
 	usercommon.NewUserCommon,
+	user_prestige.NewUserPrestigeService,
+	ProvidePrestigeBadgeMetaRepo,
+	ProvidePrestigeBadgeGroupMetaRepo,
+	ProvidePrestigeAwardCountRepo,
 	questioncommon.NewQuestionCommon,
 	answercommon.NewAnswerCommon,
 	uploader.NewUploaderService,
@@ -144,3 +149,13 @@ var ProviderSetService = wire.NewSet(
 	embedding.NewEmbeddingService,
 	vector_sync.NewService,
 )
+
+// ProvidePrestigeBadgeMetaRepo [cd] the prestige service declares its own narrow repository
+// interfaces so that it does not import the badge service (which depends on user_common).
+func ProvidePrestigeBadgeMetaRepo(r badge.BadgeRepo) user_prestige.BadgeMetaRepo { return r }
+
+// ProvidePrestigeBadgeGroupMetaRepo [cd] see ProvidePrestigeBadgeMetaRepo
+func ProvidePrestigeBadgeGroupMetaRepo(r badge.BadgeGroupRepo) user_prestige.BadgeGroupMetaRepo { return r }
+
+// ProvidePrestigeAwardCountRepo [cd] see ProvidePrestigeBadgeMetaRepo
+func ProvidePrestigeAwardCountRepo(r badge.BadgeAwardRepo) user_prestige.AwardCountRepo { return r }

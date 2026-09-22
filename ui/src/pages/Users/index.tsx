@@ -24,7 +24,7 @@ import { Fragment } from 'react';
 
 import { usePageTags } from '@/hooks';
 import { useQueryContributeUsers } from '@/services';
-import { Avatar } from '@/components';
+import { Avatar, UserPrestige } from '@/components';
 
 const Users = () => {
   const { t } = useTranslation('translation', { keyPrefix: 'users' });
@@ -88,6 +88,10 @@ const Users = () => {
                             ? `${user.vote_count} ${t('votes')}`
                             : `${user.rank} ${t('reputation')}`}
                         </div>
+                        <UserPrestige
+                          prestige={user.prestige}
+                          className="mt-1 small"
+                        />
                       </div>
                     </div>
                   </Col>

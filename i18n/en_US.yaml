@@ -2882,11 +2882,17 @@ ui:
     no_data: "We couldn't find anything."
   users:
     title: Users
-    users_with_the_most_reputation: Users with the highest reputation scores this week
-    users_with_the_most_vote: Users who voted the most this week
+    users_with_the_most_reputation: Users with the highest reputation
+    users_with_the_most_vote: Users who voted the most
     staffs: Our community staff
     reputation: reputation
     votes: votes
+  prestige:
+    rank: Rank
+    rank_title: "{{name}} — {{num}} accepted answers"
+    reputation: Reputation
+    badges: "Badges: {{num}}"
+    yellow_card: "Yellow card ({{num}}) — code of conduct §7.6"
   prompt:
     leave_page: Are you sure you want to leave the page?
     changes_not_save: Your changes may not be saved.

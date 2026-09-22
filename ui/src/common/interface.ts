@@ -142,6 +142,19 @@ export interface User {
   vote_count: number;
   display_name: string;
   avatar: string;
+  /** [cd] rank insignia, badge count and yellow cards */
+  prestige?: UserPrestige | null;
+}
+
+/** [cd] rank insignia, badge count and yellow cards shown next to the avatar */
+export interface UserPrestige {
+  rank_badge_id: string;
+  rank_badge_name: string;
+  rank_badge_icon: string;
+  rank_badge_level: number;
+  rank_badge_amount: number;
+  badge_count: number;
+  yellow_cards: number;
 }
 
 export interface UserInfoBase {
@@ -156,6 +169,8 @@ export interface UserInfoBase {
   status?: 'normal' | 'suspended' | 'deleted' | 'inactive';
   /** roles */
   role_id?: RoleId;
+  /** [cd] rank insignia, badge count and yellow cards */
+  prestige?: UserPrestige | null;
 }
 
 export interface UserInfoRes extends UserInfoBase {

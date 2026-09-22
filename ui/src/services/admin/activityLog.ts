@@ -33,6 +33,10 @@ export interface ActivityLogUser {
   display_name: string;
   avatar?: string;
   status?: string;
+  /** [cd] rank insignia, badge count and yellow cards */
+  prestige?: Type.UserPrestige | null;
+  /** [cd] reputation */
+  rank?: number;
 }
 
 export interface ActivityLogItem {

@@ -208,6 +208,10 @@ type GetCommentResp struct {
 	UserAvatar string `json:"user_avatar"`
 	// user status
 	UserStatus string `json:"user_status"`
+	// [cd] user reputation
+	UserRank int `json:"user_rank"`
+	// [cd] rank insignia, badge count and yellow cards
+	Prestige *UserPrestige `json:"prestige,omitempty"`
 
 	// reply user id
 	ReplyUserID string `json:"reply_user_id"`

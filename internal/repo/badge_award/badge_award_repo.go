@@ -129,6 +129,23 @@ func (r *badgeAwardRepo) SumUserEarnedGroupByBadgeID(ctx context.Context, userID
 	return
 }
 
+// BatchUserEarnedCount [cd] awards of all badges for many users in one query
+func (r *badgeAwardRepo) BatchUserEarnedCount(ctx context.Context, userIDs []string) (
+	counts []*entity.UserBadgeEarnedCount, err error) {
+	if len(userIDs) == 0 {
+		return counts, nil
+	}
+	err = r.data.DB.Context(ctx).Table("badge_award").
+		Select("user_id, badge_id, count(id) AS earned_count").
+		In("user_id", userIDs).
+		Where("is_badge_deleted = ?", entity.IsBadgeNotDeleted).
+		GroupBy("user_id, badge_id").Find(&counts)
+	if err != nil {
+		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+	}
+	return
+}
+
 // ListPagedByBadgeId list badge awards by badge id
 func (r *badgeAwardRepo) ListPagedByBadgeId(ctx context.Context, badgeID string, page int, pageSize int) (badgeAwardList []*entity.BadgeAward, total int64, err error) {
 	session := r.data.DB.Context(ctx)

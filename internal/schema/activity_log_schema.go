@@ -41,6 +41,10 @@ type ActivityLogUser struct {
 	DisplayName string `json:"display_name"`
 	Avatar      string `json:"avatar"`
 	Status      string `json:"status"`
+	// [cd] rank insignia, badge count and yellow cards
+	Prestige *UserPrestige `json:"prestige,omitempty"`
+	// [cd] reputation, shown next to the insignia
+	Rank int `json:"rank"`
 }
 
 // ActivityLogItem one grid row

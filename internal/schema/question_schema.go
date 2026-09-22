@@ -424,6 +424,8 @@ type QuestionPageRespOperator struct {
 	DisplayName string `json:"display_name"`
 	Status      string `json:"status"`
 	Avatar      string `json:"avatar"`
+	// [cd] rank insignia, badge count and yellow cards
+	Prestige *UserPrestige `json:"prestige,omitempty"`
 }
 
 type AdminQuestionPageReq struct {

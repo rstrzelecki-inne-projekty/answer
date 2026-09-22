@@ -469,7 +469,33 @@ func (cs *CommentService) GetCommentWithPage(ctx context.Context, req *schema.Ge
 			}
 		}
 	}
+	cs.fillCommentUserPrestige(ctx, resp)
 	return pager.NewPageModel(total, resp), nil
+}
+
+// fillCommentUserPrestige [cd] adds reputation and the prestige card to a page of comments
+// with a single batch lookup. Decorations are optional: on failure the comments stay plain.
+func (cs *CommentService) fillCommentUserPrestige(ctx context.Context, resp []*schema.GetCommentResp) {
+	userIDs := make([]string, 0, len(resp))
+	for _, item := range resp {
+		if len(item.UserID) > 0 {
+			userIDs = append(userIDs, item.UserID)
+		}
+	}
+	if len(userIDs) == 0 {
+		return
+	}
+	userInfoMap, err := cs.userCommon.BatchUserBasicInfoByID(ctx, userIDs)
+	if err != nil {
+		log.Errorf("get comment user prestige failed: %v", err)
+		return
+	}
+	for _, item := range resp {
+		if userInfo, ok := userInfoMap[item.UserID]; ok && userInfo != nil {
+			item.UserRank = userInfo.Rank
+			item.Prestige = userInfo.Prestige
+		}
+	}
 }
 
 func (cs *CommentService) convertCommentEntity2Resp(ctx context.Context, req *schema.GetCommentWithPageReq,

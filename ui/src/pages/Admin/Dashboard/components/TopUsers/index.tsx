@@ -139,8 +139,8 @@ const TopUsers: FC<Props> = ({ mode = 'activity' }) => {
                 <td>
                   <BaseUserCard
                     data={row.user}
-                    showReputation={false}
                     nameMaxWidth="200px"
+                    className="small flex-wrap"
                   />
                 </td>
                 {COLUMNS.map((c) => {

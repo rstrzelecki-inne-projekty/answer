@@ -32,6 +32,7 @@ import (
 	"github.com/apache/answer/internal/service/auth"
 	"github.com/apache/answer/internal/service/role"
 	"github.com/apache/answer/internal/service/siteinfo_common"
+	"github.com/apache/answer/internal/service/user_prestige"
 	"github.com/apache/answer/pkg/checker"
 	"github.com/apache/answer/pkg/random"
 	"github.com/mozillazg/go-pinyin"
@@ -60,6 +61,8 @@ type UserRepo interface {
 	GetByEmail(ctx context.Context, email string) (userInfo *entity.User, exist bool, err error)
 	GetUserCount(ctx context.Context) (count int64, err error)
 	SearchUserListByName(ctx context.Context, name string, limit int, onlyStaff bool) (userList []*entity.User, err error)
+	// [cd] users with the highest reputation, all time
+	ListTopByRank(ctx context.Context, limit int) (userList []*entity.User, err error)
 	IsAvatarFileUsed(ctx context.Context, filePath string) (bool, error)
 }
 
@@ -69,6 +72,8 @@ type UserCommon struct {
 	userRoleService       *role.UserRoleRelService
 	authService           *auth.AuthService
 	siteInfoCommonService siteinfo_common.SiteInfoCommonService
+	// [cd] rank insignia, badge count and yellow cards; nil in tests that do not need them
+	prestigeService *user_prestige.UserPrestigeService
 }
 
 func NewUserCommon(
@@ -76,12 +81,53 @@ func NewUserCommon(
 	userRoleService *role.UserRoleRelService,
 	authService *auth.AuthService,
 	siteInfoCommonService siteinfo_common.SiteInfoCommonService,
+	prestigeService *user_prestige.UserPrestigeService,
 ) *UserCommon {
 	return &UserCommon{
 		userRepo:              userRepo,
 		userRoleService:       userRoleService,
 		authService:           authService,
 		siteInfoCommonService: siteInfoCommonService,
+		prestigeService:       prestigeService,
+	}
+}
+
+// BatchPrestige [cd] prestige cards for the given users; an empty map when they cannot be read,
+// because the decorations are optional everywhere they are shown.
+func (us *UserCommon) BatchPrestige(ctx context.Context, userIDs []string) map[string]*schema.UserPrestige {
+	if us.prestigeService == nil || len(userIDs) == 0 {
+		return map[string]*schema.UserPrestige{}
+	}
+	prestigeMap, err := us.prestigeService.BatchGet(ctx, userIDs)
+	if err != nil {
+		log.Errorf("get user prestige failed: %v", err)
+		return map[string]*schema.UserPrestige{}
+	}
+	return prestigeMap
+}
+
+// fillPrestige [cd] adds the rank insignia, badge count and yellow cards to already formatted users.
+// A failure here only costs the decorations, never the list itself.
+func (us *UserCommon) fillPrestige(ctx context.Context, userMap map[string]*schema.UserBasicInfo) {
+	if us.prestigeService == nil || len(userMap) == 0 {
+		return
+	}
+	userIDs := make([]string, 0, len(userMap))
+	for id, info := range userMap {
+		if info.Status == constant.UserDeleted {
+			continue
+		}
+		userIDs = append(userIDs, id)
+	}
+	prestigeMap, err := us.prestigeService.BatchGet(ctx, userIDs)
+	if err != nil {
+		log.Errorf("get user prestige failed: %v", err)
+		return
+	}
+	for id, prestige := range prestigeMap {
+		if info, ok := userMap[id]; ok {
+			info.Prestige = prestige
+		}
 	}
 }
 
@@ -166,6 +212,7 @@ func (us *UserCommon) BatchUserBasicInfoByID(ctx context.Context, userIDs []stri
 			}
 		}
 	}
+	us.fillPrestige(ctx, userMap)
 	return userMap, nil
 }
 

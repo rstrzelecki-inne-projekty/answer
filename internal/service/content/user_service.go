@@ -23,6 +23,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/apache/answer/internal/service/eventqueue"
@@ -841,11 +842,12 @@ func (us *UserService) getSiteUrl(ctx context.Context) string {
 func (us *UserService) UserRanking(ctx context.Context) (resp *schema.UserRankingResp, err error) {
 	limit := 20
 	endTime := time.Now()
-	startTime := endTime.AddDate(0, 0, -7)
+	// [cd] both rankings cover the whole history, not just the last week
+	startTime := time.Unix(0, 0)
 	userIDs, userIDExist := make([]string, 0), make(map[string]bool, 0)
 
-	// get most reputation users
-	rankStat, rankStatUserIDs, err := us.getActivityUserRankStat(ctx, startTime, endTime, limit, userIDExist)
+	// [cd] most reputation users of all time, straight from user.rank
+	rankStat, rankStatUserIDs, err := us.getTopRankUsers(ctx, limit, userIDExist)
 	if err != nil {
 		return nil, err
 	}
@@ -870,7 +872,75 @@ func (us *UserService) UserRanking(ctx context.Context) (resp *schema.UserRankin
 	if err != nil {
 		return nil, err
 	}
-	return us.warpStatRankingResp(userInfoMapping, rankStat, voteStat, userRoleRels), nil
+	resp = us.warpStatRankingResp(userInfoMapping, rankStat, voteStat, userRoleRels)
+	us.fillRankingPrestige(ctx, userInfoMapping, resp)
+	return resp, nil
+}
+
+// getTopRankUsers [cd] users with the highest reputation of all time
+func (us *UserService) getTopRankUsers(ctx context.Context, limit int, userIDExist map[string]bool) (
+	rankStat []*entity.ActivityUserRankStat, userIDs []string, err error) {
+	rankStat = make([]*entity.ActivityUserRankStat, 0)
+	userList, err := us.userRepo.ListTopByRank(ctx, limit)
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, user := range userList {
+		if userIDExist[user.ID] {
+			continue
+		}
+		rankStat = append(rankStat, &entity.ActivityUserRankStat{UserID: user.ID, Rank: user.Rank})
+		userIDs = append(userIDs, user.ID)
+		userIDExist[user.ID] = true
+	}
+	return rankStat, userIDs, nil
+}
+
+// fillRankingPrestige [cd] adds the prestige card to every ranking entry and puts the highest
+// ranks on top of the reputation list (reputation first, rank insignia breaks the tie).
+func (us *UserService) fillRankingPrestige(ctx context.Context, userInfoMapping map[string]*entity.User,
+	resp *schema.UserRankingResp) {
+	if resp == nil {
+		return
+	}
+	userIDs := make([]string, 0, len(userInfoMapping))
+	usernameToID := make(map[string]string, len(userInfoMapping))
+	for id, user := range userInfoMapping {
+		if user == nil {
+			continue
+		}
+		userIDs = append(userIDs, id)
+		usernameToID[user.Username] = id
+	}
+	prestigeMap := us.userCommonService.BatchPrestige(ctx, userIDs)
+	if len(prestigeMap) == 0 {
+		return
+	}
+	decorate := func(list []*schema.UserRankingSimpleInfo) {
+		for _, item := range list {
+			if prestige, ok := prestigeMap[usernameToID[item.Username]]; ok {
+				item.Prestige = prestige
+			}
+		}
+	}
+	decorate(resp.UsersWithTheMostReputation)
+	decorate(resp.UsersWithTheMostVote)
+	decorate(resp.Staffs)
+
+	sort.SliceStable(resp.UsersWithTheMostReputation, func(i, j int) bool {
+		a, b := resp.UsersWithTheMostReputation[i], resp.UsersWithTheMostReputation[j]
+		if a.Rank != b.Rank {
+			return a.Rank > b.Rank
+		}
+		return rankAmountOf(a) > rankAmountOf(b)
+	})
+}
+
+func rankAmountOf(info *schema.UserRankingSimpleInfo) int {
+	if info == nil || info.Prestige == nil {
+		return 0
+	}
+	return info.Prestige.RankBadgeAmount
 }
 
 // GetUserStaff get user staff

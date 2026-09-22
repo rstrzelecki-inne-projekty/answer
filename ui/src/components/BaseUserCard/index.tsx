@@ -21,7 +21,7 @@ import { memo, FC } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Avatar } from '@/components';
-import { formatCount } from '@/utils';
+import UserPrestige from '../UserPrestige';
 
 interface Props {
   data: any;
@@ -32,6 +32,8 @@ interface Props {
   className?: string;
   avatarClass?: string;
   nameMaxWidth?: string;
+  /** [cd] sm keeps only the insignia and the reputation */
+  prestigeSize?: 'sm' | 'md';
 }
 
 const Index: FC<Props> = ({
@@ -43,6 +45,7 @@ const Index: FC<Props> = ({
   avatarSearchStr = 's=48',
   showReputation = true,
   nameMaxWidth = '300px',
+  prestigeSize = 'md',
 }) => {
   return (
     <div className={`d-flex align-items-center  text-secondary ${className}`}>
@@ -84,9 +87,11 @@ const Index: FC<Props> = ({
       )}
 
       {showReputation && (
-        <span className="fw-bold" title="Reputation">
-          {formatCount(data?.rank)}
-        </span>
+        <UserPrestige
+          rank={data?.rank}
+          prestige={data?.prestige}
+          size={prestigeSize}
+        />
       )}
     </div>
   );

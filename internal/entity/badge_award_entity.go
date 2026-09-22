@@ -55,6 +55,18 @@ func (BadgeEarnedCount) TableName() string {
 	return "badge_award"
 }
 
+// UserBadgeEarnedCount [cd] number of awards of one badge for one user, filled by the batch query
+type UserBadgeEarnedCount struct {
+	UserID      string `xorm:"user_id"`
+	BadgeID     string `xorm:"badge_id"`
+	EarnedCount int64  `xorm:"earned_count"`
+}
+
+// TableName badge_award table name
+func (UserBadgeEarnedCount) TableName() string {
+	return "badge_award"
+}
+
 type BadgeAwardRecent struct {
 	Created        time.Time `xorm:"created"`
 	BadgeID        string    `xorm:"badge_id"`

@@ -101,8 +101,8 @@ func newTestService(t *testing.T, badgeRepo *fakeBadgeRepo, awardRepo *fakeBadge
 	siteInfo.EXPECT().FormatAvatar(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&schema.AvatarInfo{}).AnyTimes()
 	userCommon := usercommon.NewUserCommon(&fakeUserRepo{users: map[string]*entity.User{
 		"alice": {ID: "u-alice", Username: "alice"},
-	}}, nil, nil, siteInfo)
-	return NewBadgeAwardService(awardRepo, badgeRepo, userCommon, nil, noticequeue.NewService())
+	}}, nil, nil, siteInfo, nil)
+	return NewBadgeAwardService(awardRepo, badgeRepo, userCommon, nil, noticequeue.NewService(), nil)
 }
 
 func reasonOf(err error) string {

@@ -558,6 +558,10 @@ func (r *newQuestionNotificationTestUserRepo) AddUser(context.Context, *entity.U
 	return nil
 }
 
+func (r *newQuestionNotificationTestUserRepo) ListTopByRank(context.Context, int) ([]*entity.User, error) {
+	return nil, nil
+}
+
 func (r *newQuestionNotificationTestUserRepo) IncreaseAnswerCount(context.Context, string, int) error {
 	return nil
 }

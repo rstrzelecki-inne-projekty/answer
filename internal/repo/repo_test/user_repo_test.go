@@ -30,7 +30,7 @@ import (
 )
 
 func Test_userRepo_AddUser(t *testing.T) {
-	userRepo := user.NewUserRepo(testDataSource)
+	userRepo := user.NewUserRepo(testDataSource, nil)
 	userInfo := &entity.User{
 		Username:    "answer",
 		Pass:        "answer",
@@ -45,7 +45,7 @@ func Test_userRepo_AddUser(t *testing.T) {
 }
 
 func Test_userRepo_BatchGetByID(t *testing.T) {
-	userRepo := user.NewUserRepo(testDataSource)
+	userRepo := user.NewUserRepo(testDataSource, nil)
 	got, err := userRepo.BatchGetByID(context.TODO(), []string{"1"})
 	require.NoError(t, err)
 	assert.Len(t, got, 1)
@@ -53,7 +53,7 @@ func Test_userRepo_BatchGetByID(t *testing.T) {
 }
 
 func Test_userRepo_GetByEmail(t *testing.T) {
-	userRepo := user.NewUserRepo(testDataSource)
+	userRepo := user.NewUserRepo(testDataSource, nil)
 	got, exist, err := userRepo.GetByEmail(context.TODO(), "admin@admin.com")
 	require.NoError(t, err)
 	assert.True(t, exist)
@@ -61,7 +61,7 @@ func Test_userRepo_GetByEmail(t *testing.T) {
 }
 
 func Test_userRepo_GetByUserID(t *testing.T) {
-	userRepo := user.NewUserRepo(testDataSource)
+	userRepo := user.NewUserRepo(testDataSource, nil)
 	got, exist, err := userRepo.GetByUserID(context.TODO(), "1")
 	require.NoError(t, err)
 	assert.True(t, exist)
@@ -69,7 +69,7 @@ func Test_userRepo_GetByUserID(t *testing.T) {
 }
 
 func Test_userRepo_GetByUsername(t *testing.T) {
-	userRepo := user.NewUserRepo(testDataSource)
+	userRepo := user.NewUserRepo(testDataSource, nil)
 	got, exist, err := userRepo.GetByUsername(context.TODO(), "admin")
 	require.NoError(t, err)
 	assert.True(t, exist)
@@ -77,7 +77,7 @@ func Test_userRepo_GetByUsername(t *testing.T) {
 }
 
 func Test_userRepo_IncreaseAnswerCount(t *testing.T) {
-	userRepo := user.NewUserRepo(testDataSource)
+	userRepo := user.NewUserRepo(testDataSource, nil)
 	err := userRepo.IncreaseAnswerCount(context.TODO(), "1", 1)
 	require.NoError(t, err)
 
@@ -88,7 +88,7 @@ func Test_userRepo_IncreaseAnswerCount(t *testing.T) {
 }
 
 func Test_userRepo_IncreaseQuestionCount(t *testing.T) {
-	userRepo := user.NewUserRepo(testDataSource)
+	userRepo := user.NewUserRepo(testDataSource, nil)
 	err := userRepo.IncreaseQuestionCount(context.TODO(), "1", 1)
 	require.NoError(t, err)
 
@@ -99,19 +99,19 @@ func Test_userRepo_IncreaseQuestionCount(t *testing.T) {
 }
 
 func Test_userRepo_UpdateEmail(t *testing.T) {
-	userRepo := user.NewUserRepo(testDataSource)
+	userRepo := user.NewUserRepo(testDataSource, nil)
 	err := userRepo.UpdateEmail(context.TODO(), "1", "admin@admin.com")
 	require.NoError(t, err)
 }
 
 func Test_userRepo_UpdateEmailStatus(t *testing.T) {
-	userRepo := user.NewUserRepo(testDataSource)
+	userRepo := user.NewUserRepo(testDataSource, nil)
 	err := userRepo.UpdateEmailStatus(context.TODO(), "1", entity.EmailStatusToBeVerified)
 	require.NoError(t, err)
 }
 
 func Test_userRepo_UpdateInfo(t *testing.T) {
-	userRepo := user.NewUserRepo(testDataSource)
+	userRepo := user.NewUserRepo(testDataSource, nil)
 	err := userRepo.UpdateInfo(context.TODO(), &entity.User{ID: "1", Bio: "test"})
 	require.NoError(t, err)
 
@@ -122,19 +122,19 @@ func Test_userRepo_UpdateInfo(t *testing.T) {
 }
 
 func Test_userRepo_UpdateLastLoginDate(t *testing.T) {
-	userRepo := user.NewUserRepo(testDataSource)
+	userRepo := user.NewUserRepo(testDataSource, nil)
 	err := userRepo.UpdateLastLoginDate(context.TODO(), "1")
 	require.NoError(t, err)
 }
 
 func Test_userRepo_UpdateNoticeStatus(t *testing.T) {
-	userRepo := user.NewUserRepo(testDataSource)
+	userRepo := user.NewUserRepo(testDataSource, nil)
 	err := userRepo.UpdateNoticeStatus(context.TODO(), "1", 1)
 	require.NoError(t, err)
 }
 
 func Test_userRepo_UpdatePass(t *testing.T) {
-	userRepo := user.NewUserRepo(testDataSource)
+	userRepo := user.NewUserRepo(testDataSource, nil)
 	err := userRepo.UpdatePass(context.TODO(), "1", "admin")
 	require.NoError(t, err)
 }

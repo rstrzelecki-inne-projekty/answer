@@ -49,6 +49,9 @@ type BadgeAwardRepo interface {
 
 	SumUserEarnedGroupByBadgeID(ctx context.Context, userID string) (earnedCounts []*entity.BadgeEarnedCount, err error)
 
+	// [cd] awards of all badges for many users at once, used by the prestige card
+	BatchUserEarnedCount(ctx context.Context, userIDs []string) (counts []*entity.UserBadgeEarnedCount, err error)
+
 	ListPagedByBadgeId(ctx context.Context, badgeID string, page int, pageSize int) (badgeAwardList []*entity.BadgeAward, total int64, err error)
 	ListPagedByBadgeIdAndUserId(ctx context.Context, badgeID string, userID string, page int, pageSize int) (badgeAwards []*entity.BadgeAward, total int64, err error)
 	ListNewestEarned(ctx context.Context, userID string, limit int) (badgeAwards []*entity.BadgeAwardRecent, err error)

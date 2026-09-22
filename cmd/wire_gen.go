@@ -122,6 +122,7 @@ import (
 	"github.com/apache/answer/internal/service/uploader"
 	"github.com/apache/answer/internal/service/user_admin"
 	"github.com/apache/answer/internal/service/user_common"
+	"github.com/apache/answer/internal/service/user_prestige"
 	user_external_login2 "github.com/apache/answer/internal/service/user_external_login"
 	user_notification_config2 "github.com/apache/answer/internal/service/user_notification_config"
 	"github.com/apache/answer/internal/service/vector_sync"
@@ -174,7 +175,11 @@ func initApplication(debug bool, serverConf *conf.Server, dbConf *data.Database,
 	roleRepo := role.NewRoleRepo(dataData)
 	roleService := role2.NewRoleService(roleRepo)
 	userRoleRelService := role2.NewUserRoleRelService(userRoleRelRepo, roleService)
-	userCommon := usercommon.NewUserCommon(userRepo, userRoleRelService, authService, siteInfoCommonService)
+	badgeAwardRepo := badge_award.NewBadgeAwardRepo(dataData, uniqueIDRepo)
+	badgeRepo := badge.NewBadgeRepo(dataData, uniqueIDRepo)
+	badgeGroupRepo := badge_group.NewBadgeGroupRepo(dataData, uniqueIDRepo)
+	userPrestigeService := user_prestige.NewUserPrestigeService(badgeRepo, badgeGroupRepo, badgeAwardRepo)
+	userCommon := usercommon.NewUserCommon(userRepo, userRoleRelService, authService, siteInfoCommonService, userPrestigeService)
 	userExternalLoginRepo := user_external_login.NewUserExternalLoginRepo(dataData)
 	userNotificationConfigRepo := user_notification_config.NewUserNotificationConfigRepo(dataData)
 	userNotificationConfigService := user_notification_config2.NewUserNotificationConfigService(userRepo, userNotificationConfigRepo)
@@ -249,7 +254,6 @@ func initApplication(debug bool, serverConf *conf.Server, dbConf *data.Database,
 	userAdminRepo := user.NewUserAdminRepo(dataData, authRepo)
 	notificationRepo := notification2.NewNotificationRepo(dataData)
 	pluginUserConfigRepo := plugin_config.NewPluginUserConfigRepo(dataData)
-	badgeAwardRepo := badge_award.NewBadgeAwardRepo(dataData, uniqueIDRepo)
 	userAdminService := user_admin.NewUserAdminService(userAdminRepo, userRoleRelService, authService, userCommon, userActiveActivityRepo, siteInfoCommonService, emailService, questionRepo, answerRepo, commentCommonRepo, userExternalLoginRepo, notificationRepo, pluginUserConfigRepo, badgeAwardRepo, apiKeyRepo, activityLogService)
 	userAdminController := controller_admin.NewUserAdminController(userAdminService)
 	reasonRepo := reason.NewReasonRepo(configService)
@@ -260,7 +264,6 @@ func initApplication(debug bool, serverConf *conf.Server, dbConf *data.Database,
 	siteInfoController := controller_admin.NewSiteInfoController(siteInfoService)
 	controllerSiteInfoController := controller.NewSiteInfoController(siteInfoCommonService)
 	notificationCommon := notificationcommon.NewNotificationCommon(dataData, notificationRepo, userCommon, activityRepo, followRepo, objService, noticequeueService, userExternalLoginRepo, siteInfoCommonService)
-	badgeRepo := badge.NewBadgeRepo(dataData, uniqueIDRepo)
 	notificationService := notification.NewNotificationService(dataData, notificationRepo, notificationCommon, revisionService, userRepo, reportRepo, reviewService, badgeRepo)
 	notificationController := controller.NewNotificationController(notificationService, rankService)
 	dashboardService := dashboard.NewDashboardService(questionRepo, answerRepo, commentCommonRepo, voteRepo, userRepo, reportRepo, configService, siteInfoCommonService, serviceConf, reviewService, revisionRepo, dataData)
@@ -282,7 +285,6 @@ func initApplication(debug bool, serverConf *conf.Server, dbConf *data.Database,
 	reviewController := controller.NewReviewController(reviewService, rankService, captchaService)
 	metaService := meta2.NewMetaService(metaCommonService, userCommon, answerRepo, questionRepo, service)
 	metaController := controller.NewMetaController(metaService)
-	badgeGroupRepo := badge_group.NewBadgeGroupRepo(dataData, uniqueIDRepo)
 	eventRuleRepo := badge.NewEventRuleRepo(dataData)
 	badgeAwardService := badge2.NewBadgeAwardService(badgeAwardRepo, badgeRepo, userCommon, objService, noticequeueService, activityLogService)
 	badgeEventService := badge2.NewBadgeEventService(dataData, service, badgeRepo, eventRuleRepo, badgeAwardService)

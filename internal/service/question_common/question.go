@@ -458,6 +458,8 @@ func (qs *QuestionCommon) FormatQuestionsPage(
 				item.Operator.Rank = userInfo.Rank
 				item.Operator.Status = userInfo.Status
 				item.Operator.Avatar = userInfo.Avatar
+				// [cd] rank insignia, badge count and yellow cards
+				item.Operator.Prestige = userInfo.Prestige
 			}
 		}
 	}

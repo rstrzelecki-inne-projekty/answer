@@ -24,7 +24,12 @@ import { Link } from 'react-router-dom';
 
 import classNames from 'classnames';
 
-import { Icon, FormatTime, MessageUserButton } from '@/components';
+import {
+  Icon,
+  FormatTime,
+  MessageUserButton,
+  UserPrestige,
+} from '@/components';
 
 const ActionBar = ({
   nickName,
@@ -39,6 +44,8 @@ const ActionBar = ({
   onVoteDown,
   onAction,
   userStatus = '',
+  userRank,
+  prestige,
   commentId = '',
   objectTitle = '',
 }) => {
@@ -60,6 +67,12 @@ const ActionBar = ({
         ) : (
           <span>{nickName}</span>
         )}
+        <UserPrestige
+          rank={userRank}
+          prestige={prestige}
+          size="sm"
+          className="ms-1"
+        />
         <span className="mx-1">•</span>
         <FormatTime time={createdAt} className="me-3 flex-shrink-0" />
         <Button

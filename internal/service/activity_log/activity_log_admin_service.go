@@ -290,7 +290,8 @@ func (s *ActivityLogAdminService) TopUsers(ctx context.Context, req *schema.Acti
 	if users, err := s.userCommon.BatchUserBasicInfoByID(ctx, ids); err == nil {
 		for _, row := range out {
 			if u := users[row.User.ID]; u != nil {
-				row.User = &schema.ActivityLogUser{ID: u.ID, Username: u.Username, DisplayName: u.DisplayName, Avatar: u.Avatar, Status: u.Status}
+				row.User = &schema.ActivityLogUser{ID: u.ID, Username: u.Username, DisplayName: u.DisplayName,
+					Avatar: u.Avatar, Status: u.Status, Prestige: u.Prestige, Rank: u.Rank}
 			} else {
 				row.User.DisplayName = "#" + row.User.ID
 			}

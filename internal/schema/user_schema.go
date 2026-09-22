@@ -369,6 +369,24 @@ type ActionRecordResp struct {
 	Verify     bool   `json:"verify"`
 }
 
+// UserPrestige [cd] badges shown next to the user's avatar: rank insignia, badge count, yellow cards
+type UserPrestige struct {
+	// highest earned badge of the rank group, empty when the user has none
+	RankBadgeID string `json:"rank_badge_id"`
+	// i18n key of the rank badge name, translated by the UI
+	RankBadgeName string `json:"rank_badge_name"`
+	// icon URL of the rank badge
+	RankBadgeIcon string `json:"rank_badge_icon"`
+	// 1 bronze, 2 silver, 3 gold
+	RankBadgeLevel int `json:"rank_badge_level"`
+	// accepted answers needed for this rank, also used to order users by rank
+	RankBadgeAmount int `json:"rank_badge_amount"`
+	// awarded badges except ranks and yellow cards
+	BadgeCount int `json:"badge_count"`
+	// times the yellow card badge was awarded
+	YellowCards int `json:"yellow_cards"`
+}
+
 type UserBasicInfo struct {
 	ID             string `json:"id"`
 	Username       string `json:"username"`
@@ -380,6 +398,8 @@ type UserBasicInfo struct {
 	Language       string `json:"language"`
 	Status         string `json:"status"`
 	SuspendedUntil int64  `json:"suspended_until"`
+	// [cd] rank insignia, badge count and yellow cards
+	Prestige *UserPrestige `json:"prestige,omitempty"`
 }
 
 type GetOtherUserInfoByUsernameReq struct {
@@ -428,6 +448,8 @@ type UserRankingSimpleInfo struct {
 	DisplayName string `json:"display_name"`
 	// avatar
 	Avatar string `json:"avatar"`
+	// [cd] rank insignia, badge count and yellow cards
+	Prestige *UserPrestige `json:"prestige,omitempty"`
 }
 
 // UserUnsubscribeNotificationReq user unsubscribe email notification request

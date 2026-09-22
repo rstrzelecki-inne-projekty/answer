@@ -2909,8 +2909,8 @@ ui:
     no_data: Nie mogliśmy nic znaleźć.
   users:
     title: Użytkownicy
-    users_with_the_most_reputation: Użytkownicy o najwyższej reputacji w tym tygodniu
-    users_with_the_most_vote: Użytkownicy, którzy oddali najwięcej głosów w tym tygodniu
+    users_with_the_most_reputation: Użytkownicy o najwyższej reputacji
+    users_with_the_most_vote: Użytkownicy, którzy oddali najwięcej głosów
     staffs: Nasz personel społeczności
     reputation: reputacja
     votes: głosy
@@ -2960,3 +2960,9 @@ ui:
     send: Wyślij
     success: Wiadomość wysłana do {{username}}.
     failed: Nie udało się wysłać wiadomości
+  prestige:
+    rank: Stopień
+    rank_title: '{{name}} — {{num}} zaakceptowanych odpowiedzi'
+    reputation: Renoma
+    badges: 'Odznaki: {{num}}'
+    yellow_card: Żółta kartka ({{num}}) — regulamin §7.6

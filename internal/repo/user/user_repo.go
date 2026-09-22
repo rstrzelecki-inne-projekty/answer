@@ -283,6 +283,21 @@ func (ur *userRepo) GetUserCount(ctx context.Context) (count int64, err error) {
 	return count, nil
 }
 
+// ListTopByRank [cd] users with the highest reputation, all time
+func (ur *userRepo) ListTopByRank(ctx context.Context, limit int) (userList []*entity.User, err error) {
+	userList = make([]*entity.User, 0)
+	session := ur.data.DB.Context(ctx)
+	session.Where("status = ?", entity.UserStatusAvailable)
+	session.Where("rank > 0")
+	session.OrderBy("`rank` DESC, `user`.id ASC")
+	session.Limit(limit)
+	if err = session.Find(&userList); err != nil {
+		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+	}
+	tryToDecorateUserListFromUserCenter(ctx, ur.data, userList)
+	return userList, nil
+}
+
 func (ur *userRepo) SearchUserListByName(ctx context.Context, name string, limit int,
 	onlyStaff bool) (userList []*entity.User, err error) {
 	userList = make([]*entity.User, 0)

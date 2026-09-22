@@ -41,7 +41,7 @@ func Test_questionRepo_GetRecommend(t *testing.T) {
 	var (
 		uniqueIDRepo       = unique.NewUniqueIDRepo(testDataSource)
 		questionRepo       = question.NewQuestionRepo(testDataSource, uniqueIDRepo)
-		userRepo           = user.NewUserRepo(testDataSource)
+		userRepo           = user.NewUserRepo(testDataSource, nil)
 		tagRelRepo         = tag.NewTagRelRepo(testDataSource, uniqueIDRepo)
 		tagRepo            = tag.NewTagRepo(testDataSource, uniqueIDRepo)
 		tagCommenRepo      = tag_common.NewTagCommonRepo(testDataSource, uniqueIDRepo)
