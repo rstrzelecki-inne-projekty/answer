@@ -34,6 +34,15 @@ export const useQueryContributeUsers = () => {
   }>(apiUrl, request.instance.get);
 };
 
+// [cd] §10.2 of the contest rules: own contest points, fetched only when the dialog opens
+export const useQueryContestMyPoints = (enabled: boolean) => {
+  const apiUrl = '/answer/api/v1/contest/my-points';
+  return useSWR<Type.ContestMyPoints>(
+    enabled ? apiUrl : null,
+    request.instance.get,
+  );
+};
+
 export const userSearchByName = (name: string) => {
   const apiUrl = '/answer/api/v1/user/info/search';
   return request.get<Type.UserInfoBase[]>(apiUrl, {

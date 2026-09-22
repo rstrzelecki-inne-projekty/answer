@@ -1242,6 +1242,10 @@ const (
 	contestQuestionShareOfAnswers = 2.0 / 3.0
 	// §4 ranks places 1-20
 	contestListLimit = 20
+
+	contestKindSolution       = "solution"
+	contestKindAnswerUpvote   = "answer_upvote"
+	contestKindQuestionUpvote = "question_upvote"
 )
 
 // contestExcludedUsernames [cd] §2.2 keeps the service accounts out of the contest; portal staff
@@ -1291,13 +1295,28 @@ func contestAnswerPoints(accepted, upvoted, ownQuestion bool) float64 {
 
 // contestTotalPoints §3.4: points for questions may not exceed 40% of the total, the surplus is lost
 func contestTotalPoints(answerPoints, questionPoints float64) float64 {
-	if limit := answerPoints * contestQuestionShareOfAnswers; questionPoints > limit {
-		questionPoints = limit
-	}
-	return math.Round((answerPoints+questionPoints)*10) / 10
+	return math.Round((answerPoints+contestCountedQuestionPoints(answerPoints, questionPoints))*10) / 10
 }
 
-// contestScore one participant's running total// contestScore one participant's running total
+// contestCountedQuestionPoints how much of the question points survives the §3.4 cap
+func contestCountedQuestionPoints(answerPoints, questionPoints float64) float64 {
+	if limit := answerPoints * contestQuestionShareOfAnswers; questionPoints > limit {
+		return limit
+	}
+	return questionPoints
+}
+
+// contestItem one scoring event: an answer taken as the solution, an answer with a qualifying
+// upvote, or an upvoted question. Points are already halved and capped per §3.5 and §3.
+type contestItem struct {
+	QuestionID string
+	Kind       string
+	Points     float64
+	Halved     bool
+	At         time.Time
+}
+
+// contestScore one participant's running total
 type contestScore struct {
 	answerPoints   float64
 	questionPoints float64
@@ -1305,20 +1324,39 @@ type contestScore struct {
 	firstScoredAt  time.Time
 }
 
-// fillContestRanking [cd] the quarterly contest ranking (§3, §4). Everything it counts comes from
-// the activity log, so un-accepting an answer or cancelling a vote takes the points away as well.
-func (us *UserService) fillContestRanking(ctx context.Context, resp *schema.UserRankingResp) {
+// contestAggregate sums one participant's scoring events
+func contestAggregate(items []*contestItem) *contestScore {
+	score := &contestScore{}
+	for _, item := range items {
+		if score.firstScoredAt.IsZero() || item.At.Before(score.firstScoredAt) {
+			score.firstScoredAt = item.At
+		}
+		switch item.Kind {
+		case contestKindQuestionUpvote:
+			score.questionPoints += item.Points
+		case contestKindSolution:
+			score.answerPoints += item.Points
+			score.solved++
+		default:
+			score.answerPoints += item.Points
+		}
+	}
+	return score
+}
+
+// contestItems [cd] every scoring event of the current quarter, per user. Everything comes from the
+// activity log, so un-accepting an answer or cancelling a vote takes the points away as well.
+func (us *UserService) contestItems(ctx context.Context) (map[string][]*contestItem, error) {
 	now := time.Now()
 	acts, err := us.contestActivities(ctx, contestQuarterStart(now), now)
 	if err != nil {
-		log.Errorf("get contest activities failed: %v", err)
-		return
+		return nil, err
 	}
+	items := make(map[string][]*contestItem)
 	if len(acts.accepted) == 0 && len(acts.answerUpvotes) == 0 && len(acts.questionUpvotes) == 0 {
-		return
+		return items, nil
 	}
 
-	// answers accepted as the solution, upvoted answers (qualified voters only), upvoted questions
 	accepted := make(map[string]time.Time)           // answer id → when it was accepted
 	answerVoters := make(map[string]map[string]bool) // answer id → voter ids
 	questionUpvotes := make(map[string]time.Time)    // question id → first upvote
@@ -1361,21 +1399,7 @@ func (us *UserService) fillContestRanking(ctx context.Context, resp *schema.User
 	}
 	authorship, err := us.questionService.AnswerAuthorship(ctx, answerIDs)
 	if err != nil {
-		log.Errorf("get answer authorship failed: %v", err)
-		return
-	}
-
-	scores := make(map[string]*contestScore)
-	score := func(userID string, at time.Time) *contestScore {
-		s := scores[userID]
-		if s == nil {
-			s = &contestScore{firstScoredAt: at}
-			scores[userID] = s
-		}
-		if at.Before(s.firstScoredAt) {
-			s.firstScoredAt = at
-		}
-		return s
+		return nil, err
 	}
 
 	for answerID, author := range authorship {
@@ -1387,8 +1411,8 @@ func (us *UserService) fillContestRanking(ctx context.Context, resp *schema.User
 				break
 			}
 		}
-		points := contestAnswerPoints(isAccepted, upvoted,
-			author.QuestionUserID != "" && author.QuestionUserID == author.AnswerUserID)
+		ownQuestion := author.QuestionUserID != "" && author.QuestionUserID == author.AnswerUserID
+		points := contestAnswerPoints(isAccepted, upvoted, ownQuestion)
 		if points == 0 {
 			continue
 		}
@@ -1396,10 +1420,27 @@ func (us *UserService) fillContestRanking(ctx context.Context, resp *schema.User
 		if isAccepted {
 			when = at
 		}
-		s := score(author.AnswerUserID, when)
-		s.answerPoints += points
-		if _, ok := accepted[answerID]; ok {
-			s.solved++
+		// split the (already halved and capped) points back into the two reasons, so the
+		// participant sees what each one gave them
+		raw := 0.0
+		if isAccepted {
+			raw += contestPPSolution
+		}
+		if upvoted {
+			raw += contestPPUpvotedAnswer
+		}
+		factor := points / raw
+		if isAccepted {
+			items[author.AnswerUserID] = append(items[author.AnswerUserID], &contestItem{
+				QuestionID: author.QuestionID, Kind: contestKindSolution,
+				Points: contestPPSolution * factor, Halved: ownQuestion, At: when,
+			})
+		}
+		if upvoted {
+			items[author.AnswerUserID] = append(items[author.AnswerUserID], &contestItem{
+				QuestionID: author.QuestionID, Kind: contestKindAnswerUpvote,
+				Points: contestPPUpvotedAnswer * factor, Halved: ownQuestion, At: when,
+			})
 		}
 	}
 
@@ -1408,11 +1449,87 @@ func (us *UserService) fillContestRanking(ctx context.Context, resp *schema.User
 		if author == "" || author == "0" {
 			continue
 		}
-		s := score(author, at)
-		s.questionPoints += contestPPUpvotedQuestion
+		items[author] = append(items[author], &contestItem{
+			QuestionID: questionID, Kind: contestKindQuestionUpvote,
+			Points: contestPPUpvotedQuestion, At: at,
+		})
 	}
+	return items, nil
+}
 
-	resp.ContestRanking = us.contestRankingList(ctx, scores)
+// fillContestRanking [cd] the quarterly contest ranking (§3, §4)
+func (us *UserService) fillContestRanking(ctx context.Context, resp *schema.UserRankingResp) {
+	items, err := us.contestItems(ctx)
+	if err != nil {
+		log.Errorf("get contest items failed: %v", err)
+		return
+	}
+	if len(items) == 0 {
+		return
+	}
+	resp.ContestRanking = us.contestRankingList(ctx, items)
+}
+
+// ContestMyPoints [cd] §10.2: the participant sees their own points and how they were counted
+func (us *UserService) ContestMyPoints(ctx context.Context, userID string) (*schema.ContestMyPointsResp, error) {
+	now := time.Now()
+	resp := &schema.ContestMyPointsResp{
+		PeriodStart: contestQuarterStart(now).Unix(),
+		PeriodEnd:   now.Unix(),
+		Items:       make([]*schema.ContestMyPointsItem, 0),
+	}
+	userInfo, exist, err := us.userRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if !exist {
+		return resp, nil
+	}
+	resp.Excluded = contestExcludedUsernames[strings.ToLower(userInfo.Username)] || us.contestStaff(ctx)[userID]
+
+	items, err := us.contestItems(ctx)
+	if err != nil {
+		return nil, err
+	}
+	mine := items[userID]
+	score := contestAggregate(mine)
+	counted := contestCountedQuestionPoints(score.answerPoints, score.questionPoints)
+	resp.AnswerPoints = math.Round(score.answerPoints*10) / 10
+	resp.QuestionPoints = math.Round(counted*10) / 10
+	resp.QuestionPointsLost = math.Round((score.questionPoints-counted)*10) / 10
+	resp.SolvedCount = score.solved
+	resp.Total = contestTotalPoints(score.answerPoints, score.questionPoints)
+
+	titles, err := us.questionService.QuestionTitles(ctx, contestQuestionIDs(mine))
+	if err != nil {
+		log.Errorf("get contest question titles failed: %v", err)
+		titles = map[string]string{}
+	}
+	sort.SliceStable(mine, func(i, j int) bool { return mine[i].At.After(mine[j].At) })
+	for _, item := range mine {
+		resp.Items = append(resp.Items, &schema.ContestMyPointsItem{
+			QuestionID: item.QuestionID,
+			Title:      titles[item.QuestionID],
+			Kind:       item.Kind,
+			Points:     math.Round(item.Points*10) / 10,
+			Halved:     item.Halved,
+			CreatedAt:  item.At.Unix(),
+		})
+	}
+	return resp, nil
+}
+
+func contestQuestionIDs(items []*contestItem) []string {
+	seen := make(map[string]bool, len(items))
+	ids := make([]string, 0, len(items))
+	for _, item := range items {
+		if item.QuestionID == "" || seen[item.QuestionID] {
+			continue
+		}
+		seen[item.QuestionID] = true
+		ids = append(ids, item.QuestionID)
+	}
+	return ids
 }
 
 // contestActivityGroups the three activity types the contest can count
@@ -1475,25 +1592,31 @@ func (us *UserService) contestQualifiedVoters(ctx context.Context, voterIDs map[
 	return qualified
 }
 
-// contestRankingList turns the running totals into the published ranking: the question share is
+// contestStaff §2.2: the portal staff does not take part in the contest
+func (us *UserService) contestStaff(ctx context.Context) map[string]bool {
+	staff := make(map[string]bool)
+	rels, err := us.userRoleService.GetUserByRoleID(ctx, []int{role.RoleAdminID, role.RoleModeratorID})
+	if err != nil {
+		log.Errorf("get contest staff failed: %v", err)
+		return staff
+	}
+	for _, rel := range rels {
+		staff[rel.UserID] = true
+	}
+	return staff
+}
+
+// contestRankingList turns the scoring events into the published ranking: the question share is
 // capped (§3.4), the excluded accounts and the portal staff drop out (§2.2), ties are broken by the
 // number of solutions and then by who got there first (§4.8).
-func (us *UserService) contestRankingList(ctx context.Context, scores map[string]*contestScore) []*schema.UserRankingSimpleInfo {
-	list := make([]*schema.UserRankingSimpleInfo, 0, len(scores))
-	if len(scores) == 0 {
+func (us *UserService) contestRankingList(ctx context.Context, items map[string][]*contestItem) []*schema.UserRankingSimpleInfo {
+	list := make([]*schema.UserRankingSimpleInfo, 0, len(items))
+	if len(items) == 0 {
 		return list
 	}
-	staff := make(map[string]bool)
-	if rels, err := us.userRoleService.GetUserByRoleID(ctx, []int{role.RoleAdminID, role.RoleModeratorID}); err == nil {
-		for _, rel := range rels {
-			staff[rel.UserID] = true
-		}
-	} else {
-		log.Errorf("get contest staff failed: %v", err)
-	}
-
-	userIDs := make([]string, 0, len(scores))
-	for id := range scores {
+	staff := us.contestStaff(ctx)
+	userIDs := make([]string, 0, len(items))
+	for id := range items {
 		if !staff[id] {
 			userIDs = append(userIDs, id)
 		}
@@ -1516,8 +1639,8 @@ func (us *UserService) contestRankingList(ctx context.Context, scores map[string
 			contestExcludedUsernames[strings.ToLower(user.Username)] {
 			continue
 		}
-		s := scores[id]
-		total := contestTotalPoints(s.answerPoints, s.questionPoints)
+		score := contestAggregate(items[id])
+		total := contestTotalPoints(score.answerPoints, score.questionPoints)
 		if total <= 0 {
 			continue
 		}
@@ -1528,10 +1651,10 @@ func (us *UserService) contestRankingList(ctx context.Context, scores map[string
 				Avatar:        user.Avatar,
 				Rank:          user.Rank,
 				ContestPoints: total,
-				SolvedCount:   s.solved,
+				SolvedCount:   score.solved,
 				Prestige:      prestigeMap[id],
 			},
-			score: s,
+			score: score,
 		})
 	}
 	sort.SliceStable(rankedList, func(i, j int) bool {

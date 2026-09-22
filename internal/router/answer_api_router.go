@@ -239,6 +239,9 @@ func (a *AnswerAPIRouter) RegisterAnswerAPIRouter(r *gin.RouterGroup) {
 	r.GET("/revisions/edit/check", a.revisionController.CheckCanUpdateRevision)
 	r.GET("/reviewing/type", a.revisionController.GetReviewingType)
 
+	// [cd] contest points of the logged in user
+	r.GET("/contest/my-points", a.userController.ContestMyPoints)
+
 	// comment
 	r.POST("/comment", a.commentController.AddComment)
 	r.DELETE("/comment", a.commentController.RemoveComment)

@@ -154,6 +154,29 @@ export interface User {
   prestige?: UserPrestige | null;
 }
 
+/** [cd] one scoring event in the contest */
+export interface ContestMyPointsItem {
+  question_id: string;
+  title: string;
+  kind: string;
+  points: number;
+  halved: boolean;
+  created_at: number;
+}
+
+/** [cd] own contest points of the current quarter (§10.2 of the contest rules) */
+export interface ContestMyPoints {
+  period_start: number;
+  period_end: number;
+  total: number;
+  answer_points: number;
+  question_points: number;
+  question_points_lost: number;
+  solved_count: number;
+  excluded: boolean;
+  items: ContestMyPointsItem[];
+}
+
 /** [cd] rank insignia, badge count and yellow cards shown next to the avatar */
 export interface UserPrestige {
   rank_badge_id: string;

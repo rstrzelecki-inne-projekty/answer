@@ -2895,6 +2895,28 @@ ui:
     views: views
     points: HP
     solutions: solutions
+  contest:
+    my_points: My points
+    title: My help points
+    loading: Loading…
+    period: "Quarter from {{from}} to {{to}}"
+    total: total
+    answers: from answers
+    questions: from questions
+    solved: solutions
+    questions_lost: "{{points}} HP from questions were lost to the 40% cap (§3.4 of the contest rules)."
+    excluded: This account does not take part in the contest (§2.2 of the contest rules), the points are shown for information only.
+    empty: No points in this quarter yet.
+    col_date: Date
+    col_post: Post
+    col_reason: Counted as
+    col_points: HP
+    kind_solution: Answer accepted as the solution
+    kind_answer_upvote: Answer with an upvote
+    kind_question_upvote: Upvoted question
+    kind_other: Other
+    halved: half rate, your own question
+    note: The portal counts only what it can count on its own. Points for a substantive answer without votes, for a substantive comment and the knowledge base bonus are added by the jury.
   prestige:
     rank: Rank
     rank_title: "{{name}} — {{num}} accepted answers"

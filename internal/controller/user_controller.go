@@ -647,6 +647,20 @@ func (uc *UserController) UserRanking(ctx *gin.Context) {
 	handler.HandleResponse(ctx, err, resp)
 }
 
+// ContestMyPoints get the logged in user's contest points and how they were counted
+// @Summary get own contest points
+// @Description [cd] §10.2 of the contest rules: own help points of the current quarter with the breakdown
+// @Tags User
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} handler.RespBody{data=schema.ContestMyPointsResp}
+// @Router /answer/api/v1/contest/my-points [get]
+func (uc *UserController) ContestMyPoints(ctx *gin.Context) {
+	userID := middleware.GetLoginUserIDFromContext(ctx)
+	resp, err := uc.userService.ContestMyPoints(ctx, userID)
+	handler.HandleResponse(ctx, err, resp)
+}
+
 // UserStaff get user staff
 // @Summary get user staff
 // @Description get user staff

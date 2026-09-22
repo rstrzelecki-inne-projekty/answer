@@ -465,6 +465,37 @@ type UserRankingSimpleInfo struct {
 	Prestige *UserPrestige `json:"prestige,omitempty"`
 }
 
+// ContestMyPointsResp [cd] §10.2 of the contest rules: the participant's own points and how they
+// were counted, for the current quarter
+type ContestMyPointsResp struct {
+	PeriodStart int64 `json:"period_start"`
+	PeriodEnd   int64 `json:"period_end"`
+	// total after the §3.4 cap
+	Total float64 `json:"total"`
+	// points from answers and the part of the question points that survived the cap
+	AnswerPoints   float64 `json:"answer_points"`
+	QuestionPoints float64 `json:"question_points"`
+	// question points lost to the 40% cap (§3.4)
+	QuestionPointsLost float64 `json:"question_points_lost"`
+	// answers accepted as the solution, the extra threshold of §4
+	SolvedCount int `json:"solved_count"`
+	// true when the account does not take part in the contest at all (§2.2)
+	Excluded bool                   `json:"excluded"`
+	Items    []*ContestMyPointsItem `json:"items"`
+}
+
+// ContestMyPointsItem one scoring event
+type ContestMyPointsItem struct {
+	QuestionID string `json:"question_id"`
+	Title      string `json:"title"`
+	// solution | answer_upvote | question_upvote
+	Kind   string  `json:"kind"`
+	Points float64 `json:"points"`
+	// half rate for answering your own question (§3.5)
+	Halved    bool  `json:"halved"`
+	CreatedAt int64 `json:"created_at"`
+}
+
 // UserUnsubscribeNotificationReq user unsubscribe email notification request
 type UserUnsubscribeNotificationReq struct {
 	Code    string `validate:"required,gt=0,lte=500" json:"code"`

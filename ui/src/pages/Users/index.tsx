@@ -27,6 +27,8 @@ import { useQueryContributeUsers } from '@/services';
 import { Avatar, UserPrestige } from '@/components';
 import type * as Type from '@/common/interface';
 
+import ContestPoints from './components/ContestPoints';
+
 const Users = () => {
   const { t } = useTranslation('translation', { keyPrefix: 'users' });
 
@@ -73,7 +75,10 @@ const Users = () => {
             <Fragment key={key}>
               <Row className="mb-4">
                 <Col>
-                  <h6 className="mb-0">{t(key)}</h6>
+                  <div className="d-flex flex-wrap align-items-center gap-2">
+                    <h6 className="mb-0">{t(key)}</h6>
+                    {key === 'contest_ranking' && <ContestPoints />}
+                  </div>
                   {key === 'contest_ranking' && (
                     <div className="text-secondary small mt-1">
                       {t('contest_ranking_note')}

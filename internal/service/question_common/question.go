@@ -471,6 +471,7 @@ func (qs *QuestionCommon) FormatQuestionsPage(
 type AnswerAuthorship struct {
 	AnswerUserID   string
 	QuestionUserID string
+	QuestionID     string
 }
 
 func (qs *QuestionCommon) AnswerAuthorship(ctx context.Context, answerIDs []string) (
@@ -502,9 +503,26 @@ func (qs *QuestionCommon) AnswerAuthorship(ctx context.Context, answerIDs []stri
 		if a.Status != entity.AnswerStatusAvailable {
 			continue
 		}
-		result[a.ID] = AnswerAuthorship{AnswerUserID: a.UserID, QuestionUserID: questionAuthor[a.QuestionID]}
+		result[a.ID] = AnswerAuthorship{AnswerUserID: a.UserID, QuestionUserID: questionAuthor[a.QuestionID],
+			QuestionID: a.QuestionID}
 	}
 	return result, nil
+}
+
+// QuestionTitles [cd] question id → title, for the contest points breakdown
+func (qs *QuestionCommon) QuestionTitles(ctx context.Context, questionIDs []string) (map[string]string, error) {
+	titles := make(map[string]string, len(questionIDs))
+	if len(questionIDs) == 0 {
+		return titles, nil
+	}
+	questions, err := qs.questionRepo.FindByID(ctx, questionIDs)
+	if err != nil {
+		return nil, err
+	}
+	for _, q := range questions {
+		titles[q.ID] = q.Title
+	}
+	return titles, nil
 }
 
 func (qs *QuestionCommon) FormatQuestions(ctx context.Context, questionList []*entity.Question, loginUserID string) ([]*schema.QuestionInfoResp, error) {

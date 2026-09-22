@@ -2974,3 +2974,25 @@ ui:
     reputation: Renoma
     badges: 'Odznaki: {{num}}'
     yellow_card: Żółta kartka ({{num}}) — regulamin §7.6
+  contest:
+    my_points: Moje punkty
+    title: Moje Punkty Pomocy
+    loading: Wczytuję…
+    period: Kwartał od {{from}} do {{to}}
+    total: razem
+    answers: z odpowiedzi
+    questions: z pytań
+    solved: rozwiązań
+    questions_lost: '{{points}} PP z pytań przepadło przez limit 40% (§3.4 regulaminu konkursu).'
+    excluded: To konto nie bierze udziału w konkursie (§2.2 regulaminu). Punkty pokazujemy tylko informacyjnie.
+    empty: W tym kwartale nie ma jeszcze punktów.
+    col_date: Data
+    col_post: Wpis
+    col_reason: Za co
+    col_points: PP
+    kind_solution: Odpowiedź uznana za rozwiązanie
+    kind_answer_upvote: Odpowiedź z głosem w górę
+    kind_question_upvote: Pytanie z głosem w górę
+    kind_other: Inne
+    halved: pół stawki, własne pytanie
+    note: Portal liczy tylko to, co potrafi policzyć sam. Punkty za odpowiedź merytoryczną bez głosów, za komentarz merytoryczny i bonus za uzupełnienie bazy wiedzy dolicza Komisja Konkursowa.
