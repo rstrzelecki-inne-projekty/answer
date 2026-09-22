@@ -22,6 +22,7 @@ package content
 import (
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/apache/answer/internal/entity"
 	"github.com/apache/answer/internal/schema"
@@ -62,4 +63,43 @@ func TestExcludedFromRanking_HidesTheKnowledgeBaseAccount(t *testing.T) {
 	require.False(t, excludedFromRanking(&entity.User{Username: "asystent-ai"}))
 	require.False(t, excludedFromRanking(&entity.User{Username: "anna-kowalczyk"}))
 	require.True(t, excludedFromRanking(nil))
+}
+
+// §3 i §3.4–3.5 regulaminu konkursu „Pomocnik Automatyzacji"
+func TestContestAnswerPoints_RulesFromTheContestTable(t *testing.T) {
+	require.Equal(t, 10.0, contestAnswerPoints(true, false, false), "rozwiązanie")
+	require.Equal(t, 5.0, contestAnswerPoints(false, true, false), "odpowiedź z głosem w górę")
+	require.Equal(t, 15.0, contestAnswerPoints(true, true, false), "rozwiązanie + głos, czapka 15")
+	require.Equal(t, 0.0, contestAnswerPoints(false, false, false), "sama odpowiedź nie punktuje automatycznie")
+	require.Equal(t, 7.5, contestAnswerPoints(true, true, true), "odpowiedź na własne pytanie = pół stawki")
+	require.Equal(t, 2.5, contestAnswerPoints(false, true, true))
+	require.Equal(t, 0.0, contestAnswerPoints(false, false, true))
+}
+
+func TestContestTotalPoints_QuestionsCappedAt40Percent(t *testing.T) {
+	// 30 PP z odpowiedzi → pytania mogą dołożyć najwyżej 20 PP (20/50 = 40%)
+	require.Equal(t, 50.0, contestTotalPoints(30, 40))
+	require.Equal(t, 34.0, contestTotalPoints(30, 4), "poniżej czapki nic nie przepada")
+	require.Equal(t, 0.0, contestTotalPoints(0, 12), "same pytania bez odpowiedzi nie punktują")
+	require.Equal(t, 12.5, contestTotalPoints(7.5, 5))
+}
+
+func TestContestQuarterStart_FirstDayOfTheCalendarQuarter(t *testing.T) {
+	for _, c := range []struct {
+		now   time.Time
+		start time.Time
+	}{
+		{time.Date(2026, 9, 22, 17, 40, 0, 0, time.UTC), time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)},
+		{time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC), time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)},
+		{time.Date(2026, 12, 31, 23, 59, 0, 0, time.UTC), time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)},
+		{time.Date(2027, 1, 12, 9, 0, 0, 0, time.UTC), time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)},
+	} {
+		require.Equal(t, c.start, contestQuarterStart(c.now))
+	}
+}
+
+func TestContestExcluded_ServiceAccountsOutOfTheContest(t *testing.T) {
+	require.True(t, contestExcludedUsernames["baza-wiedzy"])
+	require.True(t, contestExcludedUsernames["asystent-ai"], "§2.2 wyklucza konta serwisowe")
+	require.False(t, contestExcludedUsernames["anna-kowalczyk"])
 }

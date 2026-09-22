@@ -2918,6 +2918,10 @@ ui:
     most_viewing_users: Najbardziej wyszukujący użytkownicy w tym tygodniu
     activities: aktywności
     views: wyświetleń
+    contest_ranking: Ranking do nagrody kwartalnej
+    contest_ranking_note: 'Punkty Pomocy z bieżącego kwartału, liczone automatycznie: rozwiązania (10 PP), odpowiedzi z głosem w górę od osoby z reputacją min. 100 (5 PP) i pytania z głosem w górę (4 PP), z czapkami z §3. Pozycje wymagające oceny Komisji — komentarze merytoryczne, odpowiedzi bez głosów, bonus za uzupełnienie bazy wiedzy — dolicza Komisja Konkursowa.'
+    points: PP
+    solutions: rozwiązań
   prompt:
     leave_page: Czy na pewno chcesz opuścić stronę?
     changes_not_save: Twoje zmiany mogą nie zostać zapisane.

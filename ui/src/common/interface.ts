@@ -144,6 +144,10 @@ export interface User {
   activity_count?: number;
   /** [cd] pages opened in the ranked period */
   view_count?: number;
+  /** [cd] help points of the current quarter (contest ranking) */
+  contest_points?: number;
+  /** [cd] answers accepted as the solution in the current quarter */
+  solved_count?: number;
   display_name: string;
   avatar: string;
   /** [cd] rank insignia, badge count and yellow cards */

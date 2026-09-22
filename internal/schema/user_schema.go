@@ -437,6 +437,8 @@ type UserRankingResp struct {
 	MostActiveUsers  []*UserRankingSimpleInfo `json:"most_active_users"`
 	MostViewingUsers []*UserRankingSimpleInfo `json:"most_viewing_users"`
 	Staffs           []*UserRankingSimpleInfo `json:"staffs"`
+	// [cd] help points of the current quarter, the contest ranking
+	ContestRanking []*UserRankingSimpleInfo `json:"contest_ranking"`
 }
 
 // UserRankingSimpleInfo user ranking simple info
@@ -455,6 +457,10 @@ type UserRankingSimpleInfo struct {
 	ActivityCount int `json:"activity_count"`
 	// [cd] pages opened in the ranked period
 	ViewCount int `json:"view_count"`
+	// [cd] help points (PP) of the current quarter, only the automatically countable rules
+	ContestPoints float64 `json:"contest_points"`
+	// [cd] answers accepted as the solution in the current quarter (threshold in §4 of the contest rules)
+	SolvedCount int `json:"solved_count"`
 	// [cd] rank insignia, badge count and yellow cards
 	Prestige *UserPrestige `json:"prestige,omitempty"`
 }

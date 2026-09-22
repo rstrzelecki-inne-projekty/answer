@@ -45,6 +45,9 @@ type ActivityRepo interface {
 		ctx context.Context, startTime, endTime time.Time, limit int) (rankStat []*entity.ActivityUserRankStat, err error)
 	GetUsersWhoHasVoteMost(
 		ctx context.Context, startTime, endTime time.Time, limit int) (voteStat []*entity.ActivityUserVoteStat, err error)
+	// [cd] uncancelled activities of the given types in a period, used by the contest ranking
+	ListByTypesBetween(ctx context.Context, activityTypes []int, startTime, endTime time.Time) (
+		activities []*entity.Activity, err error)
 }
 
 type ActivityCommon struct {

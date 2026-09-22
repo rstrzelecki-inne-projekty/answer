@@ -41,6 +41,9 @@ const Users = () => {
     if (key === 'most_viewing_users') {
       return `${user.view_count} ${t('views')}`;
     }
+    if (key === 'contest_ranking') {
+      return `${user.contest_points} ${t('points')} · ${user.solved_count} ${t('solutions')}`;
+    }
     return `${user.rank} ${t('reputation')}`;
   };
 
@@ -71,6 +74,11 @@ const Users = () => {
               <Row className="mb-4">
                 <Col>
                   <h6 className="mb-0">{t(key)}</h6>
+                  {key === 'contest_ranking' && (
+                    <div className="text-secondary small mt-1">
+                      {t('contest_ranking_note')}
+                    </div>
+                  )}
                 </Col>
               </Row>
               <Row className={index === keys.length - 1 ? '' : 'mb-4'}>

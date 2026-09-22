@@ -30,6 +30,7 @@ export const useQueryContributeUsers = () => {
     most_active_users: Type.User[];
     most_viewing_users: Type.User[];
     staffs: Type.User[];
+    contest_ranking: Type.User[];
   }>(apiUrl, request.instance.get);
 };
 

@@ -466,6 +466,47 @@ func (qs *QuestionCommon) FormatQuestionsPage(
 	return formattedQuestions, nil
 }
 
+// AnswerAuthorship [cd] for the contest ranking: who wrote the answer and who asked the question.
+// Deleted or pending answers are left out, they do not score.
+type AnswerAuthorship struct {
+	AnswerUserID   string
+	QuestionUserID string
+}
+
+func (qs *QuestionCommon) AnswerAuthorship(ctx context.Context, answerIDs []string) (
+	map[string]AnswerAuthorship, error) {
+	result := make(map[string]AnswerAuthorship, len(answerIDs))
+	if len(answerIDs) == 0 {
+		return result, nil
+	}
+	answers, err := qs.answerRepo.GetByIDs(ctx, answerIDs...)
+	if err != nil {
+		return nil, err
+	}
+	questionIDs := make([]string, 0, len(answers))
+	for _, a := range answers {
+		if a.Status != entity.AnswerStatusAvailable {
+			continue
+		}
+		questionIDs = append(questionIDs, a.QuestionID)
+	}
+	questions, err := qs.questionRepo.FindByID(ctx, questionIDs)
+	if err != nil {
+		return nil, err
+	}
+	questionAuthor := make(map[string]string, len(questions))
+	for _, q := range questions {
+		questionAuthor[q.ID] = q.UserID
+	}
+	for _, a := range answers {
+		if a.Status != entity.AnswerStatusAvailable {
+			continue
+		}
+		result[a.ID] = AnswerAuthorship{AnswerUserID: a.UserID, QuestionUserID: questionAuthor[a.QuestionID]}
+	}
+	return result, nil
+}
+
 func (qs *QuestionCommon) FormatQuestions(ctx context.Context, questionList []*entity.Question, loginUserID string) ([]*schema.QuestionInfoResp, error) {
 	list := make([]*schema.QuestionInfoResp, 0)
 	objectIds := make([]string, 0)

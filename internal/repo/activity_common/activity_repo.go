@@ -162,6 +162,23 @@ func (ar *ActivityRepo) GetUsersWhoHasGainedTheMostReputation(
 	return
 }
 
+// ListByTypesBetween [cd] uncancelled activities of the given types in a period (contest ranking)
+func (ar *ActivityRepo) ListByTypesBetween(ctx context.Context, activityTypes []int, startTime, endTime time.Time) (
+	activities []*entity.Activity, err error) {
+	activities = make([]*entity.Activity, 0)
+	if len(activityTypes) == 0 {
+		return activities, nil
+	}
+	session := ar.data.DB.Context(ctx).Where("cancelled = 0")
+	session.In("activity_type", activityTypes)
+	session.And("created_at >= ?", startTime)
+	session.And("created_at < ?", endTime)
+	if err = session.Find(&activities); err != nil {
+		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+	}
+	return activities, nil
+}
+
 // GetUsersWhoHasVoteMost get users who has vote most
 func (ar *ActivityRepo) GetUsersWhoHasVoteMost(
 	ctx context.Context, startTime, endTime time.Time, limit int) (voteStat []*entity.ActivityUserVoteStat, err error) {

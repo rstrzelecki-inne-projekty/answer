@@ -2887,10 +2887,14 @@ ui:
     most_active_users: Most active users this week
     most_viewing_users: Users who read the most this week
     staffs: Our community staff
+    contest_ranking: Quarterly prize ranking
+    contest_ranking_note: Help points of the current quarter, counted automatically from solutions, answers with an upvote and upvoted questions. The jury adds the points that need its own judgement.
     reputation: reputation
     votes: votes
     activities: activities
     views: views
+    points: HP
+    solutions: solutions
   prestige:
     rank: Rank
     rank_title: "{{name}} — {{num}} accepted answers"
