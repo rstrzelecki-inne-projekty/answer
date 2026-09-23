@@ -100,6 +100,8 @@ type ActivityLogRepo interface {
 	DeletePageViewsBefore(ctx context.Context, t time.Time) (int64, error)
 	// ListActionsBetween created_at, action, user ids of rows in [from, to) (dashboard aggregations); zero To = no upper bound
 	ListActionsBetween(ctx context.Context, from, to time.Time) ([]*entity.ActivityLog, error)
+	// [cd] object ids that already carry the given action since a moment
+	ListObjectIDsByAction(ctx context.Context, action string, since time.Time) ([]string, error)
 	// SearchUserIDs ids of users whose username / display name / e-mail contains text
 	SearchUserIDs(ctx context.Context, text string, limit int) ([]string, error)
 }
@@ -147,6 +149,19 @@ func (s *ActivityLogService) Attach(objectService *object_info.ObjService, userC
 }
 
 // Log records an entry asynchronously. IP and user agent are taken from the gin context when available.
+// ObjectsWithAction [cd] objects that already carry the given action since a moment
+func (s *ActivityLogService) ObjectsWithAction(ctx context.Context, action string, since time.Time) (map[string]bool, error) {
+	done := make(map[string]bool)
+	ids, err := s.repo.ListObjectIDsByAction(ctx, action, since)
+	if err != nil {
+		return nil, err
+	}
+	for _, id := range ids {
+		done[id] = true
+	}
+	return done, nil
+}
+
 func (s *ActivityLogService) Log(ctx context.Context, entry *entity.ActivityLog) {
 	if s == nil || entry == nil || entry.Action == "" {
 		return

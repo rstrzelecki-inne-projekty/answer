@@ -142,6 +142,50 @@ func (s *AdminMessageService) Send(ctx context.Context, req *schema.SendAdminMes
 	return items[0], nil
 }
 
+// SendSystemMessage [cd] a message the portal sends by itself (for example the reminder about a
+// thread without a solution). It goes out in the name of the first administrator, so the recipient
+// sees who to answer, and it lands in the same inbox as any other message from the staff.
+func (s *AdminMessageService) SendSystemMessage(ctx context.Context, receiverUserID, title, body, questionID string) error {
+	if receiverUserID == "" || receiverUserID == "0" {
+		return nil
+	}
+	rels, err := s.userRoleService.GetUserByRoleID(ctx, []int{role.RoleAdminID})
+	if err != nil {
+		return err
+	}
+	if len(rels) == 0 {
+		log.Warn("system message skipped: the portal has no administrator to send it")
+		return nil
+	}
+	senderUserID := rels[0].UserID
+	id, err := s.uniqueIDRepo.GenUniqueIDStr(ctx, constant.AdminMessageObjectType)
+	if err != nil {
+		return err
+	}
+	m := &entity.AdminMessage{ID: id, SenderUserID: senderUserID, ReceiverUserID: receiverUserID,
+		Title: strings.TrimSpace(title), Body: strings.TrimSpace(body),
+		ObjectID: "0", QuestionID: "0", AnswerID: "0"}
+	if questionID != "" && questionID != "0" {
+		m.ObjectType, m.ObjectID, m.QuestionID = constant.QuestionObjectType, questionID, questionID
+	}
+	if err = s.repo.Add(ctx, m); err != nil {
+		return err
+	}
+	s.notificationQueue.Send(ctx, &schema.NotificationMsg{
+		TriggerUserID:       senderUserID,
+		ReceiverUserID:      receiverUserID,
+		Type:                schema.NotificationTypeInbox,
+		Title:               m.Title,
+		ObjectID:            m.ID,
+		ObjectType:          constant.AdminMessageObjectType,
+		NotificationAction:  constant.NotificationAdminMessage,
+		NoNeedPushAllFollow: true,
+		ExtraInfo: map[string]string{"message": m.ID, "body": m.Body,
+			"question": zeroToEmpty(m.QuestionID), "answer": "", "context_type": m.ObjectType},
+	})
+	return nil
+}
+
 // Page the admin list
 func (s *AdminMessageService) Page(ctx context.Context, req *schema.AdminMessagePageReq) (*pager.PageModel, error) {
 	if err := s.checkStaff(ctx, req.LoginUserID); err != nil {

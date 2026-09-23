@@ -28,6 +28,7 @@ import { Avatar, UserPrestige } from '@/components';
 import type * as Type from '@/common/interface';
 
 import ContestPoints from './components/ContestPoints';
+import ContestPrizes from './components/ContestPrizes';
 
 const Users = () => {
   const { t } = useTranslation('translation', { keyPrefix: 'users' });
@@ -43,7 +44,7 @@ const Users = () => {
     if (key === 'most_viewing_users') {
       return `${user.view_count} ${t('views')}`;
     }
-    if (key === 'contest_ranking') {
+    if (key === 'contest_ranking' || key === 'contest_month_ranking') {
       return `${user.contest_points} ${t('points')} · ${user.solved_count} ${t('solutions')}`;
     }
     return `${user.rank} ${t('reputation')}`;
@@ -80,11 +81,21 @@ const Users = () => {
                 <Col>
                   <div className="d-flex flex-wrap align-items-center gap-2">
                     <h6 className="mb-0">{t(key)}</h6>
-                    {key === 'contest_ranking' && <ContestPoints />}
+                    {key === 'contest_ranking' && (
+                      <>
+                        <ContestPoints />
+                        <ContestPrizes />
+                      </>
+                    )}
                   </div>
                   {key === 'contest_ranking' && (
                     <div className="text-secondary small mt-1">
                       {t('contest_ranking_note')}
+                    </div>
+                  )}
+                  {key === 'contest_month_ranking' && (
+                    <div className="text-secondary small mt-1">
+                      {t('contest_month_note')}
                     </div>
                   )}
                 </Col>

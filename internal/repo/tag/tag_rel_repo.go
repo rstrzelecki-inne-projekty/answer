@@ -163,6 +163,21 @@ func (tr *tagRelRepo) GetObjectTagRelList(ctx context.Context, objectID string) 
 }
 
 // BatchGetObjectTagRelList get object tag relation list all
+// ListObjectIDsByTagID [cd] objects carrying the given tag, used by the contest scoring
+func (tr *tagRelRepo) ListObjectIDsByTagID(ctx context.Context, tagID string) (objectIDs []string, err error) {
+	objectIDs = make([]string, 0)
+	rels := make([]*entity.TagRel, 0)
+	session := tr.data.DB.Context(ctx).Where("tag_id = ?", tagID)
+	session.And("status = ?", entity.TagRelStatusAvailable)
+	if err = session.Find(&rels); err != nil {
+		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+	}
+	for _, rel := range rels {
+		objectIDs = append(objectIDs, rel.ObjectID)
+	}
+	return objectIDs, nil
+}
+
 func (tr *tagRelRepo) BatchGetObjectTagRelList(ctx context.Context, objectIds []string) (tagListList []*entity.TagRel, err error) {
 	for num, item := range objectIds {
 		objectIds[num] = uid.DeShortID(item)

@@ -299,6 +299,22 @@ func (qr *questionRepo) GetQuestionList(ctx context.Context, question *entity.Qu
 	return
 }
 
+// ListUnsolvedOlderThan [cd] published threads that have answers, no solution marked and were
+// asked before the given moment; used by the reminder to the person who asked
+func (qr *questionRepo) ListUnsolvedOlderThan(ctx context.Context, before time.Time, limit int) (
+	questionList []*entity.Question, err error) {
+	questionList = make([]*entity.Question, 0)
+	session := qr.data.DB.Context(ctx).Where("status = ?", entity.QuestionStatusAvailable)
+	session.And("answer_count > 0")
+	session.And("(accepted_answer_id = '0' OR accepted_answer_id IS NULL OR accepted_answer_id = '')")
+	session.And("created_at < ?", before)
+	session.OrderBy("created_at ASC").Limit(limit)
+	if err = session.Find(&questionList); err != nil {
+		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+	}
+	return questionList, nil
+}
+
 func (qr *questionRepo) GetQuestionCount(ctx context.Context) (count int64, err error) {
 	session := qr.data.DB.Context(ctx)
 	session.Where(builder.Lt{"status": entity.QuestionStatusDeleted})
@@ -443,6 +459,10 @@ func (qr *questionRepo) GetQuestionPage(ctx context.Context, page, pageSize int,
 		session.OrderBy("question.pin DESC, question.linked_count DESC, question.updated_at DESC")
 	case "views": // [cd]
 		session.OrderBy("question.pin DESC, question.view_count DESC, question.created_at DESC")
+	case "unsolved": // [cd] threads waiting for somebody to mark the solution
+		session.Where("question.answer_count > 0")
+		session.And("(question.accepted_answer_id = '0' OR question.accepted_answer_id IS NULL OR question.accepted_answer_id = '')")
+		session.OrderBy("question.pin DESC, question.created_at DESC")
 	}
 
 	session.GroupBy("question.id")
@@ -858,6 +878,10 @@ func (qr *questionRepo) GetQuestionLink(ctx context.Context, page, pageSize int,
 		session.OrderBy("question.pin DESC, question.linked_count DESC, question.updated_at DESC")
 	case "views": // [cd]
 		session.OrderBy("question.pin DESC, question.view_count DESC, question.created_at DESC")
+	case "unsolved": // [cd] threads waiting for somebody to mark the solution
+		session.Where("question.answer_count > 0")
+		session.And("(question.accepted_answer_id = '0' OR question.accepted_answer_id IS NULL OR question.accepted_answer_id = '')")
+		session.OrderBy("question.pin DESC, question.created_at DESC")
 	}
 
 	if page > 0 && pageSize > 0 {

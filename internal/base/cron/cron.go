@@ -23,8 +23,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
+	"github.com/apache/answer/internal/base/constant"
+	"github.com/apache/answer/internal/base/translator"
+	"github.com/apache/answer/internal/entity"
 	"github.com/apache/answer/internal/service/activity_log"
+	"github.com/apache/answer/internal/service/admin_message"
 	"github.com/apache/answer/internal/service/content"
 	"github.com/apache/answer/internal/service/file_record"
 	"github.com/apache/answer/internal/service/service_config"
@@ -32,6 +37,7 @@ import (
 	"github.com/apache/answer/internal/service/user_admin"
 	"github.com/apache/answer/pkg/converter"
 	"github.com/robfig/cron/v3"
+	"github.com/segmentfault/pacman/i18n"
 	"github.com/segmentfault/pacman/log"
 )
 
@@ -43,6 +49,7 @@ type ScheduledTaskManager struct {
 	userAdminService  *user_admin.UserAdminService
 	serviceConfig     *service_config.ServiceConfig
 	activityLog       *activity_log.ActivityLogService
+	adminMessage      *admin_message.AdminMessageService
 }
 
 // NewScheduledTaskManager new scheduled task manager
@@ -53,9 +60,11 @@ func NewScheduledTaskManager(
 	userAdminService *user_admin.UserAdminService,
 	serviceConfig *service_config.ServiceConfig,
 	activityLog *activity_log.ActivityLogService,
+	adminMessage *admin_message.AdminMessageService,
 ) *ScheduledTaskManager {
 	manager := &ScheduledTaskManager{
 		activityLog:       activityLog,
+		adminMessage:      adminMessage,
 		siteInfoService:   siteInfoService,
 		questionService:   questionService,
 		fileRecordService: fileRecordService,
@@ -100,6 +109,15 @@ func (s *ScheduledTaskManager) Run() {
 		log.Error(err)
 	}
 
+	// [cd] remind the person who asked to mark the solution, once per thread
+	_, err = c.AddFunc("0 9 * * *", func() {
+		log.Infof("unsolved question reminder cron execution")
+		s.remindUnsolvedQuestions(context.Background())
+	})
+	if err != nil {
+		log.Error(err)
+	}
+
 	// Check for expired user suspensions every 10 minutes
 	_, err = c.AddFunc("*/10 * * * *", func() {
 		ctx := context.Background()
@@ -134,4 +152,63 @@ func (s *ScheduledTaskManager) Run() {
 		}
 	}
 	c.Start()
+}
+
+// [cd] contest support: a thread with answers and no solution marked earns nobody any points, and
+// people simply do not know the button is there. A week after the question was asked its author
+// gets one message asking to mark the answer that helped. The reminder is logged, so it is sent
+// once per thread even though the job runs every day.
+const (
+	unsolvedReminderDays   = 7
+	unsolvedReminderLimit  = 200
+	unsolvedReminderAction = "question.solution_reminder"
+	unsolvedReminderWindow = 365 * 24 * time.Hour
+)
+
+func (s *ScheduledTaskManager) remindUnsolvedQuestions(ctx context.Context) {
+	if s.adminMessage == nil || s.questionService == nil {
+		return
+	}
+	items, err := s.questionService.ListUnsolvedForReminder(ctx, unsolvedReminderDays, unsolvedReminderLimit)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	if len(items) == 0 {
+		return
+	}
+	reminded := map[string]bool{}
+	if s.activityLog != nil {
+		if done, err := s.activityLog.ObjectsWithAction(ctx, unsolvedReminderAction,
+			time.Now().Add(-unsolvedReminderWindow)); err == nil {
+			reminded = done
+		} else {
+			log.Error(err)
+			return // without the log the reminder would go out again every day
+		}
+	}
+	lang := i18n.DefaultLanguage
+	if siteInterface, err := s.siteInfoService.GetSiteInterface(ctx); err == nil && siteInterface != nil {
+		lang = i18n.Language(siteInterface.Language)
+	}
+	title := translator.Tr(lang, "backend.reminder.solution.title")
+	bodyTpl := translator.Tr(lang, "backend.reminder.solution.body")
+	sent := 0
+	for _, item := range items {
+		if reminded[item.QuestionID] {
+			continue
+		}
+		body := fmt.Sprintf(bodyTpl, item.Title)
+		if err := s.adminMessage.SendSystemMessage(ctx, item.UserID, title, body, item.QuestionID); err != nil {
+			log.Error(err)
+			continue
+		}
+		s.activityLog.Log(ctx, &entity.ActivityLog{UserID: "0", Action: unsolvedReminderAction,
+			ObjectType: constant.QuestionObjectType, ObjectID: item.QuestionID,
+			QuestionID: item.QuestionID, TargetUserID: item.UserID})
+		sent++
+	}
+	if sent > 0 {
+		log.Infof("unsolved question reminder: %d sent", sent)
+	}
 }

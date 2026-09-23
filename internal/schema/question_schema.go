@@ -360,6 +360,7 @@ const (
 	QuestionOrderCondRecommend  = "recommend"
 	QuestionOrderCondFrequent   = "frequent"
 	QuestionOrderCondViews      = "views" // [cd] most viewed first
+	QuestionOrderCondUnsolved   = "unsolved" // [cd] answered but no solution marked yet
 
 	// HotInDays limit max days of the hottest question
 	HotInDays = 90
@@ -369,7 +370,7 @@ const (
 type QuestionPageReq struct {
 	Page      int    `validate:"omitempty,min=1" form:"page"`
 	PageSize  int    `validate:"omitempty,min=1" form:"page_size"`
-	OrderCond string `validate:"omitempty,oneof=newest active hot score unanswered recommend frequent views" form:"order"`
+	OrderCond string `validate:"omitempty,oneof=newest active hot score unanswered recommend frequent views unsolved" form:"order"`
 	Tag       string `validate:"omitempty,gt=0,lte=100" form:"tag"`
 	Username  string `validate:"omitempty,gt=0,lte=100" form:"username"`
 	InDays    int    `validate:"omitempty,min=1" form:"in_days"`

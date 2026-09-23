@@ -35,6 +35,9 @@ type fakeRepo struct{ added chan *entity.ActivityLog }
 
 func (f *fakeRepo) Add(_ context.Context, e *entity.ActivityLog) error    { f.added <- e; return nil }
 func (f *fakeRepo) ExistsSourceRef(context.Context, string) (bool, error) { return false, nil }
+func (f *fakeRepo) ListObjectIDsByAction(context.Context, string, time.Time) ([]string, error) {
+	return nil, nil
+}
 func (f *fakeRepo) Page(context.Context, *Query, int, int) ([]*entity.ActivityLog, int64, error) {
 	return nil, 0, nil
 }

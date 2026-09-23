@@ -1180,6 +1180,15 @@ backend:
           other: Ekspert eKsięgowość
         desc:
           other: Uznany przez admina ekspert od AO/AOA w eKsięgowości (PKO BP).
+  reminder:
+    solution:
+      title:
+        other: Czy któraś odpowiedź rozwiązała Twój problem?
+      body:
+        other: 'Pod Twoim pytaniem „%s” są już odpowiedzi, ale żadna nie jest oznaczona jako rozwiązanie.
+
+
+          Jeśli któraś pomogła, wejdź w wątek i kliknij „Zaakceptuj” pod nią. To chwila, a dzięki temu wszyscy widzą, która odpowiedź działa, i osoba, która Ci pomogła, dostaje za to punkty.'
 ui:
   how_to_format:
     title: Jak formatować
@@ -1963,6 +1972,7 @@ ui:
     follow_a_tag: Podążaj za tagiem
     more: Więcej
     views: Najwięcej wyświetleń
+    unsolved: Bez rozwiązania
   personal:
     overview: Przegląd
     answers: Odpowiedzi
@@ -2923,6 +2933,8 @@ ui:
     points: PP
     solutions: rozwiązań
     contest_empty: Ranking ruszy, gdy pierwsze odpowiedzi zostaną oznaczone jako rozwiązania — to z nich bierze się większość punktów.
+    contest_month_ranking: Pomocnik miesiąca
+    contest_month_note: Te same punkty policzone za bieżący miesiąc; wyróżnienie dostaje najwyżej trzech uczestników z wynikiem min. 20 PP.
   prompt:
     leave_page: Czy na pewno chcesz opuścić stronę?
     changes_not_save: Twoje zmiany mogą nie zostać zapisane.
@@ -2997,3 +3009,19 @@ ui:
     kind_other: Inne
     halved: pół stawki, własne pytanie
     note: Portal liczy tylko to, co potrafi policzyć sam. Punkty za odpowiedź merytoryczną bez głosów, za komentarz merytoryczny i bonus za uzupełnienie bazy wiedzy dolicza Komisja Konkursowa.
+    kind_question_kb_tag: Pytanie oznaczone „do bazy wiedzy”
+    kind_knowledge_bonus: Odpowiedź uzupełniająca Asystenta, oznaczona przez moderatora
+    prizes: Progi i nagrody
+    prizes_title: Miejsca, nagrody i progi
+    prizes_note: Nagrody przyznaje Komisja wśród uczestników, którzy osiągnęli próg. Miejsce, którego nikt nie osiągnął, zostaje nieobsadzone.
+    prize_in_kind: nagroda rzeczowa do 200 zł
+    col_place: Miejsce
+    col_prize: Nagroda
+    col_threshold: Próg
+    col_solutions: Dodatkowo
+    solutions_24: min. 24 odpowiedzi uznane za rozwiązanie
+    solutions_15: min. 15 odpowiedzi uznanych za rozwiązanie
+    solutions_10: min. 10 odpowiedzi uznanych za rozwiązanie
+    solutions_6: min. 6 odpowiedzi uznanych za rozwiązanie
+    solutions_3: min. 3 odpowiedzi uznane za rozwiązanie
+    solutions_2: min. 2 odpowiedzi lub 5 punktowanych pytań

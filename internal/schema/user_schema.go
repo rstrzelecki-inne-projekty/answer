@@ -439,6 +439,8 @@ type UserRankingResp struct {
 	Staffs           []*UserRankingSimpleInfo `json:"staffs"`
 	// [cd] help points of the current quarter, the contest ranking
 	ContestRanking []*UserRankingSimpleInfo `json:"contest_ranking"`
+	// [cd] the same points over the current month (§4.7 of the contest rules)
+	ContestMonthRanking []*UserRankingSimpleInfo `json:"contest_month_ranking"`
 }
 
 // UserRankingSimpleInfo user ranking simple info

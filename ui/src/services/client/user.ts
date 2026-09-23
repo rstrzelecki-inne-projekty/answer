@@ -31,6 +31,7 @@ export const useQueryContributeUsers = () => {
     most_viewing_users: Type.User[];
     staffs: Type.User[];
     contest_ranking: Type.User[];
+    contest_month_ranking: Type.User[];
   }>(apiUrl, request.instance.get);
 };
 

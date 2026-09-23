@@ -77,6 +77,8 @@ type TagRelRepo interface {
 	GetObjectTagRelWithoutStatus(ctx context.Context, objectId, tagID string) (tagRel *entity.TagRel, exist bool, err error)
 	GetObjectTagRelList(ctx context.Context, objectId string) (tagListList []*entity.TagRel, err error)
 	BatchGetObjectTagRelList(ctx context.Context, objectIds []string) (tagListList []*entity.TagRel, err error)
+	// [cd] objects carrying the given tag, used by the contest scoring
+	ListObjectIDsByTagID(ctx context.Context, tagID string) (objectIDs []string, err error)
 	CountTagRelByTagID(ctx context.Context, tagID string) (count int64, err error)
 	GetTagRelDefaultStatusByObjectID(ctx context.Context, objectID string) (status int, err error)
 	MigrateTagObjects(ctx context.Context, sourceTagId, targetTagId string) error
@@ -405,6 +407,11 @@ func (ts *TagCommonService) GetTagIDsByMainTagID(ctx context.Context, tagID stri
 }
 
 // GetTagBySlugName get object tag
+// ListObjectIDsByTagID [cd] objects carrying the given tag, used by the contest scoring
+func (ts *TagCommonService) ListObjectIDsByTagID(ctx context.Context, tagID string) ([]string, error) {
+	return ts.tagRelRepo.ListObjectIDsByTagID(ctx, tagID)
+}
+
 func (ts *TagCommonService) GetTagBySlugName(ctx context.Context, slugName string) (tag *entity.Tag, exist bool, err error) {
 	tag, exist, err = ts.tagCommonRepo.GetTagBySlugName(ctx, slugName)
 	if !exist {

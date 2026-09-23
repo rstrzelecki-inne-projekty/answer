@@ -18,6 +18,15 @@
 # The following fields are used for back-end
 
 backend:
+  reminder:
+    solution:
+      title:
+        other: Did any of the answers solve your problem?
+      body:
+        other: |-
+          Your question "%s" already has answers, but none of them is marked as the solution.
+
+          If one of them helped, open the thread and click "Accept" under it. It takes a second, it tells everybody else which answer works, and it is how the person who helped you gets credit for it.
   base:
     success:
       other: Success.
@@ -1907,6 +1916,7 @@ ui:
     score: Score
     unanswered: Unanswered
     views: Most viewed
+    unsolved: Without a solution
     modified: modified
     answered: answered
     asked: asked
@@ -2888,6 +2898,8 @@ ui:
     most_viewing_users: Users who read the most this week
     staffs: Our community staff
     contest_ranking: Quarterly prize ranking
+    contest_month_ranking: Helper of the month
+    contest_month_note: The same points counted over the current month; the badge goes to at most three participants with 20 HP or more.
     contest_empty: The ranking fills up once answers start being marked as solutions, which is where most of the points come from.
     contest_ranking_note: Help points of the current quarter, counted automatically from solutions, answers with an upvote and upvoted questions. The jury adds the points that need its own judgement.
     reputation: reputation
@@ -2916,6 +2928,22 @@ ui:
     kind_answer_upvote: Answer with an upvote
     kind_question_upvote: Upvoted question
     kind_other: Other
+    kind_question_kb_tag: Question marked for the knowledge base
+    kind_knowledge_bonus: Answer completing the assistant, marked by a moderator
+    prizes: Prizes
+    prizes_title: Places, prizes and thresholds
+    prizes_note: The jury awards the prizes among the participants who reached the threshold. A place nobody reached stays empty.
+    prize_in_kind: item up to 200 zł
+    col_place: Place
+    col_prize: Prize
+    col_threshold: Threshold
+    col_solutions: Also needed
+    solutions_24: at least 24 answers accepted as solutions
+    solutions_15: at least 15 answers accepted as solutions
+    solutions_10: at least 10 answers accepted as solutions
+    solutions_6: at least 6 answers accepted as solutions
+    solutions_3: at least 3 answers accepted as solutions
+    solutions_2: at least 2 answers or 5 scoring questions
     halved: half rate, your own question
     note: The portal counts only what it can count on its own. Points for a substantive answer without votes, for a substantive comment and the knowledge base bonus are added by the jury.
   prestige:

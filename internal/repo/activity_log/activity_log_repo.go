@@ -184,6 +184,22 @@ func (r *activityLogRepo) SearchUserIDs(ctx context.Context, text string, limit 
 }
 
 // ListActionsBetween a few columns only, for the dashboard aggregations
+// ListObjectIDsByAction [cd] object ids that already carry the given action since a moment,
+// used to send a reminder about a thread only once
+func (r *activityLogRepo) ListObjectIDsByAction(ctx context.Context, action string, since time.Time) ([]string, error) {
+	rows := make([]*entity.ActivityLog, 0)
+	err := r.data.DB.Context(ctx).Cols("object_id").
+		Where("action = ?", action).And("created_at >= ?", since).Find(&rows)
+	if err != nil {
+		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+	}
+	ids := make([]string, 0, len(rows))
+	for _, row := range rows {
+		ids = append(ids, row.ObjectID)
+	}
+	return ids, nil
+}
+
 func (r *activityLogRepo) ListActionsBetween(ctx context.Context, from, to time.Time) ([]*entity.ActivityLog, error) {
 	rows := make([]*entity.ActivityLog, 0)
 	session := r.data.DB.Context(ctx).Cols("created_at", "action", "user_id", "target_user_id").Where("created_at >= ?", from)

@@ -74,6 +74,8 @@ type QuestionRepo interface {
 	UpdateAccepted(ctx context.Context, question *entity.Question) (err error)
 	UpdateLastAnswer(ctx context.Context, question *entity.Question) (err error)
 	FindByID(ctx context.Context, id []string) (questionList []*entity.Question, err error)
+	// [cd] threads with answers but no solution marked, asked before the given moment
+	ListUnsolvedOlderThan(ctx context.Context, before time.Time, limit int) (questionList []*entity.Question, err error)
 	AdminQuestionPage(ctx context.Context, search *schema.AdminQuestionPageReq) ([]*entity.Question, int64, error)
 	GetQuestionCount(ctx context.Context) (count int64, err error)
 	GetUnansweredQuestionCount(ctx context.Context) (count int64, err error)
@@ -507,6 +509,44 @@ func (qs *QuestionCommon) AnswerAuthorship(ctx context.Context, answerIDs []stri
 			QuestionID: a.QuestionID}
 	}
 	return result, nil
+}
+
+// QuestionMeta [cd] what the contest scoring needs to know about a question
+type QuestionMeta struct {
+	UserID    string
+	CreatedAt time.Time
+	Status    int
+}
+
+// QuestionsMeta [cd] author, creation time and status of the given questions
+func (qs *QuestionCommon) QuestionsMeta(ctx context.Context, questionIDs []string) (map[string]QuestionMeta, error) {
+	meta := make(map[string]QuestionMeta, len(questionIDs))
+	if len(questionIDs) == 0 {
+		return meta, nil
+	}
+	questions, err := qs.questionRepo.FindByID(ctx, questionIDs)
+	if err != nil {
+		return nil, err
+	}
+	for _, q := range questions {
+		meta[q.ID] = QuestionMeta{UserID: q.UserID, CreatedAt: q.CreatedAt, Status: q.Status}
+	}
+	return meta, nil
+}
+
+// QuestionIDsByTagSlug [cd] questions carrying the given tag; an unknown tag yields nothing
+func (qs *QuestionCommon) QuestionIDsByTagSlug(ctx context.Context, slugName string) ([]string, error) {
+	if slugName == "" {
+		return nil, nil
+	}
+	tag, exist, err := qs.tagCommon.GetTagBySlugName(ctx, slugName)
+	if err != nil {
+		return nil, err
+	}
+	if !exist {
+		return nil, nil
+	}
+	return qs.tagCommon.ListObjectIDsByTagID(ctx, tag.ID)
 }
 
 // QuestionTitles [cd] question id → title, for the contest points breakdown

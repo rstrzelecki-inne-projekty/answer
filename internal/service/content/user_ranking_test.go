@@ -103,3 +103,42 @@ func TestContestExcluded_ServiceAccountsOutOfTheContest(t *testing.T) {
 	require.True(t, contestExcludedUsernames["asystent-ai"], "§2.2 wyklucza konta serwisowe")
 	require.False(t, contestExcludedUsernames["anna-kowalczyk"])
 }
+
+func TestContestMonthStart_FirstDayOfTheCalendarMonth(t *testing.T) {
+	require.Equal(t, time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC),
+		contestMonthStart(time.Date(2026, 9, 23, 18, 5, 0, 0, time.UTC)))
+	require.Equal(t, time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC),
+		contestMonthStart(time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)))
+}
+
+// §4.7: ranking miesięczny to wycinek tego samego kwartału
+func TestContestItemsSince_KeepsOnlyTheEventsOfTheShorterPeriod(t *testing.T) {
+	monthStart := time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)
+	items := map[string][]*contestItem{
+		"10000000000000001": {
+			{Kind: contestKindSolution, Points: 10, At: time.Date(2026, 8, 20, 12, 0, 0, 0, time.UTC)},
+			{Kind: contestKindSolution, Points: 10, At: time.Date(2026, 9, 10, 12, 0, 0, 0, time.UTC)},
+		},
+		"10000000000000002": {
+			{Kind: contestKindQuestionUpvote, Points: 4, At: time.Date(2026, 7, 5, 12, 0, 0, 0, time.UTC)},
+		},
+	}
+
+	month := contestItemsSince(items, monthStart)
+	require.Len(t, month, 1, "użytkownik bez zdarzeń w tym miesiącu wypada z rankingu miesięcznego")
+	require.Len(t, month["10000000000000001"], 1)
+	require.Equal(t, 10.0, contestAggregate(month["10000000000000001"]).answerPoints)
+	require.Equal(t, 20.0, contestAggregate(items["10000000000000001"]).answerPoints, "kwartał liczy oba")
+}
+
+func TestContestAggregate_QuestionTagScoresLikeAnUpvote(t *testing.T) {
+	at := time.Date(2026, 9, 10, 12, 0, 0, 0, time.UTC)
+	score := contestAggregate([]*contestItem{
+		{Kind: contestKindQuestionKB, Points: 4, At: at},
+		{Kind: contestKindSolution, Points: 10, At: at},
+		{Kind: contestKindKnowledgeBonus, Points: 5, At: at},
+	})
+	require.Equal(t, 4.0, score.questionPoints)
+	require.Equal(t, 15.0, score.answerPoints, "bonus za uzupełnienie bazy wiedzy liczy się jak punkt z odpowiedzi")
+	require.Equal(t, 1, score.solved)
+}

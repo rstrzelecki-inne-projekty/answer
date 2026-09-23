@@ -1371,6 +1371,30 @@ func (qs *QuestionService) SearchUserTopList(ctx context.Context, userName strin
 	return userQuestionlist, userAnswerlist, nil
 }
 
+// UnsolvedReminderItem [cd] a thread whose author could still mark the solution
+type UnsolvedReminderItem struct {
+	QuestionID string
+	Title      string
+	UserID     string
+}
+
+// ListUnsolvedForReminder [cd] threads with answers, no solution marked, asked at least `days` ago
+func (qs *QuestionService) ListUnsolvedForReminder(ctx context.Context, days, limit int) (
+	[]*UnsolvedReminderItem, error) {
+	questions, err := qs.questionRepo.ListUnsolvedOlderThan(ctx, time.Now().AddDate(0, 0, -days), limit)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]*UnsolvedReminderItem, 0, len(questions))
+	for _, q := range questions {
+		if q.UserID == "" || q.UserID == "0" {
+			continue
+		}
+		items = append(items, &UnsolvedReminderItem{QuestionID: q.ID, Title: q.Title, UserID: q.UserID})
+	}
+	return items, nil
+}
+
 // GetQuestionsByTitle get questions by title
 func (qs *QuestionService) GetQuestionsByTitle(ctx context.Context, title string) (
 	resp []*schema.QuestionBaseInfo, err error) {

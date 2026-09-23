@@ -1236,8 +1236,15 @@ const (
 	contestPPUpvotedQuestion = 4.0
 	// §3: at most 15 PP from a single answer
 	contestPPMaxPerAnswer = 15.0
-	// §3: an answer scores for an upvote only when the voter has at least this reputation
-	contestMinVoterRank = 100
+	// §3 asks for 100 reputation here, lowered by the owner on 2026-09-23 so that any participant
+	// can give a colleague the points: today only the portal staff is above 100.
+	// Override with CONTEST_MIN_VOTER_RANK.
+	contestDefaultMinVoterRank = 1
+	// §3: a question marked by a moderator as one for the knowledge base scores like an upvoted one
+	contestDefaultKBQuestionTag = "do-bazy-wiedzy"
+	// §3: the accepted answer in a thread marked this way completes the assistant's answer (+5 PP)
+	contestDefaultKBAnswerTag = "uzupelnia-baze-wiedzy"
+	contestPPKnowledgeBonus   = 5.0
 	// §3.4: points for questions may not exceed 40% of the total, so at most 2/3 of the answer points
 	contestQuestionShareOfAnswers = 2.0 / 3.0
 	// §4 ranks places 1-20
@@ -1246,6 +1253,8 @@ const (
 	contestKindSolution       = "solution"
 	contestKindAnswerUpvote   = "answer_upvote"
 	contestKindQuestionUpvote = "question_upvote"
+	contestKindQuestionKB     = "question_kb_tag"
+	contestKindKnowledgeBonus = "knowledge_bonus"
 )
 
 // contestExcludedUsernames [cd] §2.2 keeps the service accounts out of the contest; portal staff
@@ -1263,6 +1272,29 @@ var contestExcludedUsernames = func() map[string]bool {
 	}
 	return excluded
 }()
+
+var (
+	contestMinVoterRank = func() int {
+		if v, err := strconv.Atoi(os.Getenv("CONTEST_MIN_VOTER_RANK")); err == nil && v > 0 {
+			return v
+		}
+		return contestDefaultMinVoterRank
+	}()
+	contestKBQuestionTag = envOrDefault("CONTEST_KB_QUESTION_TAG", contestDefaultKBQuestionTag)
+	contestKBAnswerTag   = envOrDefault("CONTEST_KB_ANSWER_TAG", contestDefaultKBAnswerTag)
+)
+
+func envOrDefault(key, fallback string) string {
+	if v := strings.TrimSpace(os.Getenv(key)); v != "" {
+		return v
+	}
+	return fallback
+}
+
+// contestMonthStart the first day of the calendar month the moment belongs to
+func contestMonthStart(now time.Time) time.Time {
+	return time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+}
 
 // contestQuarterStart the first day of the calendar quarter the moment belongs to
 func contestQuarterStart(now time.Time) time.Time {
@@ -1332,7 +1364,7 @@ func contestAggregate(items []*contestItem) *contestScore {
 			score.firstScoredAt = item.At
 		}
 		switch item.Kind {
-		case contestKindQuestionUpvote:
+		case contestKindQuestionUpvote, contestKindQuestionKB:
 			score.questionPoints += item.Points
 		case contestKindSolution:
 			score.answerPoints += item.Points
@@ -1346,9 +1378,9 @@ func contestAggregate(items []*contestItem) *contestScore {
 
 // contestItems [cd] every scoring event of the current quarter, per user. Everything comes from the
 // activity log, so un-accepting an answer or cancelling a vote takes the points away as well.
-func (us *UserService) contestItems(ctx context.Context) (map[string][]*contestItem, error) {
-	now := time.Now()
-	acts, err := us.contestActivities(ctx, contestQuarterStart(now), now)
+func (us *UserService) contestItems(ctx context.Context, from, to time.Time) (map[string][]*contestItem, error) {
+	now := to
+	acts, err := us.contestActivities(ctx, from, to)
 	if err != nil {
 		return nil, err
 	}
@@ -1359,6 +1391,7 @@ func (us *UserService) contestItems(ctx context.Context) (map[string][]*contestI
 
 	accepted := make(map[string]time.Time)           // answer id → when it was accepted
 	answerVoters := make(map[string]map[string]bool) // answer id → voter ids
+	answerVoteAt := make(map[string]time.Time)       // answer id → first upvote
 	questionUpvotes := make(map[string]time.Time)    // question id → first upvote
 	questionAuthor := make(map[string]string)        // question id → author
 	voterIDs := make(map[string]bool)
@@ -1378,6 +1411,9 @@ func (us *UserService) contestItems(ctx context.Context) (map[string][]*contestI
 		}
 		answerVoters[a.ObjectID][voter] = true
 		voterIDs[voter] = true
+		if at, seen := answerVoteAt[a.ObjectID]; !seen || a.CreatedAt.Before(at) {
+			answerVoteAt[a.ObjectID] = a.CreatedAt
+		}
 	}
 	for _, a := range acts.questionUpvotes {
 		if _, seen := questionUpvotes[a.ObjectID]; !seen {
@@ -1419,6 +1455,8 @@ func (us *UserService) contestItems(ctx context.Context) (map[string][]*contestI
 		when := now
 		if isAccepted {
 			when = at
+		} else if voteAt, ok := answerVoteAt[answerID]; ok {
+			when = voteAt
 		}
 		// split the (already halved and capped) points back into the two reasons, so the
 		// participant sees what each one gave them
@@ -1444,22 +1482,84 @@ func (us *UserService) contestItems(ctx context.Context) (map[string][]*contestI
 		}
 	}
 
+	// §3: the accepted answer in a thread a moderator marked as completing the assistant's answer
+	kbThreads, err := us.contestTaggedQuestions(ctx, contestKBAnswerTag)
+	if err != nil {
+		return nil, err
+	}
+	for answerID, author := range authorship {
+		at, isAccepted := accepted[answerID]
+		if !isAccepted || !kbThreads[author.QuestionID] {
+			continue
+		}
+		items[author.AnswerUserID] = append(items[author.AnswerUserID], &contestItem{
+			QuestionID: author.QuestionID, Kind: contestKindKnowledgeBonus,
+			Points: contestPPKnowledgeBonus, At: at,
+		})
+	}
+
+	scoredQuestions := make(map[string]bool, len(questionUpvotes))
 	for questionID, at := range questionUpvotes {
 		author := questionAuthor[questionID]
 		if author == "" || author == "0" {
 			continue
 		}
+		scoredQuestions[questionID] = true
 		items[author] = append(items[author], &contestItem{
 			QuestionID: questionID, Kind: contestKindQuestionUpvote,
 			Points: contestPPUpvotedQuestion, At: at,
 		})
 	}
+
+	// §3: a question marked for the knowledge base scores like an upvoted one, once
+	kbQuestions, err := us.contestTaggedQuestions(ctx, contestKBQuestionTag)
+	if err != nil {
+		return nil, err
+	}
+	pending := make([]string, 0, len(kbQuestions))
+	for questionID := range kbQuestions {
+		if !scoredQuestions[questionID] {
+			pending = append(pending, questionID)
+		}
+	}
+	if len(pending) > 0 {
+		meta, err := us.questionService.QuestionsMeta(ctx, pending)
+		if err != nil {
+			return nil, err
+		}
+		for questionID, m := range meta {
+			if m.UserID == "" || m.UserID == "0" || m.Status != entity.QuestionStatusAvailable {
+				continue
+			}
+			if m.CreatedAt.Before(from) || !m.CreatedAt.Before(to) {
+				continue
+			}
+			items[m.UserID] = append(items[m.UserID], &contestItem{
+				QuestionID: questionID, Kind: contestKindQuestionKB,
+				Points: contestPPUpvotedQuestion, At: m.CreatedAt,
+			})
+		}
+	}
 	return items, nil
 }
 
-// fillContestRanking [cd] the quarterly contest ranking (§3, §4)
+// contestTaggedQuestions [cd] questions carrying the given tag
+func (us *UserService) contestTaggedQuestions(ctx context.Context, slugName string) (map[string]bool, error) {
+	tagged := make(map[string]bool)
+	ids, err := us.questionService.QuestionIDsByTagSlug(ctx, slugName)
+	if err != nil {
+		return nil, err
+	}
+	for _, id := range ids {
+		tagged[id] = true
+	}
+	return tagged, nil
+}
+
+// fillContestRanking [cd] the quarterly contest ranking (§3, §4) and the monthly one (§4.7)
 func (us *UserService) fillContestRanking(ctx context.Context, resp *schema.UserRankingResp) {
-	items, err := us.contestItems(ctx)
+	now := time.Now()
+	items, err := us.contestItems(ctx, contestQuarterStart(now), now)
 	if err != nil {
 		log.Errorf("get contest items failed: %v", err)
 		return
@@ -1468,6 +1568,25 @@ func (us *UserService) fillContestRanking(ctx context.Context, resp *schema.User
 		return
 	}
 	resp.ContestRanking = us.contestRankingList(ctx, items)
+	// the month is a slice of the same quarter, so it is filtered rather than read again
+	resp.ContestMonthRanking = us.contestRankingList(ctx, contestItemsSince(items, contestMonthStart(now)))
+}
+
+// contestItemsSince [cd] the scoring events of a shorter period inside the one already read
+func contestItemsSince(items map[string][]*contestItem, from time.Time) map[string][]*contestItem {
+	out := make(map[string][]*contestItem, len(items))
+	for userID, list := range items {
+		kept := make([]*contestItem, 0, len(list))
+		for _, item := range list {
+			if !item.At.Before(from) {
+				kept = append(kept, item)
+			}
+		}
+		if len(kept) > 0 {
+			out[userID] = kept
+		}
+	}
+	return out
 }
 
 // ContestMyPoints [cd] §10.2: the participant sees their own points and how they were counted
@@ -1487,7 +1606,7 @@ func (us *UserService) ContestMyPoints(ctx context.Context, userID string) (*sch
 	}
 	resp.Excluded = contestExcludedUsernames[strings.ToLower(userInfo.Username)] || us.contestStaff(ctx)[userID]
 
-	items, err := us.contestItems(ctx)
+	items, err := us.contestItems(ctx, contestQuarterStart(now), now)
 	if err != nil {
 		return nil, err
 	}
