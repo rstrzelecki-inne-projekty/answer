@@ -306,7 +306,8 @@ func (qr *questionRepo) ListUnsolvedOlderThan(ctx context.Context, before time.T
 	questionList = make([]*entity.Question, 0)
 	session := qr.data.DB.Context(ctx).Where("status = ?", entity.QuestionStatusAvailable)
 	session.And("answer_count > 0")
-	session.And("(accepted_answer_id = '0' OR accepted_answer_id IS NULL OR accepted_answer_id = '')")
+	// PostgreSQL rejects an empty string in a bigint column, so 0 and NULL are the only cases
+	session.And("(accepted_answer_id = 0 OR accepted_answer_id IS NULL)")
 	session.And("created_at < ?", before)
 	session.OrderBy("created_at ASC").Limit(limit)
 	if err = session.Find(&questionList); err != nil {
@@ -461,7 +462,8 @@ func (qr *questionRepo) GetQuestionPage(ctx context.Context, page, pageSize int,
 		session.OrderBy("question.pin DESC, question.view_count DESC, question.created_at DESC")
 	case "unsolved": // [cd] threads waiting for somebody to mark the solution
 		session.Where("question.answer_count > 0")
-		session.And("(question.accepted_answer_id = '0' OR question.accepted_answer_id IS NULL OR question.accepted_answer_id = '')")
+		// PostgreSQL rejects an empty string in a bigint column, so 0 and NULL are the only cases
+		session.And("(question.accepted_answer_id = 0 OR question.accepted_answer_id IS NULL)")
 		session.OrderBy("question.pin DESC, question.created_at DESC")
 	}
 
@@ -880,7 +882,8 @@ func (qr *questionRepo) GetQuestionLink(ctx context.Context, page, pageSize int,
 		session.OrderBy("question.pin DESC, question.view_count DESC, question.created_at DESC")
 	case "unsolved": // [cd] threads waiting for somebody to mark the solution
 		session.Where("question.answer_count > 0")
-		session.And("(question.accepted_answer_id = '0' OR question.accepted_answer_id IS NULL OR question.accepted_answer_id = '')")
+		// PostgreSQL rejects an empty string in a bigint column, so 0 and NULL are the only cases
+		session.And("(question.accepted_answer_id = 0 OR question.accepted_answer_id IS NULL)")
 		session.OrderBy("question.pin DESC, question.created_at DESC")
 	}
 
