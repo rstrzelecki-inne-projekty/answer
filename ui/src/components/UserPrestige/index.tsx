@@ -145,8 +145,11 @@ const Index: FC<Props> = ({ rank, prestige, size = 'md', className }) => {
           <Fragment key={segment.key}>
             {index > 0 ? (
               <span
-                className="border-start opacity-50"
-                style={{ height: '12px' }}
+                style={{
+                  width: '1px',
+                  height: '12px',
+                  background: 'var(--bs-emphasis-color)',
+                }}
                 aria-hidden="true"
               />
             ) : null}
