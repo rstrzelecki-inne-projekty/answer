@@ -497,15 +497,23 @@ func (qs *QuestionCommon) AnswerAuthorship(ctx context.Context, answerIDs []stri
 	if err != nil {
 		return nil, err
 	}
+	// §3 of the contest rules: a deleted thread does not score, so its answers are left out too
 	questionAuthor := make(map[string]string, len(questions))
 	for _, q := range questions {
+		if q.Status != entity.QuestionStatusAvailable {
+			continue
+		}
 		questionAuthor[q.ID] = q.UserID
 	}
 	for _, a := range answers {
 		if a.Status != entity.AnswerStatusAvailable {
 			continue
 		}
-		result[a.ID] = AnswerAuthorship{AnswerUserID: a.UserID, QuestionUserID: questionAuthor[a.QuestionID],
+		author, ok := questionAuthor[a.QuestionID]
+		if !ok {
+			continue // the thread is gone
+		}
+		result[a.ID] = AnswerAuthorship{AnswerUserID: a.UserID, QuestionUserID: author,
 			QuestionID: a.QuestionID}
 	}
 	return result, nil
