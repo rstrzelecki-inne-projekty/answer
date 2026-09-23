@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { FC, memo } from 'react';
+import { FC, Fragment, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import classNames from 'classnames';
@@ -79,6 +79,40 @@ const Index: FC<Props> = ({ rank, prestige, size = 'md', className }) => {
     return null;
   }
 
+  // the pill reads "insignia | rank | reputation | badges", with a hairline between the parts
+  const segments: { key: string; node: JSX.Element }[] = [];
+  if (!compact && rankBadgeName) {
+    segments.push({
+      key: 'rank',
+      node: (
+        <span className="fw-semibold text-body-emphasis">{rankBadgeName}</span>
+      ),
+    });
+  }
+  if (showReputation) {
+    segments.push({
+      key: 'reputation',
+      node: (
+        <span className="fw-bold text-body-emphasis" title={t('reputation')}>
+          {formatCount(rank)}
+        </span>
+      ),
+    });
+  }
+  if (!compact && badgeCount > 0) {
+    segments.push({
+      key: 'badges',
+      node: (
+        <span
+          className="d-inline-flex align-items-center gap-1 text-body-secondary"
+          title={t('badges', { num: badgeCount })}>
+          <AwardIcon />
+          {formatCount(badgeCount)}
+        </span>
+      ),
+    });
+  }
+
   const levelClass =
     LEVEL_CLASS[prestige?.rank_badge_level || 0] ||
     'border-secondary-subtle bg-body-tertiary';
@@ -107,24 +141,18 @@ const Index: FC<Props> = ({ rank, prestige, size = 'md', className }) => {
             }
           />
         ) : null}
-        {!compact && rankBadgeName ? (
-          <span className="fw-semibold text-body-emphasis">
-            {rankBadgeName}
-          </span>
-        ) : null}
-        {showReputation ? (
-          <span className="fw-bold text-body-secondary" title={t('reputation')}>
-            {formatCount(rank)}
-          </span>
-        ) : null}
-        {!compact && badgeCount > 0 ? (
-          <span
-            className="d-inline-flex align-items-center gap-1 text-body-secondary"
-            title={t('badges', { num: badgeCount })}>
-            <AwardIcon />
-            {formatCount(badgeCount)}
-          </span>
-        ) : null}
+        {segments.map((segment, index) => (
+          <Fragment key={segment.key}>
+            {index > 0 ? (
+              <span
+                className="border-start opacity-50"
+                style={{ height: '12px' }}
+                aria-hidden="true"
+              />
+            ) : null}
+            {segment.node}
+          </Fragment>
+        ))}
       </span>
       {yellowCards > 0 ? (
         <span
