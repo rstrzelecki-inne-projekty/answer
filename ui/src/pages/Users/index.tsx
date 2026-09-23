@@ -68,7 +68,10 @@ const Users = () => {
 
       <Col xxl={12}>
         {keys.map((key, index) => {
-          if (users[key]?.length === 0) {
+          // [cd] the contest section stays on the page while it is still empty: it carries the
+          // rules and the button that shows a participant their own points
+          const isContest = key === 'contest_ranking';
+          if (users[key]?.length === 0 && !isContest) {
             return null;
           }
           return (
@@ -87,6 +90,11 @@ const Users = () => {
                 </Col>
               </Row>
               <Row className={index === keys.length - 1 ? '' : 'mb-4'}>
+                {isContest && users[key]?.length === 0 ? (
+                  <Col>
+                    <p className="text-secondary">{t('contest_empty')}</p>
+                  </Col>
+                ) : null}
                 {users[key]?.map((user) => (
                   <Col
                     key={user.username}
