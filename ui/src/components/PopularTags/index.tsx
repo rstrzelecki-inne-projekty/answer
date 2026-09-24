@@ -52,7 +52,9 @@ const PopularTags: FC = () => {
   const { data } = useQueryPopularTags(range.from());
   const activeTag = urlSearchParams.get('tag') || '';
 
-  if (!data?.length && !activeTag) {
+  // The section only disappears when the portal has nothing to show at all. An empty period must
+  // keep the switch on screen, otherwise there is no way back from it.
+  if (!data?.length && rangeKey === 'always' && !activeTag) {
     return null;
   }
 
@@ -85,6 +87,10 @@ const PopularTags: FC = () => {
         ))}
       </div>
 
+      {data && data.length === 0 ? (
+        <p className="text-body-secondary small mb-0">{t('empty')}</p>
+      ) : null}
+
       <ul className="list-unstyled mb-0 small">
         {data?.map((tag) => (
           <li key={tag.slug_name} className="mb-1">
@@ -108,10 +114,6 @@ const PopularTags: FC = () => {
           </li>
         ))}
       </ul>
-
-      {data && data.length === 0 ? (
-        <p className="text-body-secondary small mb-0">{t('empty')}</p>
-      ) : null}
     </div>
   );
 };
