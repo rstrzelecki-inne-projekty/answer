@@ -220,6 +220,24 @@ func (tc *TagController) RecoverTag(ctx *gin.Context) {
 	handler.HandleResponse(ctx, err, nil)
 }
 
+// PopularTags [cd] tags ordered by the traffic of the questions carrying them
+// @Summary popular tags
+// @Description tags ordered by how many page views the questions carrying them drew
+// @Tags Tag
+// @Produce json
+// @Param from query int false "unix timestamp the period starts at; 0 or missing means the whole history"
+// @Param limit query int false "how many tags to return, 20 by default"
+// @Success 200 {object} handler.RespBody{data=[]schema.PopularTagResp}
+// @Router /answer/api/v1/tags/popular [get]
+func (tc *TagController) PopularTags(ctx *gin.Context) {
+	req := &schema.PopularTagsReq{}
+	if handler.BindAndCheck(ctx, req) {
+		return
+	}
+	resp, err := tc.tagCommonService.PopularTags(ctx, req.From, req.Limit)
+	handler.HandleResponse(ctx, err, resp)
+}
+
 // GetTagInfo get tag one
 // @Summary get tag one
 // @Description get tag one

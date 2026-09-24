@@ -165,6 +165,21 @@ type RemoveTagReq struct {
 }
 
 // AddTagReq add tag request
+// PopularTagResp [cd] one row of the popular tags list in the sidebar
+type PopularTagResp struct {
+	SlugName      string `json:"slug_name"`
+	DisplayName   string `json:"display_name"`
+	QuestionCount int64  `json:"question_count"`
+	ViewCount     int64  `json:"view_count"`
+}
+
+// PopularTagsReq [cd] From is a unix timestamp computed by the browser, so "today" means the
+// viewer's own midnight; 0 or missing means the whole history
+type PopularTagsReq struct {
+	From  int64 `validate:"omitempty,min=0" form:"from"`
+	Limit int   `validate:"omitempty,min=1,max=100" form:"limit"`
+}
+
 type AddTagReq struct {
 	// slug_name
 	SlugName string `validate:"required,gt=0,lte=35" json:"slug_name"`

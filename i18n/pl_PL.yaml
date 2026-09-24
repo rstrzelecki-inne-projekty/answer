@@ -3025,3 +3025,13 @@ ui:
     solutions_6: min. 6 odpowiedzi uznanych za rozwiązanie
     solutions_3: min. 3 odpowiedzi uznane za rozwiązanie
     solutions_2: min. 2 odpowiedzi lub 5 punktowanych pytań
+  popular_tags:
+    title: Popularne tagi
+    today: dziś
+    days_7: 7 dni
+    days_14: 14 dni
+    days_30: 30 dni
+    always: zawsze
+    reset: resetuj
+    empty: Brak wyświetleń w tym okresie.
+    tag_title: '{{questions}} pytań, {{views}} wyświetleń'

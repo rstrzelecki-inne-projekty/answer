@@ -41,6 +41,7 @@ import AccordionNav from './AccordionNav';
 import Empty from './Empty';
 import BaseUserCard from './BaseUserCard';
 import UserPrestige from './UserPrestige';
+import PopularTags from './PopularTags';
 import FollowingTags from './FollowingTags';
 import QueryGroup from './QueryGroup';
 import BrandUpload from './BrandUpload';
@@ -97,6 +98,7 @@ export {
   Empty,
   BaseUserCard,
   UserPrestige,
+  PopularTags,
   FollowingTags,
   htmlRender,
   QueryGroup,

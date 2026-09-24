@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/apache/answer/internal/base/constant"
 	"github.com/apache/answer/internal/base/handler"
@@ -64,6 +65,9 @@ type TagRepo interface {
 	GetTagSynonymCount(ctx context.Context, tagID string) (count int64, err error)
 	GetIDsByMainTagId(ctx context.Context, mainTagID string) (tagIDs []string, err error)
 	GetTagList(ctx context.Context, tag *entity.Tag) (tagList []*entity.Tag, err error)
+	// [cd] popularity of tags: questions and their views, all time or since a moment
+	PopularityAllTime(ctx context.Context) (list []*entity.TagPopularity, err error)
+	PopularitySince(ctx context.Context, since time.Time) (list []*entity.TagPopularity, err error)
 }
 
 type TagRelRepo interface {
@@ -257,6 +261,58 @@ func (ts *TagCommonService) SetTagsAttribute(ctx context.Context, tags []string,
 		return err
 	}
 	return nil
+}
+
+// PopularTags [cd] tags ordered by how many page views the questions carrying them drew.
+// Without a starting moment it sums the lifetime view counter of the questions; with one it counts
+// the page views recorded in the activity log, which is kept for as long as its retention allows.
+func (ts *TagCommonService) PopularTags(ctx context.Context, from int64, limit int) ([]*schema.PopularTagResp, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	var (
+		rows []*entity.TagPopularity
+		err  error
+	)
+	if from > 0 {
+		rows, err = ts.tagRepo.PopularitySince(ctx, time.Unix(from, 0))
+	} else {
+		rows, err = ts.tagRepo.PopularityAllTime(ctx)
+	}
+	if err != nil {
+		return nil, err
+	}
+	sort.SliceStable(rows, func(i, j int) bool {
+		if rows[i].ViewCount != rows[j].ViewCount {
+			return rows[i].ViewCount > rows[j].ViewCount
+		}
+		return rows[i].QuestionCount > rows[j].QuestionCount
+	})
+	if len(rows) > limit {
+		rows = rows[:limit]
+	}
+	ids := make([]string, 0, len(rows))
+	for _, row := range rows {
+		ids = append(ids, row.TagID)
+	}
+	tags, err := ts.GetTagListByIDs(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+	byID := make(map[string]*entity.Tag, len(tags))
+	for _, tag := range tags {
+		byID[tag.ID] = tag
+	}
+	resp := make([]*schema.PopularTagResp, 0, len(rows))
+	for _, row := range rows {
+		tag := byID[row.TagID]
+		if tag == nil || tag.Status != entity.TagStatusAvailable {
+			continue
+		}
+		resp = append(resp, &schema.PopularTagResp{SlugName: tag.SlugName, DisplayName: tag.DisplayName,
+			QuestionCount: row.QuestionCount, ViewCount: row.ViewCount})
+	}
+	return resp, nil
 }
 
 func (ts *TagCommonService) GetTagListByNames(ctx context.Context, tagNames []string) ([]*entity.Tag, error) {

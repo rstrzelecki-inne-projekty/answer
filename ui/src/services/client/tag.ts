@@ -107,3 +107,9 @@ export const unDeleteTag = (id) => {
     tag_id: id,
   });
 };
+
+// [cd] popular tags for the sidebar; from = unix seconds the period starts at, 0 = all time
+export const useQueryPopularTags = (from: number) => {
+  const apiUrl = `/answer/api/v1/tags/popular?from=${from}&limit=20`;
+  return useSWR<Type.PopularTag[]>(apiUrl, request.instance.get);
+};

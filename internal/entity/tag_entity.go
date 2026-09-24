@@ -51,6 +51,13 @@ type Tag struct {
 	UserID          string    `xorm:"not null default 0 BIGINT(20) user_id"`
 }
 
+// TagPopularity [cd] how much traffic the questions of one tag drew in a period
+type TagPopularity struct {
+	TagID         string `xorm:"tag_id"`
+	QuestionCount int64  `xorm:"question_count"`
+	ViewCount     int64  `xorm:"view_count"`
+}
+
 // TableName tag table name
 func (Tag) TableName() string {
 	return "tag"

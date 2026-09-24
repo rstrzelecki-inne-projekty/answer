@@ -154,6 +154,14 @@ export interface User {
   prestige?: UserPrestige | null;
 }
 
+/** [cd] a tag in the sidebar list, ranked by the traffic of its questions */
+export interface PopularTag {
+  slug_name: string;
+  display_name: string;
+  question_count: number;
+  view_count: number;
+}
+
 /** [cd] one scoring event in the contest */
 export interface ContestMyPointsItem {
   question_id: string;

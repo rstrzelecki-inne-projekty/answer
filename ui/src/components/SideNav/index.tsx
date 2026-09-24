@@ -23,7 +23,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import { loggedUserInfoStore, sideNavStore, aiControlStore } from '@/stores';
-import { Icon, PluginRender } from '@/components';
+import { Icon, PluginRender, PopularTags } from '@/components';
 import { PluginType } from '@/utils/pluginKit';
 import request from '@/utils/request';
 
@@ -108,6 +108,9 @@ const Index: FC = () => {
           ) : null}
         </>
       ) : null}
+
+      {/* [cd] popular tags with their own period switch, under the menu */}
+      <PopularTags />
     </Nav>
   );
 };

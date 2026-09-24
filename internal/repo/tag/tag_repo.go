@@ -21,6 +21,7 @@ package tag
 
 import (
 	"context"
+	"time"
 
 	"github.com/apache/answer/internal/base/data"
 	"github.com/apache/answer/internal/base/reason"
@@ -47,6 +48,36 @@ func NewTagRepo(
 		data:         data,
 		uniqueIDRepo: uniqueIDRepo,
 	}
+}
+
+// PopularityAllTime [cd] questions and their lifetime views per tag
+func (tr *tagRepo) PopularityAllTime(ctx context.Context) (list []*entity.TagPopularity, err error) {
+	list = make([]*entity.TagPopularity, 0)
+	err = tr.data.DB.Context(ctx).SQL(`SELECT tr.tag_id AS tag_id, COUNT(q.id) AS question_count,
+			COALESCE(SUM(q.view_count), 0) AS view_count
+		FROM tag_rel tr JOIN question q ON q.id = tr.object_id
+		WHERE tr.status = ? AND q.status = ?
+		GROUP BY tr.tag_id`, entity.TagRelStatusAvailable, entity.QuestionStatusAvailable).Find(&list)
+	if err != nil {
+		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+	}
+	return list, nil
+}
+
+// PopularitySince [cd] page views of the questions of each tag since a moment, from the activity log
+func (tr *tagRepo) PopularitySince(ctx context.Context, since time.Time) (list []*entity.TagPopularity, err error) {
+	list = make([]*entity.TagPopularity, 0)
+	err = tr.data.DB.Context(ctx).SQL(`SELECT tr.tag_id AS tag_id, COUNT(DISTINCT q.id) AS question_count,
+			COUNT(al.id) AS view_count
+		FROM activity_log al
+		JOIN question q ON q.id = al.question_id
+		JOIN tag_rel tr ON tr.object_id = q.id
+		WHERE al.action = ? AND al.created_at >= ? AND tr.status = ? AND q.status = ?
+		GROUP BY tr.tag_id`, "page.view", since, entity.TagRelStatusAvailable, entity.QuestionStatusAvailable).Find(&list)
+	if err != nil {
+		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+	}
+	return list, nil
 }
 
 // RemoveTag delete tag

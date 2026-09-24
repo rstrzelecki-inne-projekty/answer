@@ -2946,6 +2946,16 @@ ui:
     solutions_2: at least 2 answers or 5 scoring questions
     halved: half rate, your own question
     note: The portal counts only what it can count on its own. Points for a substantive answer without votes, for a substantive comment and the knowledge base bonus are added by the jury.
+  popular_tags:
+    title: Popular tags
+    today: today
+    days_7: 7 days
+    days_14: 14 days
+    days_30: 30 days
+    always: always
+    reset: reset
+    empty: No views in this period.
+    tag_title: "{{questions}} questions, {{views}} views"
   prestige:
     rank: Rank
     rank_title: "{{name}} — {{num}} accepted answers"

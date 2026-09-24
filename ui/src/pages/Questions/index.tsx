@@ -47,10 +47,13 @@ const Questions: FC = () => {
   const curPage = Number(urlSearchParams.get('page')) || 1;
   const curOrder = (urlSearchParams.get('order') ||
     QUESTION_ORDER_KEYS[0]) as Type.QuestionOrderBy;
+  // [cd] the sidebar tag list filters the questions through ?tag=
+  const curTag = urlSearchParams.get('tag') || '';
   const reqParams: Type.QueryQuestionsReq = {
     page_size: 20,
     page: curPage,
     order: curOrder as Type.QuestionOrderBy,
+    ...(curTag ? { tag: curTag } : {}),
   };
   const { data: listData, isLoading: listLoading } =
     curOrder === 'recommend'
