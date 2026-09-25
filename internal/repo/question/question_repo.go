@@ -56,6 +56,11 @@ func NewQuestionRepo(
 	data *data.Data,
 	uniqueIDRepo unique.UniqueIDRepo,
 ) questioncommon.QuestionRepo {
+	// [cd] the private column is ours, so it is added on start-up (idempotent) instead of
+	// hooking into upstream's numbered migrations; an existing database gets it on the next boot
+	if err := data.DB.Sync2(new(entity.Question)); err != nil {
+		log.Errorf("question: sync table: %v", err)
+	}
 	return &questionRepo{
 		data:         data,
 		uniqueIDRepo: uniqueIDRepo,
