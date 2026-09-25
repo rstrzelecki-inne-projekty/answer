@@ -3035,3 +3035,13 @@ ui:
     reset: resetuj
     empty: Brak wyświetleń w tym okresie.
     tag_title: '{{questions}} pytań, {{views}} wyświetleń'
+  private_question:
+    badge: PRIV
+    badge_title: Ten wątek widzi tylko osoba pytająca oraz administracja portalu
+    make_private: ustaw jako prywatne
+    make_public: ustaw jako publiczne
+    turned_on: Wątek jest prywatny. Widzisz go tylko Ty i administracja portalu.
+    turned_off: Wątek jest znowu publiczny.
+    form:
+      label: Pytanie prywatne
+      text: Wątek zobaczysz tylko Ty i administracja portalu. Użyj, gdy sprawę trzeba wyjaśnić dyskretnie.

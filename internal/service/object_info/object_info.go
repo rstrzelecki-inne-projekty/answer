@@ -206,6 +206,7 @@ func (os *ObjService) GetInfo(ctx context.Context, objectID string) (objInfo *sc
 			QuestionCreatorUserID: questionInfo.UserID,
 			QuestionStatus:        questionInfo.Status,
 			QuestionShow:          questionInfo.Show,
+			QuestionPrivate:       questionInfo.Private,
 			ObjectType:            objectType,
 			Title:                 questionInfo.Title,
 			Content:               questionInfo.ParsedText, // todo trim
@@ -232,6 +233,7 @@ func (os *ObjService) GetInfo(ctx context.Context, objectID string) (objInfo *sc
 			QuestionCreatorUserID: questionInfo.UserID,
 			QuestionStatus:        questionInfo.Status,
 			QuestionShow:          questionInfo.Show,
+			QuestionPrivate:       questionInfo.Private,
 			AnswerStatus:          answerInfo.Status,
 			AnswerID:              answerInfo.ID,
 			ObjectType:            objectType,

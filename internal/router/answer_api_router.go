@@ -245,6 +245,9 @@ func (a *AnswerAPIRouter) RegisterAnswerAPIRouter(r *gin.RouterGroup) {
 	r.GET("/contest/my-points", a.userController.ContestMyPoints)
 
 	// comment
+	// [cd] discreet threads
+	r.PUT("/question/private", a.questionController.SetQuestionPrivate)
+
 	r.POST("/comment", a.commentController.AddComment)
 	r.DELETE("/comment", a.commentController.RemoveComment)
 	r.PUT("/comment", a.commentController.UpdateComment)

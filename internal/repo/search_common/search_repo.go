@@ -125,13 +125,17 @@ func (sr *searchRepo) SearchContents(ctx context.Context, words []string, tagIDs
 		LeftJoin("`question`", "`question`.id = `answer`.question_id")
 
 	b.Where(builder.Lt{"`question`.`status`": entity.QuestionStatusDeleted}).
-		And(builder.Eq{"`question`.`show`": entity.QuestionShow})
+		And(builder.Eq{"`question`.`show`": entity.QuestionShow}).
+		And(builder.Eq{"`question`.`private`": entity.QuestionNotPrivate})
 	ub.Where(builder.Lt{"`question`.`status`": entity.QuestionStatusDeleted}).
 		And(builder.Lt{"`answer`.`status`": entity.AnswerStatusDeleted}).
-		And(builder.Eq{"`question`.`show`": entity.QuestionShow})
+		And(builder.Eq{"`question`.`show`": entity.QuestionShow}).
+		And(builder.Eq{"`question`.`private`": entity.QuestionNotPrivate})
 
-	argsQ = append(argsQ, entity.QuestionStatusDeleted, entity.QuestionShow)
-	argsA = append(argsA, entity.QuestionStatusDeleted, entity.AnswerStatusDeleted, entity.QuestionShow)
+	// [cd] the arguments follow the order of the conditions above
+	argsQ = append(argsQ, entity.QuestionStatusDeleted, entity.QuestionShow, entity.QuestionNotPrivate)
+	argsA = append(argsA, entity.QuestionStatusDeleted, entity.AnswerStatusDeleted, entity.QuestionShow,
+		entity.QuestionNotPrivate)
 
 	likeConQ := builder.NewCond()
 	likeConA := builder.NewCond()
@@ -258,8 +262,9 @@ func (sr *searchRepo) SearchQuestions(ctx context.Context, words []string, tagID
 
 	b := builder.MySQL().Select(qfs...).From("question")
 
-	b.Where(builder.Lt{"`question`.`status`": entity.QuestionStatusDeleted}).And(builder.Eq{"`question`.`show`": entity.QuestionShow})
-	args = append(args, entity.QuestionStatusDeleted, entity.QuestionShow)
+	b.Where(builder.Lt{"`question`.`status`": entity.QuestionStatusDeleted}).
+		And(builder.Eq{"`question`.`show`": entity.QuestionShow}).And(builder.Eq{"`question`.`private`": entity.QuestionNotPrivate})
+	args = append(args, entity.QuestionStatusDeleted, entity.QuestionShow, entity.QuestionNotPrivate)
 
 	likeConQ := builder.NewCond()
 	for _, word := range words {
@@ -372,8 +377,10 @@ func (sr *searchRepo) SearchAnswers(ctx context.Context, words []string, tagIDs 
 		LeftJoin("`question`", "`question`.id = `answer`.question_id")
 
 	b.Where(builder.Lt{"`question`.`status`": entity.QuestionStatusDeleted}).
-		And(builder.Lt{"`answer`.`status`": entity.AnswerStatusDeleted}).And(builder.Eq{"`question`.`show`": entity.QuestionShow})
-	args = append(args, entity.QuestionStatusDeleted, entity.AnswerStatusDeleted, entity.QuestionShow)
+		And(builder.Lt{"`answer`.`status`": entity.AnswerStatusDeleted}).
+		And(builder.Eq{"`question`.`show`": entity.QuestionShow}).And(builder.Eq{"`question`.`private`": entity.QuestionNotPrivate})
+	args = append(args, entity.QuestionStatusDeleted, entity.AnswerStatusDeleted, entity.QuestionShow,
+		entity.QuestionNotPrivate)
 
 	likeConA := builder.NewCond()
 	for _, word := range words {
@@ -474,12 +481,14 @@ func (sr *searchRepo) ParseSearchPluginResult(ctx context.Context, sres []plugin
 		switch r.Type {
 		case "question":
 			b = builder.MySQL().Select(qFields...).From("question").Where(builder.Eq{"id": r.ID}).
-				And(builder.Lt{"`status`": entity.QuestionStatusDeleted})
+				And(builder.Lt{"`status`": entity.QuestionStatusDeleted}).
+				And(builder.Eq{"`private`": entity.QuestionNotPrivate})
 		case "answer":
 			b = builder.MySQL().Select(aFields...).From("answer").LeftJoin("`question`", "`question`.`id` = `answer`.`question_id`").
 				Where(builder.Eq{"`answer`.`id`": r.ID}).
 				And(builder.Lt{"`question`.`status`": entity.QuestionStatusDeleted}).
-				And(builder.Lt{"`answer`.`status`": entity.AnswerStatusDeleted}).And(builder.Eq{"`question`.`show`": entity.QuestionShow})
+				And(builder.Lt{"`answer`.`status`": entity.AnswerStatusDeleted}).
+				And(builder.Eq{"`question`.`show`": entity.QuestionShow}).And(builder.Eq{"`question`.`private`": entity.QuestionNotPrivate})
 		}
 		qres, err = sr.data.DB.Context(ctx).Query(b)
 		if err != nil || len(qres) == 0 {

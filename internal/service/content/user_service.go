@@ -1528,7 +1528,8 @@ func (us *UserService) contestItems(ctx context.Context, from, to time.Time) (ma
 			return nil, err
 		}
 		for questionID, m := range meta {
-			if m.UserID == "" || m.UserID == "0" || m.Status != entity.QuestionStatusAvailable {
+			if m.UserID == "" || m.UserID == "0" || m.Status != entity.QuestionStatusAvailable ||
+				m.Private {
 				continue
 			}
 			if m.CreatedAt.Before(from) || !m.CreatedAt.Before(to) {

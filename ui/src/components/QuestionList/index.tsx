@@ -182,6 +182,15 @@ const QuestionList: FC<Props> = ({
                       to={pathFactory.questionLanding(li.id, li.url_title)}>
                       {li.title}
                       {li.status === 2 ? ` [${t('closed')}]` : ''}
+                      {li.private ? (
+                        <span
+                          className="badge text-bg-secondary ms-2 align-middle"
+                          title={t('badge_title', {
+                            keyPrefix: 'private_question',
+                          })}>
+                          {t('badge', { keyPrefix: 'private_question' })}
+                        </span>
+                      ) : null}
                     </NavLink>
                   </h5>
                   {viewType === 'card' && (

@@ -316,9 +316,35 @@ func (qr *questionRepo) ListUnsolvedOlderThan(ctx context.Context, before time.T
 	return questionList, nil
 }
 
+// UpdateQuestionPrivate [cd] switches a thread between public and private
+func (qr *questionRepo) UpdateQuestionPrivate(ctx context.Context, id string, private int) error {
+	_, err := qr.data.DB.Context(ctx).Where("id = ?", id).Cols("private").
+		Update(&entity.Question{Private: private})
+	if err != nil {
+		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+	}
+	return nil
+}
+
+// ListAnswerIDsByQuestion [cd] ids of the answers of a thread, used to refresh their embeddings
+func (qr *questionRepo) ListAnswerIDsByQuestion(ctx context.Context, questionID string) ([]string, error) {
+	answers := make([]*entity.Answer, 0)
+	err := qr.data.DB.Context(ctx).Cols("id").Where("question_id = ?", questionID).Find(&answers)
+	if err != nil {
+		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+	}
+	ids := make([]string, 0, len(answers))
+	for _, a := range answers {
+		ids = append(ids, a.ID)
+	}
+	return ids, nil
+}
+
 func (qr *questionRepo) GetQuestionCount(ctx context.Context) (count int64, err error) {
 	session := qr.data.DB.Context(ctx)
 	session.Where(builder.Lt{"status": entity.QuestionStatusDeleted})
+	// [cd] private threads stay out of the public counters
+	session.And(builder.Eq{"private": entity.QuestionNotPrivate})
 	count, err = session.Count(&entity.Question{Show: entity.QuestionShow})
 	if err != nil {
 		return 0, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -330,6 +356,8 @@ func (qr *questionRepo) GetUnansweredQuestionCount(ctx context.Context) (count i
 	session := qr.data.DB.Context(ctx)
 	session.Where(builder.Lt{"status": entity.QuestionStatusDeleted}).
 		And(builder.Eq{"answer_count": 0})
+	// [cd] private threads stay out of the public counters
+	session.And(builder.Eq{"private": entity.QuestionNotPrivate})
 	count, err = session.Count(&entity.Question{Show: entity.QuestionShow})
 	if err != nil {
 		return 0, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -342,6 +370,8 @@ func (qr *questionRepo) GetResolvedQuestionCount(ctx context.Context) (count int
 	session.Where(builder.Lt{"status": entity.QuestionStatusDeleted}).
 		And(builder.Neq{"answer_count": 0}).
 		And(builder.Neq{"accepted_answer_id": 0})
+	// [cd] private threads stay out of the public counters
+	session.And(builder.Eq{"private": entity.QuestionNotPrivate})
 	count, err = session.Count(&entity.Question{Show: entity.QuestionShow})
 	if err != nil {
 		return 0, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -377,6 +407,7 @@ func (qr *questionRepo) SitemapQuestions(ctx context.Context, page, pageSize int
 	session := qr.data.DB.Context(ctx)
 	session.Select("id,title,created_at,post_update_time")
 	session.Where("`show` = ?", entity.QuestionShow)
+	session.Where("private = ?", entity.QuestionNotPrivate) // [cd] never in the sitemap
 	session.Where("status = ? OR status = ?", entity.QuestionStatusAvailable, entity.QuestionStatusClosed)
 	session.Limit(pageSize, page*pageSize)
 	session.Asc("created_at")
@@ -432,9 +463,11 @@ func (qr *questionRepo) GetQuestionPage(ctx context.Context, page, pageSize int,
 		session.And("question.user_id = ?", userID)
 		if !showHidden {
 			session.And("question.show = ?", entity.QuestionShow)
+			session.And("question.private = ?", entity.QuestionNotPrivate)
 		}
 	} else {
 		session.And("question.show = ?", entity.QuestionShow)
+		session.And("question.private = ?", entity.QuestionNotPrivate)
 	}
 	if inDays > 0 {
 		session.And("question.created_at > ?", time.Now().AddDate(0, 0, -inDays))
@@ -517,7 +550,8 @@ func (qr *questionRepo) GetRecommendQuestionPageByTags(ctx context.Context, user
 	}
 
 	session.
-		And("question.show = ? and question.status = ?", entity.QuestionShow, entity.QuestionStatusAvailable).
+		And("question.show = ? and question.status = ? and question.private = ?",
+			entity.QuestionShow, entity.QuestionStatusAvailable, entity.QuestionNotPrivate).
 		Distinct("question.id").
 		OrderBy(orderBySQL)
 
@@ -854,7 +888,8 @@ func (qr *questionRepo) GetQuestionLink(ctx context.Context, page, pageSize int,
 	session := qr.data.DB.Context(ctx).
 		Table("question_link").
 		Join("INNER", "question", "question_link.from_question_id = question.id").
-		Where("question_link.to_question_id = ? AND question.show = ?", questionID, entity.QuestionShow).
+		Where("question_link.to_question_id = ? AND question.show = ? AND question.private = ?",
+			questionID, entity.QuestionShow, entity.QuestionNotPrivate).
 		Distinct("question.id").
 		Where("question_link.status = ?", entity.QuestionLinkStatusAvailable).
 		Select("question.*").

@@ -33,6 +33,7 @@ import {
   FormatTime,
   htmlRender,
   ImgViewer,
+  QuestionPrivate,
 } from '@/components';
 import { useRenderHtmlPlugin } from '@/utils/pluginKit';
 import { formatCount, guard } from '@/utils';
@@ -103,6 +104,15 @@ const Index: FC<Props> = ({ data, initPage, hasAnswer, isLogged }) => {
             : ''}
         </Link>
       </h1>
+
+      {/* [cd] discreet threads: the badge and the switch for the author and the staff */}
+      <QuestionPrivate
+        questionId={data.id}
+        authorId={data.user_info?.id}
+        isPrivate={data.private}
+        onChange={() => window.location.reload()}
+        className="mb-2"
+      />
 
       <div className="d-flex flex-wrap align-items-center small mb-4 text-secondary border-bottom pb-3">
         <BaseUserCard data={data.user_info} className="me-3" />

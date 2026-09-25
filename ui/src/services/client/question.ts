@@ -118,3 +118,11 @@ export const unDeleteQuestion = (qid) => {
     question_id: qid,
   });
 };
+
+// [cd] switch a thread between public and private
+export const setQuestionPrivate = (id: string, isPrivate: boolean) => {
+  return request.put('/answer/api/v1/question/private', {
+    id,
+    private: isPrivate,
+  });
+};

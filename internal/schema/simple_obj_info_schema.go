@@ -34,15 +34,17 @@ type SimpleObjectInfo struct {
 	QuestionCreatorUserID string `json:"question_creator_user_id"`
 	QuestionStatus        int    `json:"question_status"`
 	QuestionShow          int    `json:"question_show"`
-	AnswerID              string `json:"answer_id"`
-	AnswerStatus          int    `json:"answer_status"`
-	CommentID             string `json:"comment_id"`
-	CommentStatus         int    `json:"comment_status"`
-	TagID                 string `json:"tag_id"`
-	TagStatus             int    `json:"tag_status"`
-	ObjectType            string `json:"object_type"`
-	Title                 string `json:"title"`
-	Content               string `json:"content"`
+	// [cd] 1 = the thread is private: only the person who asked and the staff may read it
+	QuestionPrivate int    `json:"question_private"`
+	AnswerID        string `json:"answer_id"`
+	AnswerStatus    int    `json:"answer_status"`
+	CommentID       string `json:"comment_id"`
+	CommentStatus   int    `json:"comment_status"`
+	TagID           string `json:"tag_id"`
+	TagStatus       int    `json:"tag_status"`
+	ObjectType      string `json:"object_type"`
+	Title           string `json:"title"`
+	Content         string `json:"content"`
 }
 
 // IsDeleted is deleted
@@ -109,7 +111,8 @@ func (s *SimpleObjectInfo) isObjectRestricted() bool {
 	case constant.QuestionObjectType:
 		return s.QuestionStatus == entity.QuestionStatusDeleted ||
 			s.QuestionStatus == entity.QuestionStatusPending ||
-			s.QuestionShow == entity.QuestionHide
+			s.QuestionShow == entity.QuestionHide ||
+			s.QuestionPrivate == entity.QuestionPrivate
 	case constant.AnswerObjectType:
 		return s.AnswerStatus == entity.AnswerStatusDeleted || s.AnswerStatus == entity.AnswerStatusPending
 	case constant.CommentObjectType:
@@ -124,7 +127,8 @@ func (s *SimpleObjectInfo) isObjectRestricted() bool {
 func (s *SimpleObjectInfo) isParentQuestionRestricted() bool {
 	return s.QuestionStatus == entity.QuestionStatusDeleted ||
 		s.QuestionStatus == entity.QuestionStatusPending ||
-		s.QuestionShow == entity.QuestionHide
+		s.QuestionShow == entity.QuestionHide ||
+		s.QuestionPrivate == entity.QuestionPrivate
 }
 
 func (s *SimpleObjectInfo) objectNotFoundReason() string {

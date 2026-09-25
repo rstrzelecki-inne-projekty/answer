@@ -69,11 +69,22 @@ func (p *PluginSyncer) GetAnswersPage(ctx context.Context, page, pageSize int) (
 	return p.buildAnswerContents(ctx, answers)
 }
 
+// vectorIndexable [cd] the knowledge base must never contain a thread the portal hides: a private
+// question, one hidden by a moderator, or one that is deleted or still waiting for review. Without
+// this the assistant could quote content the reader is not allowed to see.
+func vectorIndexable(q *entity.Question) bool {
+	return q != nil && q.Private == entity.QuestionNotPrivate && q.Show == entity.QuestionShow &&
+		q.Status == entity.QuestionStatusAvailable
+}
+
 // buildQuestionContents aggregates each question with its answers and comments.
 func (p *PluginSyncer) buildQuestionContents(ctx context.Context, questions []*entity.Question) (
 	[]*plugin.VectorSearchContent, error) {
 	result := make([]*plugin.VectorSearchContent, 0, len(questions))
 	for _, q := range questions {
+		if !vectorIndexable(q) {
+			continue
+		}
 		meta := plugin.VectorSearchMetadata{
 			QuestionID: uid.DeShortID(q.ID),
 		}
@@ -150,7 +161,7 @@ func (p *PluginSyncer) buildAnswerContents(ctx context.Context, answers []*entit
 			log.Errorf("get question %s failed: %v", a.QuestionID, err)
 			continue
 		}
-		if !exist {
+		if !exist || !vectorIndexable(question) {
 			continue
 		}
 

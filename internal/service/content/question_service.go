@@ -39,6 +39,7 @@ import (
 	"github.com/apache/answer/internal/schema"
 	"github.com/apache/answer/internal/service/activity"
 	"github.com/apache/answer/internal/service/activity_common"
+	"github.com/apache/answer/internal/service/activity_log"
 	"github.com/apache/answer/internal/service/activityqueue"
 	answercommon "github.com/apache/answer/internal/service/answer_common"
 	collectioncommon "github.com/apache/answer/internal/service/collection_common"
@@ -95,6 +96,8 @@ type QuestionService struct {
 	eventQueueService                eventqueue.Service
 	reviewRepo                       review.ReviewRepo
 	vectorSyncService                vector_sync.Service
+	// [cd] audit trail for visibility changes
+	activityLogService *activity_log.ActivityLogService
 }
 
 func NewQuestionService(
@@ -122,6 +125,7 @@ func NewQuestionService(
 	eventQueueService eventqueue.Service,
 	reviewRepo review.ReviewRepo,
 	vectorSyncService vector_sync.Service,
+	activityLogService *activity_log.ActivityLogService,
 ) *QuestionService {
 	return &QuestionService{
 		activityRepo:                     activityRepo,
@@ -148,6 +152,7 @@ func NewQuestionService(
 		eventQueueService:                eventQueueService,
 		reviewRepo:                       reviewRepo,
 		vectorSyncService:                vectorSyncService,
+		activityLogService:               activityLogService,
 	}
 }
 
@@ -385,6 +390,11 @@ func (qs *QuestionService) AddQuestion(ctx context.Context, req *schema.Question
 	question.PostUpdateTime = now
 	question.Pin = entity.QuestionUnPin
 	question.Show = entity.QuestionShow
+	// [cd] asked discreetly: nobody but the author and the staff ever sees it
+	question.Private = entity.QuestionNotPrivate
+	if req.Private {
+		question.Private = entity.QuestionPrivate
+	}
 	// question.UpdatedAt = nil
 	err = qs.questionRepo.AddQuestion(ctx, question)
 	if err != nil {
@@ -447,7 +457,9 @@ func (qs *QuestionService) AddQuestion(ctx context.Context, req *schema.Question
 		RevisionID:       revisionID,
 	})
 
-	if question.Status == entity.QuestionStatusAvailable {
+	// [cd] a private thread never reaches the people watching the tag: telling them it exists
+	// would defeat the point of asking discreetly
+	if question.Status == entity.QuestionStatusAvailable && question.Private == entity.QuestionNotPrivate {
 		newTags, newTagsErr := qs.tagCommon.GetTagListByNames(ctx, tagNameList)
 		if newTagsErr != nil {
 			log.Error("get question newTags error %v", newTagsErr)
@@ -466,6 +478,59 @@ func (qs *QuestionService) AddQuestion(ctx context.Context, req *schema.Question
 
 	questionInfo, err = qs.GetQuestion(ctx, question.ID, question.UserID, req.QuestionPermission)
 	return
+}
+
+// ActionQuestionPrivate [cd] activity log action for a visibility switch
+const ActionQuestionPrivate = "question.private"
+
+// SetQuestionPrivate [cd] switches a thread between public and private. A private thread is visible
+// only to the person who asked it and to the portal staff; its answers and comments follow, because
+// the visibility check walks up to the parent question. Only the author, an administrator or a
+// moderator may flip it.
+func (qs *QuestionService) SetQuestionPrivate(ctx context.Context, req *schema.QuestionPrivateReq) error {
+	questionInfo, has, err := qs.questionRepo.GetQuestion(ctx, req.ID)
+	if err != nil {
+		return err
+	}
+	if !has {
+		return errors.BadRequest(reason.QuestionNotFound)
+	}
+	if !req.IsAdminModerator && questionInfo.UserID != req.UserID {
+		return errors.Forbidden(reason.RankFailToMeetTheCondition)
+	}
+	want := entity.QuestionNotPrivate
+	if req.Private {
+		want = entity.QuestionPrivate
+	}
+	if questionInfo.Private == want {
+		return nil
+	}
+	if err := qs.questionRepo.UpdateQuestionPrivate(ctx, questionInfo.ID, want); err != nil {
+		return err
+	}
+	// the knowledge base must forget a thread that went private and learn it again when it comes
+	// back: the content builders return nothing for a private thread, and the sync deletes on nil
+	qs.vectorSyncService.Send(ctx, &vector_sync.Task{Action: vector_sync.ActionUpsert,
+		ObjectType: vector_sync.ObjectTypeQuestion, ObjectID: questionInfo.ID})
+	answerIDs, err := qs.questionRepo.ListAnswerIDsByQuestion(ctx, questionInfo.ID)
+	if err != nil {
+		log.Errorf("list answers of question %s failed: %v", questionInfo.ID, err)
+	}
+	for _, answerID := range answerIDs {
+		qs.vectorSyncService.Send(ctx, &vector_sync.Task{Action: vector_sync.ActionUpsert,
+			ObjectType: vector_sync.ObjectTypeAnswer, ObjectID: answerID})
+	}
+	qs.activityLogService.Log(ctx, &entity.ActivityLog{UserID: req.UserID, Action: ActionQuestionPrivate,
+		ObjectType: constant.QuestionObjectType, ObjectID: questionInfo.ID, QuestionID: questionInfo.ID,
+		TargetUserID: questionInfo.UserID, Detail: privateDetail(req.Private)})
+	return nil
+}
+
+func privateDetail(private bool) string {
+	if private {
+		return `{"private":true}`
+	}
+	return `{"private":false}`
 }
 
 // OperationQuestion

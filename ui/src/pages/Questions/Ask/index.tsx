@@ -380,6 +380,9 @@ const Ask = () => {
     removeDraft();
   };
 
+  // [cd] ask discreetly: the thread stays between the author and the staff
+  const [askPrivate, setAskPrivate] = useState(false);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     event.stopPropagation();
@@ -388,6 +391,7 @@ const Ask = () => {
       title: formData.title.value,
       content: formData.content.value,
       tags: formData.tags.value,
+      ...(isEdit ? {} : { private: askPrivate }),
     };
 
     if (isEdit) {
@@ -518,6 +522,20 @@ const Ask = () => {
                 errMsg={formData.tags.errorMsg}
               />
             </Form.Group>
+            {!isEdit && (
+              <Form.Group controlId="private" className="my-3">
+                <Form.Switch
+                  checked={askPrivate}
+                  type="switch"
+                  id="question-private"
+                  label={t('label', { keyPrefix: 'private_question.form' })}
+                  onChange={(e) => setAskPrivate(e.target.checked)}
+                />
+                <Form.Text className="text-muted">
+                  {t('text', { keyPrefix: 'private_question.form' })}
+                </Form.Text>
+              </Form.Group>
+            )}
             {!isEdit && (
               <>
                 <Form.Switch

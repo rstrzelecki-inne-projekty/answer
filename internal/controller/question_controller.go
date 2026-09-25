@@ -117,6 +117,28 @@ func (qc *QuestionController) RemoveQuestion(ctx *gin.Context) {
 	handler.HandleResponse(ctx, err, nil)
 }
 
+// SetQuestionPrivate [cd] switch a thread between public and private
+// @Summary switch a thread between public and private
+// @Description A private thread is visible only to the person who asked it and to the portal staff.
+// @Tags Question
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param data body schema.QuestionPrivateReq true "question"
+// @Success 200 {object} handler.RespBody
+// @Router /answer/api/v1/question/private [put]
+func (qc *QuestionController) SetQuestionPrivate(ctx *gin.Context) {
+	req := &schema.QuestionPrivateReq{}
+	if handler.BindAndCheck(ctx, req) {
+		return
+	}
+	req.ID = uid.DeShortID(req.ID)
+	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	req.IsAdminModerator = middleware.GetUserIsAdminModerator(ctx)
+	err := qc.questionService.SetQuestionPrivate(ctx, req)
+	handler.HandleResponse(ctx, err, nil)
+}
+
 // OperationQuestion Operation question
 // @Summary Operation question
 // @Description Operation question \n operation [pin unpin hide show]

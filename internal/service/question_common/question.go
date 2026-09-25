@@ -74,6 +74,10 @@ type QuestionRepo interface {
 	UpdateAccepted(ctx context.Context, question *entity.Question) (err error)
 	UpdateLastAnswer(ctx context.Context, question *entity.Question) (err error)
 	FindByID(ctx context.Context, id []string) (questionList []*entity.Question, err error)
+	// [cd] switch a thread between public and private
+	UpdateQuestionPrivate(ctx context.Context, id string, private int) error
+	// [cd] ids of the answers of a thread
+	ListAnswerIDsByQuestion(ctx context.Context, questionID string) ([]string, error)
 	// [cd] threads with answers but no solution marked, asked before the given moment
 	ListUnsolvedOlderThan(ctx context.Context, before time.Time, limit int) (questionList []*entity.Question, err error)
 	AdminQuestionPage(ctx context.Context, search *schema.AdminQuestionPageReq) ([]*entity.Question, int64, error)
@@ -387,6 +391,7 @@ func (qs *QuestionCommon) FormatQuestionsPage(
 			LastAnswerID:     questionInfo.LastAnswerID,
 			Pin:              questionInfo.Pin,
 			Show:             questionInfo.Show,
+			Private:          questionInfo.Private == entity.QuestionPrivate,
 			Operator:         &schema.QuestionPageRespOperator{ID: questionInfo.UserID},
 		}
 
@@ -497,10 +502,12 @@ func (qs *QuestionCommon) AnswerAuthorship(ctx context.Context, answerIDs []stri
 	if err != nil {
 		return nil, err
 	}
-	// §3 of the contest rules: a deleted thread does not score, so its answers are left out too
+	// §3 of the contest rules: a deleted thread does not score, so its answers are left out too.
+	// [cd] A private thread scores nothing either: nobody can verify the help that was given,
+	// and a pair of people could otherwise farm points out of sight.
 	questionAuthor := make(map[string]string, len(questions))
 	for _, q := range questions {
-		if q.Status != entity.QuestionStatusAvailable {
+		if q.Status != entity.QuestionStatusAvailable || q.Private == entity.QuestionPrivate {
 			continue
 		}
 		questionAuthor[q.ID] = q.UserID
@@ -524,6 +531,8 @@ type QuestionMeta struct {
 	UserID    string
 	CreatedAt time.Time
 	Status    int
+	// [cd] a private thread scores nothing in the contest
+	Private bool
 }
 
 // QuestionsMeta [cd] author, creation time and status of the given questions
@@ -537,7 +546,8 @@ func (qs *QuestionCommon) QuestionsMeta(ctx context.Context, questionIDs []strin
 		return nil, err
 	}
 	for _, q := range questions {
-		meta[q.ID] = QuestionMeta{UserID: q.UserID, CreatedAt: q.CreatedAt, Status: q.Status}
+		meta[q.ID] = QuestionMeta{UserID: q.UserID, CreatedAt: q.CreatedAt, Status: q.Status,
+			Private: q.Private == entity.QuestionPrivate}
 	}
 	return meta, nil
 }
@@ -755,6 +765,8 @@ func (qs *QuestionCommon) ShowFormat(ctx context.Context, data *entity.Question)
 		info.ID = uid.EnShortID(data.ID)
 	}
 	info.Title = data.Title
+	// [cd] the UI marks a private thread and offers the switch
+	info.Private = data.Private == entity.QuestionPrivate
 	info.UrlTitle = htmltext.UrlTitle(data.Title)
 	info.Content = data.OriginalText
 	info.HTML = data.ParsedText

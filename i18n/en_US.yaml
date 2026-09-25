@@ -2946,6 +2946,16 @@ ui:
     solutions_2: at least 2 answers or 5 scoring questions
     halved: half rate, your own question
     note: The portal counts only what it can count on its own. Points for a substantive answer without votes, for a substantive comment and the knowledge base bonus are added by the jury.
+  private_question:
+    badge: PRIV
+    badge_title: Only the person who asked and the portal staff can see this thread
+    make_private: make private
+    make_public: make public
+    turned_on: The thread is private now. Only you and the portal staff can see it.
+    turned_off: The thread is public again.
+    form:
+      label: Private question
+      text: Only you and the portal staff will see the thread. Use it when the matter should be settled discreetly.
   popular_tags:
     title: Popular tags
     today: today

@@ -56,6 +56,15 @@ type CloseQuestionReq struct {
 	UserID    string `json:"-"`          // user_id
 }
 
+// QuestionPrivateReq [cd] switch a thread between public and private
+type QuestionPrivateReq struct {
+	ID      string `validate:"required" json:"id"`
+	Private bool   `json:"private"`
+	UserID  string `json:"-"`
+	// filled by the controller: the caller is an administrator or a moderator
+	IsAdminModerator bool `json:"-"`
+}
+
 type OperationQuestionReq struct {
 	ID        string `validate:"required" json:"id"`
 	Operation string `json:"operation"` // operation [pin unpin hide show]
@@ -84,6 +93,8 @@ type QuestionAdd struct {
 	HTML string `json:"-"`
 	// tags
 	Tags []*TagItem `validate:"dive" json:"tags"`
+	// [cd] ask discreetly: only the author and the staff will see the thread
+	Private bool `json:"private"`
 	// user id
 	UserID string `json:"-"`
 	QuestionPermission
@@ -230,13 +241,15 @@ type QuestionBaseInfo struct {
 }
 
 type QuestionInfoResp struct {
-	ID                   string         `json:"id" `
-	Title                string         `json:"title"`
-	UrlTitle             string         `json:"url_title"`
-	Content              string         `json:"content"`
-	HTML                 string         `json:"html"`
-	Description          string         `json:"description"`
-	Tags                 []*TagResp     `json:"tags"`
+	ID          string     `json:"id" `
+	Title       string     `json:"title"`
+	UrlTitle    string     `json:"url_title"`
+	Content     string     `json:"content"`
+	HTML        string     `json:"html"`
+	Description string     `json:"description"`
+	Tags        []*TagResp `json:"tags"`
+	// [cd] the thread is visible only to the author and the staff
+	Private              bool           `json:"private"`
 	ViewCount            int            `json:"view_count"`
 	UniqueViewCount      int            `json:"unique_view_count"`
 	VoteCount            int            `json:"vote_count"`
@@ -359,7 +372,7 @@ const (
 	QuestionOrderCondUnanswered = "unanswered"
 	QuestionOrderCondRecommend  = "recommend"
 	QuestionOrderCondFrequent   = "frequent"
-	QuestionOrderCondViews      = "views" // [cd] most viewed first
+	QuestionOrderCondViews      = "views"    // [cd] most viewed first
 	QuestionOrderCondUnsolved   = "unsolved" // [cd] answered but no solution marked yet
 
 	// HotInDays limit max days of the hottest question
@@ -388,15 +401,17 @@ const (
 )
 
 type QuestionPageResp struct {
-	ID          string     `json:"id" `
-	CreatedAt   int64      `json:"created_at"`
-	Title       string     `json:"title"`
-	UrlTitle    string     `json:"url_title"`
-	Description string     `json:"description"`
-	Pin         int        `json:"pin"`  // 1: unpin, 2: pin
-	Show        int        `json:"show"` // 0: show, 1: hide
-	Status      int        `json:"status"`
-	Tags        []*TagResp `json:"tags"`
+	ID          string `json:"id" `
+	CreatedAt   int64  `json:"created_at"`
+	Title       string `json:"title"`
+	UrlTitle    string `json:"url_title"`
+	Description string `json:"description"`
+	Pin         int    `json:"pin"`  // 1: unpin, 2: pin
+	Show        int    `json:"show"` // 0: show, 1: hide
+	// [cd] private thread, shown with a PRIV badge to those who may see it
+	Private bool       `json:"private"`
+	Status  int        `json:"status"`
+	Tags    []*TagResp `json:"tags"`
 
 	// question statistical information
 	ViewCount       int `json:"view_count"`

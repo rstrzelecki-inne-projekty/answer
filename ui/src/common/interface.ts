@@ -83,6 +83,8 @@ export interface QuestionParams extends ImgCodeReq {
   url_title?: string;
   content: string;
   tags: Tag[];
+  /** [cd] ask discreetly */
+  private?: boolean;
 }
 
 export interface QuestionWithAnswer extends QuestionParams {
@@ -310,6 +312,8 @@ export interface QuestionDetailRes {
   answer_ids: string[];
 
   [prop: string]: any;
+  /** [cd] visible only to the author and the staff */
+  private?: boolean;
 }
 
 export interface AnswersReq extends Paging {
