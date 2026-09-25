@@ -1164,6 +1164,10 @@ func (qs *QuestionService) GetQuestion(ctx context.Context, questionID, userID s
 	if question.Show == entity.QuestionHide && !per.IsAdminModerator && question.UserID != userID {
 		return nil, errors.NotFound(reason.QuestionNotFound)
 	}
+	// [cd] a private thread answers like a missing one to everybody but its author and the staff
+	if question.Private && !per.IsAdminModerator && question.UserID != userID {
+		return nil, errors.NotFound(reason.QuestionNotFound)
+	}
 	if question.Status != entity.QuestionStatusClosed {
 		per.CanReopen = false
 	}

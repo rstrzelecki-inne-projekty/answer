@@ -557,7 +557,8 @@ func (as *AnswerService) Get(ctx context.Context, answerID, loginUserID string, 
 
 	if (question.Status == entity.QuestionStatusDeleted ||
 		question.Status == entity.QuestionStatusPending ||
-		question.Show == entity.QuestionHide) &&
+		question.Show == entity.QuestionHide ||
+		question.Private == entity.QuestionPrivate) &&
 		!isAdminModerator && question.UserID != loginUserID {
 		return nil, nil, false, errors.NotFound(reason.AnswerNotFound)
 	}
@@ -687,7 +688,8 @@ func (as *AnswerService) SearchList(ctx context.Context, req *schema.AnswerListR
 	}
 	if (questionInfo.Status == entity.QuestionStatusDeleted ||
 		questionInfo.Status == entity.QuestionStatusPending ||
-		questionInfo.Show == entity.QuestionHide) &&
+		questionInfo.Show == entity.QuestionHide ||
+		questionInfo.Private == entity.QuestionPrivate) &&
 		!req.IsAdminModerator && questionInfo.UserID != req.UserID {
 		return list, 0, errors.NotFound(reason.QuestionNotFound)
 	}
