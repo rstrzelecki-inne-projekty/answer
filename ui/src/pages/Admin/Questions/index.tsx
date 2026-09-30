@@ -171,6 +171,7 @@ const Questions: FC = () => {
                       avatarSize="20"
                       data={li.user_info}
                       nameMaxWidth="130px"
+                      prestigeBelow
                     />
                     <FormatTime
                       className="small text-secondary"

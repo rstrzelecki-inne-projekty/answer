@@ -34,6 +34,8 @@ interface Props {
   nameMaxWidth?: string;
   /** [cd] sm keeps only the insignia and the reputation */
   prestigeSize?: 'sm' | 'md';
+  /** [cd] prestige pill on its own line under the name (narrow table cells) */
+  prestigeBelow?: boolean;
 }
 
 const Index: FC<Props> = ({
@@ -46,8 +48,16 @@ const Index: FC<Props> = ({
   showReputation = true,
   nameMaxWidth = '300px',
   prestigeSize = 'md',
+  prestigeBelow = false,
 }) => {
-  return (
+  const prestigePill = showReputation ? (
+    <UserPrestige
+      rank={data?.rank}
+      prestige={data?.prestige}
+      size={prestigeSize}
+    />
+  ) : null;
+  const user = (
     <div className={`d-flex align-items-center  text-secondary ${className}`}>
       {data?.status !== 'deleted' ? (
         <Link
@@ -86,13 +96,16 @@ const Index: FC<Props> = ({
         </>
       )}
 
-      {showReputation && (
-        <UserPrestige
-          rank={data?.rank}
-          prestige={data?.prestige}
-          size={prestigeSize}
-        />
-      )}
+      {!prestigeBelow && prestigePill}
+    </div>
+  );
+  if (!prestigeBelow || !prestigePill) {
+    return user;
+  }
+  return (
+    <div className={`d-flex flex-column align-items-start gap-1 ${className}`}>
+      {user}
+      {prestigePill}
     </div>
   );
 };

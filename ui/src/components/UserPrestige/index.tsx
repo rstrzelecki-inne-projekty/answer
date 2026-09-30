@@ -118,7 +118,11 @@ const Index: FC<Props> = ({ rank, prestige, size = 'md', className }) => {
     'border-secondary-subtle bg-body-tertiary';
 
   return (
-    <span className={classNames('d-inline-flex align-items-center', className)}>
+    <span
+      className={classNames(
+        'd-inline-flex align-items-center flex-shrink-0 text-nowrap',
+        className,
+      )}>
       <span
         className={classNames(
           'd-inline-flex align-items-center gap-1 border rounded-pill lh-1',
