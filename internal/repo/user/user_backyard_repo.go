@@ -130,9 +130,9 @@ func (ur *userAdminRepo) GetUserInfo(ctx context.Context, userID string) (user *
 
 // GetUserInfoByEmail get user info
 func (ur *userAdminRepo) GetUserInfoByEmail(ctx context.Context, email string) (user *entity.User, exist bool, err error) {
-	userInfo := &entity.User{}
+	user = &entity.User{}
 	exist, err = ur.data.DB.Context(ctx).Where("e_mail = ?", email).
-		Where("status != ?", entity.UserStatusDeleted).Get(userInfo)
+		Where("status != ?", entity.UserStatusDeleted).Get(user)
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 		return
