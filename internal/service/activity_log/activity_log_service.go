@@ -49,6 +49,8 @@ const (
 	ActionUserSuspend      = "user.suspend"
 	ActionUserUnsuspend    = "user.unsuspend"
 	ActionUserDelete       = "user.delete"
+	ActionUserInvite       = "user.invite"
+	ActionUserCreate       = "user.create"
 	ActionPageView         = "page.view"
 	ActionBadgeAward       = "badge.award"
 	ActionBadgeRevoke      = "badge.revoke"
@@ -64,7 +66,7 @@ const UserSystem = "0"
 
 // KnownActions every action key the log can contain (labels come from i18n ui.admin.activity_log.action.*)
 var KnownActions = []string{
-	ActionUserLogin, ActionUserUpdate, ActionUserShare, ActionUserRole, ActionUserSuspend, ActionUserUnsuspend, ActionUserDelete,
+	ActionUserLogin, ActionUserUpdate, ActionUserShare, ActionUserRole, ActionUserSuspend, ActionUserUnsuspend, ActionUserDelete, ActionUserInvite, ActionUserCreate,
 	ActionPageView, ActionBadgeAward, ActionBadgeRevoke, ActionReviewQueued, ActionReviewApprove, ActionReviewReject,
 	ActionReputationChange, ActionCommentReply, "message.send",
 	"question.create", "question.update", "question.delete", "question.vote_up", "question.vote_down", "question.vote_cancel",

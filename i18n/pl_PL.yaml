@@ -631,6 +631,27 @@ backend:
           --<br>
 
           Uwaga: to automatyczna wiadomość systemowa, nie odpowiadaj na nią — odpowiedź nie zostanie odczytana.'
+    user_invite:
+      title:
+        other: '[{{.SiteName}}] Twoje konto jest gotowe — ustaw hasło'
+      body:
+        other: 'Dzień dobry, {{.DisplayName}},<br><br>
+
+
+          założyliśmy dla Ciebie konto w portalu {{.SiteName}}. Loginem jest Twój adres e-mail: <b>{{.Email}}</b>.<br><br>
+
+
+          Kliknij poniższy link, aby ustawić hasło (link jest ważny {{.ValidDays}} dni):<br>
+
+          <a href=''{{.SetPasswordUrl}}'' target=''_blank''>{{.SetPasswordUrl}}</a><br><br>
+
+
+          Potem loguj się adresem e-mail i hasłem (nie przyciskiem Google). Jeśli link wygaśnie, użyj „Zapomniałeś hasła?” na stronie logowania.<br><br>
+
+
+          --<br>
+
+          Uwaga: to automatyczna wiadomość systemowa, nie odpowiadaj na nią — odpowiedź nie zostanie odczytana.'
   action_activity_type:
     upvote:
       other: oceń pozytywnie
@@ -2168,6 +2189,7 @@ ui:
     mcp: MCP
     activity_log: Log aktywności
     admin_messages: Wiadomości admina
+    user_import: Import użytkowników
   website_welcome: Witamy w serwisie {{site_name}}
   user_center:
     login: Zaloguj się
@@ -2388,6 +2410,9 @@ ui:
         content: Zawieszony użytkownik nie może się logować.
         label: Na jak długo zawiesić użytkownika?
         forever: Bezterminowo
+      send_invite: Wyślij zaproszenie (ustawienie hasła)
+      send_invite_confirm: Wysłać na {{email}} e-mail z linkiem do ustawienia hasła? Wcześniej wysłany link przestanie działać.
+      send_invite_done: Zaproszenie wysłane, link ważny do {{date}}.
     questions:
       page_title: Pytania
       unlisted: Ukryte z listy
@@ -2815,6 +2840,8 @@ ui:
         comment_vote_down: Głos w dół na komentarz
         comment_vote_cancel: Cofnięcie głosu na komentarz
         comment_flag: Zgłoszenie komentarza
+        user_invite: Wysłane zaproszenie
+        user_create: Założenie konta
       title: Log aktywności
       total: 'Wpisów: {{count}}'
       system: System
@@ -2852,6 +2879,50 @@ ui:
         method: sposób
         role: rola
         reply_to: odpowiedź na
+    user_import:
+      title: Import użytkowników
+      intro: Zakładanie kont z hasłem dla osób, które nie mogą logować się przez Google. Wklej wiersze albo wybierz plik CSV/TSV z nazwą i e-mailem (kolumny „nazwa” i „email” albo „imię”, „nazwisko” i „email”; nagłówek jest opcjonalny). Istniejące adresy e-mail nie są zmieniane.
+      file: Plik CSV / TSV
+      paste: albo wklej wiersze
+      paste_placeholder: 'imię i nazwisko;email
+
+        Anna Kowalska;anna.kowalska@biuro.morganizer.pl'
+      check: Sprawdź
+      import: Załóż konta ({{count}})
+      send_invites: Wyślij zaproszenia z linkiem do ustawienia hasła
+      invite_existing: Wyślij zaproszenia także do istniejących kont, które nigdy się nie logowały ({{count}})
+      delimiter: 'Separator: {{delimiter}}'
+      domains: Domeny e-mail
+      summary: Podsumowanie
+      sending: Wysyłanie zaproszeń {{done}} / {{total}}…
+      done: 'Gotowe: założono {{created}} kont, wysłano {{invited}} zaproszeń, błędów: {{failed}}.'
+      retry: Ponów nieudane zaproszenia
+      only_problems: Pokaż tylko wiersze wymagające uwagi
+      col:
+        line: Wiersz
+        name: Nazwa
+        email: E-mail
+        status: Status
+        invite: Zaproszenie
+      status:
+        new: zostanie założone
+        created: założone
+        exists: już istnieje
+        duplicate: powtórzenie wiersza {{line}}
+        invalid: błędny
+        error: błąd
+      reason:
+        missing_email: brak e-maila
+        invalid_email: niepoprawny e-mail
+        invalid_name: nazwa musi mieć 2–30 znaków
+        too_many_rows: za dużo wierszy (maks. 2000)
+        csv_error: błąd formatu pliku
+      last_login: ostatnie logowanie {{date}}
+      never_logged_in: nigdy się nie logował(a)
+      invite_state:
+        pending: czeka
+        sent: wysłane
+        failed: błąd
   form:
     optional: (opcjonalne)
     empty: nie może być puste

@@ -32,6 +32,9 @@ const (
 	EmailTplKeyPassResetTitle = "email_tpl.pass_reset.title"
 	EmailTplKeyPassResetBody  = "email_tpl.pass_reset.body"
 
+	EmailTplKeyUserInviteTitle = "email_tpl.user_invite.title"
+	EmailTplKeyUserInviteBody  = "email_tpl.user_invite.body"
+
 	EmailTplKeyRegisterTitle = "email_tpl.register.title"
 	EmailTplKeyRegisterBody  = "email_tpl.register.body"
 

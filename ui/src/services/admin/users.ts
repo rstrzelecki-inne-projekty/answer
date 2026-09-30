@@ -95,6 +95,41 @@ export const postUserActivation = (userId: string) => {
   });
 };
 
+// [cd] invitation with a "set your password" link (valid USER_INVITE_LINK_DAYS days)
+export const postUserInvite = (userId: string) => {
+  return request.post<{ expires_at: number }>('/answer/admin/api/user/invite', {
+    user_id: userId,
+  });
+};
+
+export interface ImportUsersRow {
+  line: number;
+  display_name: string;
+  email: string;
+  status: 'new' | 'created' | 'exists' | 'duplicate' | 'invalid' | 'error';
+  message?: string;
+  duplicate_of?: number;
+  user_id?: string;
+  last_login_at: number;
+}
+
+export interface ImportUsersResp {
+  delimiter: string;
+  rows: ImportUsersRow[];
+  statuses: Record<string, number>;
+  domains: Record<string, number>;
+}
+
+// [cd] create password accounts from a CSV/TSV; dry_run only checks the rows
+export const postImportUsers = (content: string, dryRun: boolean) => {
+  // creating hundreds of accounts (bcrypt per row) takes longer than the default 10 s timeout
+  return request.post<ImportUsersResp>(
+    '/answer/admin/api/users/import',
+    { content, dry_run: dryRun },
+    { timeout: 600000 },
+  );
+};
+
 export const useAdminUsersSettings = () => {
   const apiUrl = `/answer/admin/api/siteinfo/users-settings`;
   const { data, error } = useSWR<

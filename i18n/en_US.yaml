@@ -528,6 +528,11 @@ backend:
         other: "[{{.SiteName }}] Password reset"
       body:
         other: "Somebody asked to reset your password on {{.SiteName}}.<br><br>\n\nIf it was not you, you can safely ignore this email.<br><br>\n\nClick the following link to choose a new password:<br>\n<a href='{{.PassResetUrl}}' target='_blank'>{{.PassResetUrl}}</a>\n<br><br>\n\n--<br>\nNote: This is an automatic system email, please do not reply to this message as your response will not be seen."
+    user_invite:
+      title:
+        other: "[{{.SiteName}}] Your account is ready — set your password"
+      body:
+        other: "Hello {{.DisplayName}},<br><br>\n\nan account has been created for you on {{.SiteName}}. Your login is your e-mail address: <b>{{.Email}}</b>.<br><br>\n\nClick the following link to set your password (valid for {{.ValidDays}} days):<br>\n<a href='{{.SetPasswordUrl}}' target='_blank'>{{.SetPasswordUrl}}</a><br><br>\n\nThen sign in with your e-mail and password (not with the Google button). If the link has expired, use \"Forgot password?\" on the login page.<br><br>\n\n--<br>\nNote: This is an automatic system email, please do not reply to this message as your response will not be seen."
     register:
       title:
         other: "[{{.SiteName}}] Confirm your new account"
@@ -2129,6 +2134,7 @@ ui:
     mcp: MCP
     activity_log: Activity log
     admin_messages: Admin messages
+    user_import: Import users
   website_welcome: Welcome to {{site_name}}
   user_center:
     login: Login
@@ -2342,6 +2348,9 @@ ui:
       filter:
         placeholder: "Filter by name, user:id"
       set_new_password: Set new password
+      send_invite: Send invitation (set password)
+      send_invite_confirm: Send {{email}} an e-mail with a link that sets the password? A link sent earlier stops working.
+      send_invite_done: Invitation sent, the link is valid until {{date}}.
       edit_profile: Edit profile
       change_status: Change status
       change_role: Change role
@@ -2650,6 +2659,48 @@ ui:
       msg:
         should_be_number: the input should be number
         number_larger_1: number should be equal or larger than 1
+    user_import:
+      title: Import users
+      intro: Create password accounts for people who cannot use the Google login. Paste rows or choose a CSV/TSV file with a name and an e-mail (columns "name" and "email", or "first name", "last name" and "email"; a header row is optional). Existing e-mails are not changed.
+      file: CSV / TSV file
+      paste: or paste the rows
+      paste_placeholder: "name;email\nAnna Kowalska;anna.kowalska@example.com"
+      check: Check
+      import: Create {{count}} accounts
+      send_invites: Send invitations with a link that sets the password
+      invite_existing: Also send invitations to existing accounts that have never signed in ({{count}})
+      delimiter: "Delimiter: {{delimiter}}"
+      domains: E-mail domains
+      summary: Summary
+      sending: Sending invitations {{done}} / {{total}}…
+      done: "Done: {{created}} accounts created, {{invited}} invitations sent, {{failed}} failed."
+      retry: Retry failed invitations
+      only_problems: Show only rows needing attention
+      col:
+        line: Line
+        name: Name
+        email: E-mail
+        status: Status
+        invite: Invitation
+      status:
+        new: will be created
+        created: created
+        exists: already exists
+        duplicate: duplicate of line {{line}}
+        invalid: invalid
+        error: error
+      reason:
+        missing_email: no e-mail
+        invalid_email: invalid e-mail
+        invalid_name: name must have 2-30 characters
+        too_many_rows: too many rows (max 2000)
+        csv_error: file format error
+      last_login: last signed in {{date}}
+      never_logged_in: never signed in
+      invite_state:
+        pending: waiting
+        sent: sent
+        failed: failed
     admin_messages:
       title: Admin messages
       total: "{{count}} messages"
@@ -2710,6 +2761,8 @@ ui:
         user_update: Profile updated
         user_share: Shared a link
         user_role: Role changed
+        user_invite: Invitation sent
+        user_create: Account created
         user_suspend: User suspended
         user_unsuspend: User unsuspended
         user_delete: User deleted

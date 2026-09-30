@@ -243,6 +243,46 @@ func (uc *UserAdminController) SendUserActivation(ctx *gin.Context) {
 	handler.HandleResponse(ctx, err, nil)
 }
 
+// ImportUsers create accounts from a CSV/TSV
+// @Summary create accounts from a CSV/TSV (display name + e-mail)
+// @Description dry_run=true only checks the rows; existing e-mails are left untouched, invitations go through user/invite
+// @Security ApiKeyAuth
+// @Tags admin
+// @Produce json
+// @Param data body schema.ImportUsersReq true "ImportUsersReq"
+// @Success 200 {object} handler.RespBody{data=schema.ImportUsersResp}
+// @Router /answer/admin/api/users/import [post]
+func (uc *UserAdminController) ImportUsers(ctx *gin.Context) {
+	req := &schema.ImportUsersReq{}
+	if handler.BindAndCheck(ctx, req) {
+		return
+	}
+	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
+
+	resp, err := uc.userService.ImportUsers(ctx, req)
+	handler.HandleResponse(ctx, err, resp)
+}
+
+// SendUserInvite send an invitation with a "set your password" link
+// @Summary send an invitation with a "set your password" link
+// @Description send an invitation with a "set your password" link (valid USER_INVITE_LINK_DAYS days, 7 by default)
+// @Security ApiKeyAuth
+// @Tags admin
+// @Produce json
+// @Param data body schema.SendUserInviteReq true "SendUserInviteReq"
+// @Success 200 {object} handler.RespBody{data=schema.SendUserInviteResp}
+// @Router /answer/admin/api/user/invite [post]
+func (uc *UserAdminController) SendUserInvite(ctx *gin.Context) {
+	req := &schema.SendUserInviteReq{}
+	if handler.BindAndCheck(ctx, req) {
+		return
+	}
+	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
+
+	resp, err := uc.userService.SendUserInvite(ctx, req)
+	handler.HandleResponse(ctx, err, resp)
+}
+
 // DeletePermanently delete permanently
 // @Summary delete permanently
 // @Description delete permanently

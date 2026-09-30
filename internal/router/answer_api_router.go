@@ -367,6 +367,8 @@ func (a *AnswerAPIRouter) RegisterAnswerAdminAPIRouter(r *gin.RouterGroup) {
 	r.PUT("/user/role", a.adminUserController.UpdateUserRole)
 	r.GET("/user/activation", a.adminUserController.GetUserActivation)
 	r.POST("/user/activation", a.adminUserController.SendUserActivation)
+	r.POST("/user/invite", a.adminUserController.SendUserInvite)
+	r.POST("/users/import", a.adminUserController.ImportUsers)
 	r.POST("/user", a.adminUserController.AddUser)
 	r.POST("/users", a.adminUserController.AddUsers)
 	r.PUT("/user/password", a.adminUserController.UpdateUserPassword)

@@ -195,6 +195,20 @@ func (es *EmailService) PassResetTemplate(ctx context.Context, passResetUrl stri
 	return title, body, nil
 }
 
+// UserInviteTemplate invitation to an account created by the admin, with a link that sets the first password
+func (es *EmailService) UserInviteTemplate(ctx context.Context, data *schema.UserInviteTemplateData) (title, body string, err error) {
+	siteInfo, err := es.siteInfoService.GetSiteGeneral(ctx)
+	if err != nil {
+		return
+	}
+	data.SiteName = siteInfo.Name
+
+	lang := handler.GetLangByCtx(ctx)
+	title = translator.TrWithData(lang, constant.EmailTplKeyUserInviteTitle, data)
+	body = translator.TrWithData(lang, constant.EmailTplKeyUserInviteBody, data)
+	return title, body, nil
+}
+
 func (es *EmailService) ChangeEmailTemplate(ctx context.Context, changeEmailUrl string) (title, body string, err error) {
 	siteInfo, err := es.siteInfoService.GetSiteGeneral(ctx)
 	if err != nil {

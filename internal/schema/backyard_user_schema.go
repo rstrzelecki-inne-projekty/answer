@@ -252,6 +252,57 @@ type GetUserActivationResp struct {
 	ActivationURL string `json:"activation_url"`
 }
 
+// SendUserInviteReq send an invitation with a "set your password" link
+type SendUserInviteReq struct {
+	UserID      string `validate:"required" json:"user_id"`
+	LoginUserID string `json:"-"`
+}
+
+// SendUserInviteResp the invitation link expires at (unix seconds)
+type SendUserInviteResp struct {
+	ExpiresAt int64 `json:"expires_at"`
+}
+
+// ImportUsersReq CSV/TSV with the people to create (display name + e-mail); dry_run only checks the rows
+type ImportUsersReq struct {
+	Content     string `validate:"required,lte=2000000" json:"content"`
+	DryRun      bool   `json:"dry_run"`
+	LoginUserID string `json:"-"`
+}
+
+// Import row statuses
+const (
+	ImportUserStatusNew       = "new"       // dry run: the account would be created
+	ImportUserStatusCreated   = "created"   // the account was created
+	ImportUserStatusExists    = "exists"    // an account with this e-mail already exists (left as it is)
+	ImportUserStatusDuplicate = "duplicate" // the e-mail repeats an earlier row of the file
+	ImportUserStatusInvalid   = "invalid"   // the row cannot be imported, see message
+	ImportUserStatusError     = "error"     // creating the account failed
+)
+
+// ImportUsersRow one row of the import with its outcome
+type ImportUsersRow struct {
+	Line        int    `json:"line"`
+	DisplayName string `json:"display_name"`
+	Email       string `json:"email"`
+	Status      string `json:"status"`
+	// invalid: missing_email, invalid_email, invalid_name (2-30 characters), too_many_rows, csv_error: …;
+	// error: the database error
+	Message     string `json:"message,omitempty"`
+	DuplicateOf int    `json:"duplicate_of,omitempty"`
+	UserID      string `json:"user_id,omitempty"`
+	// for existing accounts: last login (unix seconds, 0 = never), to decide whether an invitation still makes sense
+	LastLoginAt int64 `json:"last_login_at"`
+}
+
+// ImportUsersResp rows in the file order + counts per status and per e-mail domain
+type ImportUsersResp struct {
+	Delimiter string            `json:"delimiter"`
+	Rows      []*ImportUsersRow `json:"rows"`
+	Statuses  map[string]int    `json:"statuses"`
+	Domains   map[string]int    `json:"domains"`
+}
+
 // SendUserActivationReq send user activation
 type SendUserActivationReq struct {
 	UserID string `validate:"required" json:"user_id"`

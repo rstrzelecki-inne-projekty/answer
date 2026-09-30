@@ -66,6 +66,15 @@ type PassResetTemplateData struct {
 	PassResetUrl string
 }
 
+// UserInviteTemplateData invitation sent by an admin to an account the admin created
+type UserInviteTemplateData struct {
+	SiteName       string
+	DisplayName    string
+	Email          string
+	SetPasswordUrl string
+	ValidDays      int
+}
+
 type ChangeEmailTemplateData struct {
 	SiteName       string
 	ChangeEmailUrl string

@@ -20,6 +20,8 @@
 import { Dropdown } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
+import dayjs from 'dayjs';
+
 import { Modal, Icon } from '@/components';
 import {
   useChangeUserRoleModal,
@@ -32,6 +34,7 @@ import {
   updateUserPassword,
   changeUserStatus,
   updateUserProfile,
+  postUserInvite,
 } from '@/services';
 import { toastStore } from '@/stores';
 
@@ -154,6 +157,27 @@ const UserOperation = ({
       activationEmailModal.onShow(user_id);
     }
 
+    // [cd] e-mail with a link that sets the password (accounts created by the admin)
+    if (type === 'invite') {
+      Modal.confirm({
+        title: t('send_invite'),
+        content: t('send_invite_confirm', { email: userData.e_mail }),
+        cancelBtnVariant: 'link',
+        cancelText: t('cancel', { keyPrefix: 'btns' }),
+        confirmText: t('confirm', { keyPrefix: 'btns' }),
+        onConfirm: () => {
+          postUserInvite(user_id).then((res) => {
+            toastStore.getState().show({
+              msg: t('send_invite_done', {
+                date: dayjs.unix(res.expires_at).format('YYYY-MM-DD HH:mm'),
+              }),
+              variant: 'success',
+            });
+          });
+        },
+      });
+    }
+
     if (type === 'deactivate') {
       // cons
       Modal.confirm({
@@ -201,6 +225,11 @@ const UserOperation = ({
           {showActionPassword ? (
             <Dropdown.Item onClick={() => handleAction('password')}>
               {t('set_new_password')}
+            </Dropdown.Item>
+          ) : null}
+          {showActionPassword && userData.status !== 'deleted' ? (
+            <Dropdown.Item onClick={() => handleAction('invite')}>
+              {t('send_invite')}
             </Dropdown.Item>
           ) : null}
           <Dropdown.Item onClick={() => handleAction('profile')}>

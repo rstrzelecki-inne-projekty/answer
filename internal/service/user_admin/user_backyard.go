@@ -23,6 +23,8 @@ import (
 	"context"
 	"fmt"
 	"net/mail"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -654,6 +656,57 @@ func (us *UserAdminService) SendUserActivation(ctx context.Context, req *schema.
 	}
 	go us.emailService.SendAndSaveCode(ctx, userInfo.ID, userInfo.EMail, title, body, code, data.ToJSONString())
 	return nil
+}
+
+// userInviteLinkTTL how long an invitation link stays valid: USER_INVITE_LINK_DAYS days, 7 by default.
+// The password reset link lives 10 minutes, which is too short for someone who reads the invitation the next day.
+func userInviteLinkTTL() time.Duration {
+	if days, err := strconv.Atoi(os.Getenv("USER_INVITE_LINK_DAYS")); err == nil && days > 0 && days <= 30 {
+		return time.Duration(days) * 24 * time.Hour
+	}
+	return 7 * 24 * time.Hour
+}
+
+// SendUserInvite e-mails an account created by the admin a link that sets the first password (people who cannot
+// use the Google login, e.g. partners with their own mail domains). The link opens the password reset page; sending
+// a new invitation or a password reset invalidates the previous link.
+func (us *UserAdminService) SendUserInvite(ctx context.Context, req *schema.SendUserInviteReq) (
+	resp *schema.SendUserInviteResp, err error) {
+	userInfo, exist, err := us.userRepo.GetUserInfo(ctx, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if !exist || userInfo.Status == entity.UserStatusDeleted {
+		return nil, errors.BadRequest(reason.UserNotFound)
+	}
+
+	general, err := us.siteInfoCommonService.GetSiteGeneral(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	ttl := userInviteLinkTTL()
+	data := &schema.EmailCodeContent{
+		Email:  userInfo.EMail,
+		UserID: userInfo.ID,
+	}
+	code := token.GenerateToken()
+	title, body, err := us.emailService.UserInviteTemplate(ctx, &schema.UserInviteTemplateData{
+		DisplayName:    userInfo.DisplayName,
+		Email:          userInfo.EMail,
+		SetPasswordUrl: fmt.Sprintf("%s/users/password-reset?code=%s", general.SiteUrl, code),
+		ValidDays:      int(ttl / (24 * time.Hour)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	// synchronous on purpose: a bulk import calls this in a loop and SES has a send rate limit
+	us.emailService.SendAndSaveCodeWithTime(ctx, userInfo.ID, userInfo.EMail, title, body, code, data.ToJSONString(), ttl)
+
+	us.activityLogService.LogDetail(ctx, &entity.ActivityLog{UserID: req.LoginUserID, Action: activity_log.ActionUserInvite,
+		ObjectType: constant.UserObjectType, ObjectID: userInfo.ID, TargetUserID: userInfo.ID},
+		activity_log.Detail{"email": userInfo.EMail, "valid_days": int(ttl / (24 * time.Hour))})
+	return &schema.SendUserInviteResp{ExpiresAt: time.Now().Add(ttl).Unix()}, nil
 }
 
 func (us *UserAdminService) DeletePermanently(ctx context.Context, req *schema.DeletePermanentlyReq) (err error) {
