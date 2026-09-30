@@ -272,7 +272,7 @@ const Index: React.FC = () => {
                   </Button>
                 </div>
               </Form>
-              {loginSetting.allow_new_registrations && (
+              {userCenter.showSignUpLink(loginSetting) && (
                 <div className="text-center mt-5">
                   <Trans i18nKey="login.info_sign" ns="translation">
                     Don't have an account?

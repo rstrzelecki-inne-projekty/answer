@@ -113,7 +113,7 @@ const LinkedQuestions: FC = () => {
                 onClick={floppyNavigation.handleRouteLinkClick}>
                 {t('login', { keyPrefix: 'btns' })}
               </Link>
-              {loginSetting.allow_new_registrations ? (
+              {userCenter.showSignUpLink(loginSetting) ? (
                 <Link
                   to={userCenter.getSignUpUrl()}
                   className="btn btn-link ms-2"

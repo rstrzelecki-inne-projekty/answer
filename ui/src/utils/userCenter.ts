@@ -39,6 +39,16 @@ export const getLoginUrl = (uca?: UcAgent) => {
   return ret;
 };
 
+// [cd] the sign-up link only makes sense when there is a sign-up form (e-mail registration) or an external
+// sign-up page; with registration through a connector only (e.g. Google) the sign-up page repeats the login buttons
+export const showSignUpLink = (loginSetting: {
+  allow_new_registrations: boolean;
+  allow_email_registrations: boolean;
+}) =>
+  loginSetting.allow_new_registrations &&
+  (loginSetting.allow_email_registrations ||
+    getSignUpUrl() !== RouteAlias.signUp);
+
 export const getSignUpUrl = (uca?: UcAgent) => {
   let ret = RouteAlias.signUp;
   uca ||= userCenterStore.getState().agent;

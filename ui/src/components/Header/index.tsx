@@ -196,7 +196,7 @@ const Header: FC = () => {
               to={userCenter.getLoginUrl()}>
               {t('btns.login')}
             </Link>
-            {loginSetting.allow_new_registrations && (
+            {userCenter.showSignUpLink(loginSetting) && (
               <Link
                 className={classnames(
                   'btn',
