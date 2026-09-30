@@ -60,3 +60,12 @@ func TestParseUserImport(t *testing.T) {
 		assert.Equal(t, "invalid_name", rows[5].Message)
 	})
 }
+
+func TestUsernameBase(t *testing.T) {
+	assert.Equal(t, "marzena-wasilek", usernameBase("Marzena Wasiłek"))
+	assert.Equal(t, "zaneta-zolc-gesla", usernameBase("Żaneta  Żółć-Gęśla"))
+	assert.Equal(t, "lukasz-oneill", usernameBase("Łukasz O'Neill."))
+	assert.Equal(t, "anna.kowalska", usernameBase("anna.kowalska"))
+	assert.Equal(t, "", usernameBase("你好"))
+	assert.Len(t, usernameBase("Bardzo Długie Imię Oraz Nazwisko Dwuczłonowe"), 26)
+}
