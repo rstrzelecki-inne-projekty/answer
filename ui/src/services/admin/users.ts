@@ -130,6 +130,51 @@ export const postImportUsers = (content: string, dryRun: boolean) => {
   );
 };
 
+export interface KBImportRow {
+  line: number;
+  question: string;
+  answer: string;
+  tags: string[];
+  status: 'new' | 'exists' | 'duplicate' | 'invalid';
+  message?: string;
+  duplicate_of?: number;
+  question_id?: string;
+}
+
+export interface KBImportCheckResp {
+  delimiter: string;
+  rows: KBImportRow[];
+  statuses: Record<string, number>;
+  unknown_tags: string[];
+  username: string;
+  display_name: string;
+  account_found: boolean;
+  base_tag: string;
+  base_tag_found: boolean;
+}
+
+// [cd] knowledge base import: check the pairs, then publish them one by one
+export const postKBImportCheck = (content: string) => {
+  return request.post<KBImportCheckResp>(
+    '/answer/admin/api/kb/import/check',
+    { content },
+    { timeout: 120000 },
+  );
+};
+
+export const postKBImportRow = (params: {
+  question: string;
+  answer: string;
+  tags: string[];
+  source: string;
+}) => {
+  return request.post<{
+    question_id: string;
+    url_title?: string;
+    status: 'published' | 'pending' | 'exists';
+  }>('/answer/admin/api/kb/import/row', params, { timeout: 60000 });
+};
+
 export const useAdminUsersSettings = () => {
   const apiUrl = `/answer/admin/api/siteinfo/users-settings`;
   const { data, error } = useSWR<

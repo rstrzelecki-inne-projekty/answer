@@ -98,6 +98,7 @@ import (
 	file_record2 "github.com/apache/answer/internal/service/file_record"
 	"github.com/apache/answer/internal/service/follow"
 	"github.com/apache/answer/internal/service/importer"
+	"github.com/apache/answer/internal/service/kb_import"
 	meta2 "github.com/apache/answer/internal/service/meta"
 	"github.com/apache/answer/internal/service/meta_common"
 	"github.com/apache/answer/internal/service/noticequeue"
@@ -122,9 +123,9 @@ import (
 	"github.com/apache/answer/internal/service/uploader"
 	"github.com/apache/answer/internal/service/user_admin"
 	"github.com/apache/answer/internal/service/user_common"
-	"github.com/apache/answer/internal/service/user_prestige"
 	user_external_login2 "github.com/apache/answer/internal/service/user_external_login"
 	user_notification_config2 "github.com/apache/answer/internal/service/user_notification_config"
+	"github.com/apache/answer/internal/service/user_prestige"
 	"github.com/apache/answer/internal/service/vector_sync"
 	"github.com/segmentfault/pacman"
 	"github.com/segmentfault/pacman/log"
@@ -307,7 +308,9 @@ func initApplication(debug bool, serverConf *conf.Server, dbConf *data.Database,
 	adminMessageRepo := admin_message.NewAdminMessageRepo(dataData)
 	adminMessageService := admin_message2.NewAdminMessageService(adminMessageRepo, uniqueIDRepo, userCommon, userRoleRelService, objService, noticequeueService, activityLogService)
 	adminMessageController := controller.NewAdminMessageController(adminMessageService)
-	answerAPIRouter := router.NewAnswerAPIRouter(langController, userController, commentController, reportController, voteController, tagController, followController, collectionController, questionController, answerController, searchController, revisionController, rankController, userAdminController, reasonController, themeController, siteInfoController, controllerSiteInfoController, notificationController, dashboardController, uploadController, activityController, roleController, pluginController, permissionController, userPluginController, reviewController, metaController, badgeController, controller_adminBadgeController, adminAPIKeyController, aiController, aiConversationController, aiConversationAdminController, mcpController, activityLogController, controller_adminActivityLogController, adminMessageController)
+	kbImportService := kb_import.NewKBImportService(dataData, questionService, answerService, tagCommonService, activityLogService)
+	kbImportController := controller_admin.NewKBImportController(kbImportService)
+	answerAPIRouter := router.NewAnswerAPIRouter(langController, userController, commentController, reportController, voteController, tagController, followController, collectionController, questionController, answerController, searchController, revisionController, rankController, userAdminController, reasonController, themeController, siteInfoController, controllerSiteInfoController, notificationController, dashboardController, uploadController, activityController, roleController, pluginController, permissionController, userPluginController, reviewController, metaController, badgeController, controller_adminBadgeController, adminAPIKeyController, aiController, aiConversationController, aiConversationAdminController, mcpController, activityLogController, controller_adminActivityLogController, adminMessageController, kbImportController)
 	swaggerRouter := router.NewSwaggerRouter(swaggerConf)
 	uiRouter := router.NewUIRouter(controllerSiteInfoController, siteInfoCommonService)
 	authUserMiddleware := middleware.NewAuthUserMiddleware(authService, siteInfoCommonService)

@@ -64,6 +64,7 @@ type AnswerAPIRouter struct {
 	mcpController                 *controller.MCPController
 	activityLogController         *controller.ActivityLogController
 	adminActivityLogController    *controller_admin.ActivityLogController
+	kbImportController            *controller_admin.KBImportController
 	adminMessageController        *controller.AdminMessageController
 }
 
@@ -106,6 +107,7 @@ func NewAnswerAPIRouter(
 	activityLogController *controller.ActivityLogController,
 	adminActivityLogController *controller_admin.ActivityLogController,
 	adminMessageController *controller.AdminMessageController,
+	kbImportController *controller_admin.KBImportController,
 ) *AnswerAPIRouter {
 	return &AnswerAPIRouter{
 		langController:                langController,
@@ -146,6 +148,7 @@ func NewAnswerAPIRouter(
 		activityLogController:         activityLogController,
 		adminActivityLogController:    adminActivityLogController,
 		adminMessageController:        adminMessageController,
+		kbImportController:            kbImportController,
 	}
 }
 
@@ -369,6 +372,8 @@ func (a *AnswerAPIRouter) RegisterAnswerAdminAPIRouter(r *gin.RouterGroup) {
 	r.POST("/user/activation", a.adminUserController.SendUserActivation)
 	r.POST("/user/invite", a.adminUserController.SendUserInvite)
 	r.POST("/users/import", a.adminUserController.ImportUsers)
+	r.POST("/kb/import/check", a.kbImportController.Check)
+	r.POST("/kb/import/row", a.kbImportController.Publish)
 	r.POST("/user", a.adminUserController.AddUser)
 	r.POST("/users", a.adminUserController.AddUsers)
 	r.PUT("/user/password", a.adminUserController.UpdateUserPassword)

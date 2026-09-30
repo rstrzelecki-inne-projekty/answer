@@ -2135,6 +2135,7 @@ ui:
     activity_log: Activity log
     admin_messages: Admin messages
     user_import: Import users
+    kb_import: Knowledge base import
   website_welcome: Welcome to {{site_name}}
   user_center:
     login: Login
@@ -2659,6 +2660,52 @@ ui:
       msg:
         should_be_number: the input should be number
         number_larger_1: number should be equal or larger than 1
+    kb_import:
+      title: Knowledge base import
+      intro: Publish ready question–answer pairs. Every pair becomes a question with an accepted answer by the knowledge-base account; the bot and the AI assistant use them right away. Columns "question", "answer" and optional "tags" (a header row is optional); a question with the same title is never added twice.
+      file: TSV / CSV file
+      paste: or paste the rows
+      paste_placeholder: "question\tanswer\ttags\nHow do I send an invoice to KSeF?\tStep 1: …\tksef"
+      source: Source shown under every answer
+      source_placeholder: e.g. file name or "FAQ of the implementation team"
+      check: Check
+      publish: Publish {{count}} entries
+      account: "Entries will be published as: {{name}} ({{username}}), tag {{tag}}."
+      account_missing: Account {{username}} does not exist. Create it (Admin → Users) or set KB_IMPORT_USERNAME.
+      base_tag_missing: Tag {{tag}} does not exist, entries will get only the tags from the file. Create it first if every entry should have it.
+      unknown_tags: "Unknown tags, will be skipped (new tags are created by the admin): {{tags}}"
+      delimiter: "Delimiter: {{delimiter}}"
+      summary: Summary
+      only_problems: Show only rows needing attention
+      publishing: Publishing {{done}} / {{total}}…
+      done: "Done: {{published}} published, {{pending}} waiting for approval, {{failed}} failed."
+      retry: Retry failed rows
+      col:
+        line: Line
+        question: Question
+        answer: Answer
+        tags: Tags
+        status: Status
+        result: Result
+      status:
+        new: will be published
+        exists: already in the portal
+        duplicate: duplicate of line {{line}}
+        invalid: invalid
+        published: published
+        pending: published
+      reason:
+        missing_field: no question or no answer
+        question_length: question must have 6-150 characters
+        answer_too_short: answer too short
+        too_many_rows: too many rows (max 2000)
+        csv_error: file format error
+      result:
+        waiting: waiting
+        published: published
+        pending: waiting for approval
+        exists: already in the portal
+        failed: failed
     user_import:
       title: Import users
       intro: Create password accounts for people who cannot use the Google login. Paste rows or choose a CSV/TSV file with a name and an e-mail (columns "name" and "email", or "first name", "last name" and "email"; a header row is optional). Existing e-mails are not changed.
@@ -2763,6 +2810,7 @@ ui:
         user_role: Role changed
         user_invite: Invitation sent
         user_create: Account created
+        kb_import: Knowledge base entry imported
         user_suspend: User suspended
         user_unsuspend: User unsuspended
         user_delete: User deleted

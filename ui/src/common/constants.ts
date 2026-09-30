@@ -120,6 +120,7 @@ export const ADMIN_NAV_MENUS = [
       { name: 'activity_log', path: 'activity-log' },
       { name: 'admin_messages', path: 'admin-messages' },
       { name: 'user_import', path: 'user-import' },
+      { name: 'kb_import', path: 'kb-import' },
       { name: 'rules', path: 'rules/privileges', pathPrefix: 'rules/' },
     ],
   },

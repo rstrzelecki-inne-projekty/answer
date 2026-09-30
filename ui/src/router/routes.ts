@@ -410,6 +410,10 @@ const routes: RouteNode[] = [
             page: 'pages/Admin/UserImport',
           },
           {
+            path: 'kb-import',
+            page: 'pages/Admin/KBImport',
+          },
+          {
             path: 'users/settings',
             page: 'pages/Admin/UsersSettings',
           },

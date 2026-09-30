@@ -2190,6 +2190,7 @@ ui:
     activity_log: Log aktywności
     admin_messages: Wiadomości admina
     user_import: Import użytkowników
+    kb_import: Import bazy wiedzy
   website_welcome: Witamy w serwisie {{site_name}}
   user_center:
     login: Zaloguj się
@@ -2842,6 +2843,7 @@ ui:
         comment_flag: Zgłoszenie komentarza
         user_invite: Wysłane zaproszenie
         user_create: Założenie konta
+        kb_import: Import wpisu bazy wiedzy
       title: Log aktywności
       total: 'Wpisów: {{count}}'
       system: System
@@ -2922,6 +2924,52 @@ ui:
       invite_state:
         pending: czeka
         sent: wysłane
+        failed: błąd
+    kb_import:
+      title: Import bazy wiedzy
+      intro: Publikacja gotowych par pytanie–odpowiedź. Każda para staje się pytaniem z zaakceptowaną odpowiedzią konta bazy wiedzy; bot i Asystent AI korzystają z nich od razu. Kolumny „pytanie”, „odpowiedź” i opcjonalnie „tagi” (nagłówek nie jest wymagany); pytanie o takim samym tytule nie zostanie dodane drugi raz.
+      file: Plik TSV / CSV
+      paste: albo wklej wiersze
+      paste_placeholder: "pytanie\todpowiedź\ttagi\nJak wysłać fakturę do KSeF?\tKrok 1: …\tksef"
+      source: Źródło podawane pod każdą odpowiedzią
+      source_placeholder: np. nazwa pliku albo „FAQ zespołu wdrożeń”
+      check: Sprawdź
+      publish: Opublikuj wpisy ({{count}})
+      account: 'Wpisy zostaną opublikowane jako: {{name}} ({{username}}), z tagiem {{tag}}.'
+      account_missing: Konto {{username}} nie istnieje. Załóż je (Admin → Użytkownicy) albo ustaw KB_IMPORT_USERNAME.
+      base_tag_missing: Tag {{tag}} nie istnieje — wpisy dostaną tylko tagi z pliku. Jeśli każdy wpis ma go mieć, najpierw go załóż.
+      unknown_tags: 'Nieznane tagi, zostaną pominięte (nowe tagi zakłada admin): {{tags}}'
+      delimiter: 'Separator: {{delimiter}}'
+      summary: Podsumowanie
+      only_problems: Pokaż tylko wiersze wymagające uwagi
+      publishing: Publikowanie {{done}} / {{total}}…
+      done: 'Gotowe: opublikowano {{published}}, czeka na zatwierdzenie {{pending}}, błędów: {{failed}}.'
+      retry: Ponów nieudane wiersze
+      col:
+        line: Wiersz
+        question: Pytanie
+        answer: Odpowiedź
+        tags: Tagi
+        status: Status
+        result: Wynik
+      status:
+        new: zostanie opublikowane
+        exists: już jest w portalu
+        duplicate: powtórzenie wiersza {{line}}
+        invalid: błędny
+        published: opublikowane
+        pending: opublikowane
+      reason:
+        missing_field: brak pytania albo odpowiedzi
+        question_length: pytanie musi mieć 6–150 znaków
+        answer_too_short: za krótka odpowiedź
+        too_many_rows: za dużo wierszy (maks. 2000)
+        csv_error: błąd formatu pliku
+      result:
+        waiting: czeka
+        published: opublikowane
+        pending: czeka na zatwierdzenie
+        exists: już jest w portalu
         failed: błąd
   form:
     optional: (opcjonalne)
