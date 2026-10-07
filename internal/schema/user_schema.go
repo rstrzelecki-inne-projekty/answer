@@ -510,6 +510,21 @@ type GetUserStaffReq struct {
 	PageSize int    `validate:"omitempty,min=1" form:"page_size"`
 }
 
+// SearchMentionUsersReq [cd] people to mention in a comment
+type SearchMentionUsersReq struct {
+	// name, login or e-mail fragment
+	Q      string `validate:"required,gte=2,lte=100" form:"q"`
+	UserID string `json:"-"`
+}
+
+// SearchMentionUserResp [cd] one suggestion; e-mail only for viewers from MENTION_EMAIL_DOMAINS
+type SearchMentionUserResp struct {
+	Username    string `json:"username"`
+	DisplayName string `json:"display_name"`
+	Avatar      string `json:"avatar"`
+	EMail       string `json:"e_mail,omitempty"`
+}
+
 // GetUserStaffResp get user staff response
 type GetUserStaffResp struct {
 	// username

@@ -316,6 +316,7 @@ func (a *AnswerAPIRouter) RegisterAnswerAPIRouter(r *gin.RouterGroup) {
 	r.GET("/user/notification/config", a.userController.GetUserNotificationConfig)
 	r.PUT("/user/notification/config", a.userController.UpdateUserNotificationConfig)
 	r.GET("/user/info/search", a.userController.SearchUserListByName)
+	r.GET("/user/mention/search", a.userController.SearchMentionUsers) // [cd] 24
 
 	// vote
 	r.GET("/personal/vote/page", a.voteController.UserVotes)

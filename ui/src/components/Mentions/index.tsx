@@ -20,8 +20,11 @@
 import React, { useEffect, useRef, useState, FC } from 'react';
 import { Dropdown } from 'react-bootstrap';
 
-import { useSearchUserStaff } from '@/services';
+import uniqBy from 'lodash/uniqBy';
+
+import { useSearchMentionUsers } from '@/services';
 import * as Types from '@/common/interface';
+import { registerMentionUser } from '@/utils';
 
 import './index.scss';
 
@@ -31,56 +34,72 @@ interface IProps {
   onSelected: (val: string) => void;
 }
 
-const MAX_RECODE = 5;
+interface MentionItem {
+  displayName: string;
+  userName: string;
+  email?: string;
+}
 
+const MAX_RECODE = 8;
+
+// a word character right before "@" means an e-mail address or a word, not a mention
+const notBoundary = /[\p{L}\p{N}_[/@]/u;
+
+/**
+ * [cd] 24: suggestions come from the server (every active user, by name, login or e-mail — the e-mail only for
+ * people from MENTION_EMAIL_DOMAINS) and from the people commenting on this page; the picked person is written as
+ * "@Display Name" and remembered, so the comment is sent with "[@Display Name](/users/login)".
+ */
 const Mentions: FC<IProps> = ({ children, pageUsers, onSelected }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [val, setValue] = useState('');
-  const [users, setUsers] = useState<Types.PageUser[]>([]);
   const [cursor, setCursor] = useState(0);
-  const [isRequested, setRequestedState] = useState(false);
-  const { data: staffUserList = [] } = useSearchUserStaff(val);
-  const mapStaffUsers =
-    staffUserList
-      ?.map((item) => ({
-        displayName: item.display_name,
-        userName: item.username,
+  const { data: found = [] } = useSearchMentionUsers(val);
+
+  const query = val.trim().toLowerCase();
+  const fromPage: MentionItem[] = query
+    ? ((pageUsers || []) as Types.PageUser[])
+        .filter(
+          (u) =>
+            u.userName &&
+            (u.displayName?.toLowerCase().includes(query) ||
+              u.userName.toLowerCase().includes(query)),
+        )
+        .map((u) => ({ displayName: u.displayName, userName: u.userName }))
+    : [];
+  const fromServer: MentionItem[] = query
+    ? (found || []).map((u) => ({
+        displayName: u.display_name,
+        userName: u.username,
+        email: u.e_mail,
       }))
-      ?.filter(
-        (item) =>
-          users.findIndex((user) => user.userName === item.userName) < 0,
-      ) || [];
+    : [];
+  const items = uniqBy([...fromServer, ...fromPage], 'userName').slice(
+    0,
+    MAX_RECODE,
+  );
 
   const searchUser = () => {
-    const element = dropdownRef.current?.children[0];
-    const { value, selectionStart = 0 } = element as HTMLTextAreaElement;
-
-    if (value.indexOf('@') < 0) {
+    const element = dropdownRef.current?.children[0] as HTMLTextAreaElement;
+    if (!element) {
+      return;
+    }
+    const { value, selectionStart = 0 } = element;
+    const before = value.substring(0, selectionStart);
+    const at = before.lastIndexOf('@');
+    if (at < 0 || (at > 0 && notBoundary.test(before.charAt(at - 1)))) {
       setValue('');
-    }
-    if (!selectionStart) {
       return;
     }
-
-    const str = value.substring(
-      value.substring(0, selectionStart).lastIndexOf('@'),
-      selectionStart,
-    );
-
-    if (str.substring(str.lastIndexOf(' '), selectionStart).indexOf('@') < 0) {
+    const q = before.substring(at + 1);
+    // a name is at most two words ("Jan Kowalski"); a line break or a longer text means the mention is over
+    if (q.includes('\n') || q.split(' ').length > 2 || q.length > 40) {
+      setValue('');
       return;
     }
-
-    setValue(str.substring(1));
-
-    if (!str.substring(1)) {
-      return;
-    }
-    if (isRequested) {
-      return;
-    }
-    setRequestedState(true);
+    setValue(q);
+    setCursor(0);
   };
 
   useEffect(() => {
@@ -90,15 +109,11 @@ const Mentions: FC<IProps> = ({ children, pageUsers, onSelected }) => {
       element.addEventListener('input', searchUser);
     }
     return () => {
-      element.removeEventListener('input', searchUser);
+      element?.removeEventListener('input', searchUser);
     };
   }, [dropdownRef]);
 
-  useEffect(() => {
-    setUsers(pageUsers);
-  }, [pageUsers, val]);
-
-  const handleClick = (item) => {
+  const handleClick = (item: MentionItem) => {
     const element = dropdownRef.current?.children[0] as HTMLTextAreaElement;
 
     const { value, selectionStart = 0 } = element;
@@ -106,42 +121,38 @@ const Mentions: FC<IProps> = ({ children, pageUsers, onSelected }) => {
     if (!selectionStart) {
       return;
     }
-
-    const text = `@${item?.userName} `;
+    const before = value.substring(0, selectionStart);
+    const at = before.lastIndexOf('@');
+    if (at < 0) {
+      return;
+    }
+    registerMentionUser(item.displayName, item.userName);
+    const text = `@${item.displayName} `;
     onSelected(
-      `${value.substring(
-        0,
-        value.substring(0, selectionStart).lastIndexOf('@'),
-      )}${text}${value.substring(selectionStart)}`,
+      `${before.substring(0, at)}${text}${value.substring(selectionStart)}`,
     );
-    setUsers([]);
     setValue('');
   };
-  const filterData = val
-    ? [...users, ...mapStaffUsers].filter(
-        (item) =>
-          item.displayName?.indexOf(val) === 0 ||
-          item.userName?.indexOf(val) === 0,
-      )
-    : [];
+
   const handleKeyDown = (e) => {
     const { keyCode } = e;
-
+    if (items.length === 0) {
+      return;
+    }
     if (keyCode === 38 && cursor > 0) {
       e.preventDefault();
       setCursor(cursor - 1);
     }
-    if (keyCode === 40 && cursor < filterData.length - 1) {
+    if (keyCode === 40 && cursor < items.length - 1) {
       e.preventDefault();
-
       setCursor(cursor + 1);
     }
-    if (keyCode === 13 && cursor > -1 && cursor <= filterData.length - 1) {
+    if (keyCode === 27) {
+      setValue('');
+    }
+    if (keyCode === 13 && cursor > -1 && cursor <= items.length - 1) {
       e.preventDefault();
-
-      const item = filterData[cursor];
-
-      handleClick(item);
+      handleClick(items[cursor]);
       setCursor(0);
     }
   };
@@ -150,25 +161,25 @@ const Mentions: FC<IProps> = ({ children, pageUsers, onSelected }) => {
     <Dropdown
       ref={dropdownRef}
       className="mentions-wrap"
-      show={filterData.length > 0}
+      show={items.length > 0}
       onKeyDown={handleKeyDown}>
       {children}
       <Dropdown.Menu
-        className={filterData.length > 0 ? 'visible' : 'invisible'}
+        className={items.length > 0 ? 'visible' : 'invisible'}
         ref={menuRef}>
-        {filterData
-          .filter((_, index) => index < MAX_RECODE)
-          .map((item, index) => {
-            return (
-              <Dropdown.Item
-                className={`${cursor === index ? 'bg-gray-200' : ''}`}
-                key={item.displayName}
-                onClick={() => handleClick(item)}>
-                <span className="link-dark me-1">{item.displayName}</span>
-                <small className="link-secondary">@{item.userName}</small>
-              </Dropdown.Item>
-            );
-          })}
+        {items.map((item, index) => {
+          return (
+            <Dropdown.Item
+              className={`${cursor === index ? 'bg-gray-200' : ''}`}
+              key={item.userName}
+              onClick={() => handleClick(item)}>
+              <span className="link-dark me-1">{item.displayName}</span>
+              <small className="link-secondary">
+                {item.email || `@${item.userName}`}
+              </small>
+            </Dropdown.Item>
+          );
+        })}
       </Dropdown.Menu>
     </Dropdown>
   );

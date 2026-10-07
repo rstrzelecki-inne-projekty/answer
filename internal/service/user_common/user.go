@@ -63,6 +63,10 @@ type UserRepo interface {
 	SearchUserListByName(ctx context.Context, name string, limit int, onlyStaff bool) (userList []*entity.User, err error)
 	// [cd] users with the highest reputation, all time
 	ListTopByRank(ctx context.Context, limit int) (userList []*entity.User, err error)
+	// [cd] active users whose name, login or (byEmail) e-mail contains q, for mention suggestions
+	SearchMentionUsers(ctx context.Context, q string, limit int, byEmail bool) (userList []*entity.User, err error)
+	// [cd] the one active user with the mailbox local@domain (domain empty = any domain, must be unique)
+	GetByMailbox(ctx context.Context, local, domain string) (userInfo *entity.User, exist bool, err error)
 	IsAvatarFileUsed(ctx context.Context, filePath string) (bool, error)
 }
 

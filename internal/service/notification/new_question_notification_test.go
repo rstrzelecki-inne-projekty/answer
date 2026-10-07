@@ -562,6 +562,14 @@ func (r *newQuestionNotificationTestUserRepo) ListTopByRank(context.Context, int
 	return nil, nil
 }
 
+func (r *newQuestionNotificationTestUserRepo) SearchMentionUsers(context.Context, string, int, bool) ([]*entity.User, error) {
+	return nil, nil
+}
+
+func (r *newQuestionNotificationTestUserRepo) GetByMailbox(context.Context, string, string) (*entity.User, bool, error) {
+	return nil, false, nil
+}
+
 func (r *newQuestionNotificationTestUserRepo) IncreaseAnswerCount(context.Context, string, int) error {
 	return nil
 }

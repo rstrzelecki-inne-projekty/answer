@@ -20,26 +20,14 @@
 package converter
 
 import (
-	"regexp"
+	"testing"
 
-	"github.com/segmentfault/pacman/utils"
+	"github.com/stretchr/testify/assert"
 )
 
-func DeleteUserDisplay(userID string) string {
-	return utils.EnShortID(StringToInt64(userID), 100)
-}
-
-// [cd] the login is taken from the profile URL; the text in brackets is the display name since patch 24
-var mentionLinkRe = regexp.MustCompile(`\[@[^\]]+\]\(/users/([^)\s]+)\)`)
-
-func GetMentionUsernameList(text string) []string {
-	matches := mentionLinkRe.FindAllStringSubmatch(text, -1)
-
-	var usernames []string
-	for _, match := range matches {
-		if len(match) > 1 {
-			usernames = append(usernames, match[1])
-		}
-	}
-	return usernames
+func TestGetMentionUsernameList(t *testing.T) {
+	// [cd] the login comes from the profile URL, the text in brackets is the display name
+	text := "cześć [@Rafał Strzelecki](/users/rstrzelecki) i [@old-login](/users/old-login), [nie wzmianka](/users/x)"
+	assert.Equal(t, []string{"rstrzelecki", "old-login"}, GetMentionUsernameList(text))
+	assert.Empty(t, GetMentionUsernameList("bez wzmianek @ktoś"))
 }

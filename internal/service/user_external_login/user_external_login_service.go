@@ -258,9 +258,16 @@ func (us *UserExternalLoginService) registerNewUser(ctx context.Context,
 	userInfo.EMail = externalUserInfo.Email
 	userInfo.DisplayName = externalUserInfo.DisplayName
 
-	userInfo.Username, err = us.userCommonService.MakeUsername(ctx, externalUserInfo.Username)
-	if err != nil {
+	// [cd] 24: the login is the e-mail before @ (what colleagues know), then the name transliterated to ASCII;
+	// upstream passed the raw name, so Polish letters failed validation and the account got a random login
+	userInfo.Username = ""
+	for _, candidate := range usercommon.LoginCandidates(externalUserInfo.Email, externalUserInfo.Username, externalUserInfo.DisplayName) {
+		if userInfo.Username, err = us.userCommonService.MakeUsername(ctx, candidate); err == nil {
+			break
+		}
 		log.Error(err)
+	}
+	if userInfo.Username == "" {
 		userInfo.Username = random.Username()
 	}
 

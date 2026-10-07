@@ -123,7 +123,7 @@ const Comment: FC<IProps> = ({ objectId, mode, commentId, children }) => {
       user.push({
         id: item.reply_comment_id,
         displayName: item.reply_user_display_name,
-        userName: item.username,
+        userName: item.reply_username,
       });
     });
     pageUsers.setUsers(user);

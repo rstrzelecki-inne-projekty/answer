@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/apache/answer/internal/schema"
+	usercommon "github.com/apache/answer/internal/service/user_common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -62,10 +63,10 @@ func TestParseUserImport(t *testing.T) {
 }
 
 func TestUsernameBase(t *testing.T) {
-	assert.Equal(t, "marzena-wasilek", usernameBase("Marzena Wasiłek"))
-	assert.Equal(t, "zaneta-zolc-gesla", usernameBase("Żaneta  Żółć-Gęśla"))
-	assert.Equal(t, "lukasz-oneill", usernameBase("Łukasz O'Neill."))
-	assert.Equal(t, "anna.kowalska", usernameBase("anna.kowalska"))
-	assert.Equal(t, "", usernameBase("你好"))
-	assert.Len(t, usernameBase("Bardzo Długie Imię Oraz Nazwisko Dwuczłonowe"), 26)
+	assert.Equal(t, "marzena-wasilek", usercommon.UsernameBase("Marzena Wasiłek"))
+	assert.Equal(t, "zaneta-zolc-gesla", usercommon.UsernameBase("Żaneta  Żółć-Gęśla"))
+	assert.Equal(t, "lukasz-oneill", usercommon.UsernameBase("Łukasz O'Neill."))
+	assert.Equal(t, "anna.kowalska", usercommon.UsernameBase("anna.kowalska"))
+	assert.Equal(t, "", usercommon.UsernameBase("你好"))
+	assert.Len(t, usercommon.UsernameBase("Bardzo Długie Imię Oraz Nazwisko Dwuczłonowe"), 26)
 }

@@ -110,6 +110,16 @@ export const useUserPermission = (
   >([apiUrl, { params: { action } }], request.instance.get);
 };
 
+/** [cd] people to mention in a comment: name, login or e-mail fragment (2+ characters) */
+export const useSearchMentionUsers = (q: string) => {
+  const query = q.trim();
+  const apiUrl =
+    query.length >= 2
+      ? `/answer/api/v1/user/mention/search?q=${encodeURIComponent(query)}`
+      : null;
+  return useSWR<Type.MentionUser[]>(apiUrl, request.instance.get);
+};
+
 export const useSearchUserStaff = (name: string) => {
   const apiUrl = name
     ? `/answer/api/v1/user/staff?username=${name}&page_size=10`

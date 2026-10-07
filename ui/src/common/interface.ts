@@ -345,6 +345,14 @@ export interface PageUser {
   avatar_url?;
 }
 
+/** [cd] a mention suggestion; e_mail only for viewers from MENTION_EMAIL_DOMAINS */
+export interface MentionUser {
+  username: string;
+  display_name: string;
+  avatar?: string;
+  e_mail?: string;
+}
+
 export interface LangsType {
   label: string;
   value: string;

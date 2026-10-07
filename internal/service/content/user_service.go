@@ -50,6 +50,7 @@ import (
 	"github.com/apache/answer/internal/service/auth"
 	"github.com/apache/answer/internal/service/export"
 	"github.com/apache/answer/internal/service/file_record"
+	"github.com/apache/answer/internal/service/mention"
 	"github.com/apache/answer/internal/service/role"
 	"github.com/apache/answer/internal/service/siteinfo_common"
 	usercommon "github.com/apache/answer/internal/service/user_common"
@@ -1171,6 +1172,39 @@ func (us *UserService) SearchUserListByName(ctx context.Context, req *schema.Get
 		basicInfo := us.userCommonService.FormatUserBasicInfo(ctx, u)
 		basicInfo.Avatar = avatarMapping[u.ID].GetURL()
 		resp = append(resp, basicInfo)
+	}
+	return resp, nil
+}
+
+// SearchMentionUsers [cd] suggestions for "@" in a comment: active users whose name, login or e-mail contains
+// req.Q; e-mail matching and e-mail in the result only for viewers from MENTION_EMAIL_DOMAINS. The viewer is left out.
+func (us *UserService) SearchMentionUsers(ctx context.Context, req *schema.SearchMentionUsersReq) (
+	resp []*schema.SearchMentionUserResp, err error) {
+	const limit = 8
+	resp = make([]*schema.SearchMentionUserResp, 0)
+	q := strings.TrimSpace(req.Q)
+	if len(q) < 2 {
+		return resp, nil
+	}
+	viewer, exist, err := us.userRepo.GetByUserID(ctx, req.UserID)
+	if err != nil || !exist {
+		return resp, err
+	}
+	withEmail := mention.EmailVisibleFor(viewer.EMail)
+	userList, err := us.userRepo.SearchMentionUsers(ctx, q, limit+1, withEmail)
+	if err != nil {
+		return resp, err
+	}
+	avatarMapping := us.siteInfoService.FormatListAvatar(ctx, userList)
+	for _, u := range userList {
+		if u.ID == req.UserID || len(resp) == limit {
+			continue
+		}
+		item := &schema.SearchMentionUserResp{Username: u.Username, DisplayName: u.DisplayName, Avatar: avatarMapping[u.ID].GetURL()}
+		if withEmail {
+			item.EMail = u.EMail
+		}
+		resp = append(resp, item)
 	}
 	return resp, nil
 }

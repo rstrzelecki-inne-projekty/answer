@@ -27,7 +27,6 @@ import (
 	"io"
 	"net/mail"
 	"strings"
-	"unicode"
 	"unicode/utf8"
 
 	"github.com/apache/answer/internal/base/constant"
@@ -35,10 +34,10 @@ import (
 	"github.com/apache/answer/internal/entity"
 	"github.com/apache/answer/internal/schema"
 	"github.com/apache/answer/internal/service/activity_log"
+	usercommon "github.com/apache/answer/internal/service/user_common"
 	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
 	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/text/unicode/norm"
 )
 
 // maxImportUsersRows keeps one import (and the invitations sent after it) within a few minutes
@@ -175,34 +174,10 @@ func parseUserImport(content string) (rows []*schema.ImportUsersRow, delimiter s
 	return rows, delimiter
 }
 
-// ł has no decomposition, every other Polish letter drops its mark after NFD
-var usernameFold = strings.NewReplacer("ł", "l", "Ł", "L")
-
-// usernameBase an ASCII login made of the text: Answer accepts only [A-Za-z0-9_.-] in usernames, so
-// "Marzena Wasiłek" becomes "marzena-wasilek"; other characters are dropped. Up to 26 characters, leaving room for
-// the number MakeUsername appends when the login is taken.
-func usernameBase(text string) string {
-	var b strings.Builder
-	for _, r := range norm.NFD.String(usernameFold.Replace(text)) {
-		switch {
-		case unicode.Is(unicode.Mn, r):
-		case r < unicode.MaxASCII && (unicode.IsLetter(r) || unicode.IsDigit(r) || r == '.' || r == '_'):
-			b.WriteRune(unicode.ToLower(r))
-		case unicode.IsSpace(r) || r == '-':
-			b.WriteRune('-')
-		}
-	}
-	s := strings.Trim(strings.Join(strings.FieldsFunc(b.String(), func(r rune) bool { return r == '-' }), "-"), "._")
-	if len(s) > 26 {
-		s = strings.Trim(s[:26], "-._")
-	}
-	return s
-}
-
 // importUsername the login for an imported account: from the name, else from the e-mail before @
 func (us *UserAdminService) importUsername(ctx context.Context, displayName, email string) (username string, err error) {
 	local, _, _ := strings.Cut(email, "@")
-	for _, candidate := range []string{usernameBase(displayName), usernameBase(local), "user"} {
+	for _, candidate := range []string{usercommon.UsernameBase(displayName), usercommon.UsernameBase(local), "user"} {
 		if len(candidate) < 2 {
 			continue
 		}

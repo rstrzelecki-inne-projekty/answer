@@ -727,6 +727,23 @@ func (uc *UserController) SearchUserListByName(ctx *gin.Context) {
 	handler.HandleResponse(ctx, err, resp)
 }
 
+// SearchMentionUsers [cd] people to mention in a comment, by name, login or e-mail
+// @Summary search users to mention
+// @Tags User
+// @Produce json
+// @Param q query string true "name, login or e-mail fragment"
+// @Success 200 {object} handler.RespBody{data=[]schema.SearchMentionUserResp}
+// @Router /answer/api/v1/user/mention/search [get]
+func (uc *UserController) SearchMentionUsers(ctx *gin.Context) {
+	req := &schema.SearchMentionUsersReq{}
+	if handler.BindAndCheck(ctx, req) {
+		return
+	}
+	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	resp, err := uc.userService.SearchMentionUsers(ctx, req)
+	handler.HandleResponse(ctx, err, resp)
+}
+
 func (uc *UserController) setVisitCookies(ctx *gin.Context, visitToken string, force bool) {
 	if !force {
 		cookie, _ := ctx.Cookie(constant.UserVisitCookiesCacheKey)

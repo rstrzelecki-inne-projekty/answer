@@ -91,24 +91,58 @@ const bgFadeOut = (el) => {
 };
 
 /**
+ * [cd] 24: people are mentioned by display name ("@Rafał Strzelecki"), the login stays the identifier in the
+ * markdown link "[@Rafał Strzelecki](/users/login)". This registry maps the names picked from the suggestion
+ * list (or found in an edited comment) to logins. Anything else typed after "@" (login, mailbox, e-mail) is
+ * left as is and resolved by the server.
+ */
+const mentionRegistry = new Map<string, string>();
+
+function registerMentionUser(displayName: string, userName: string) {
+  if (displayName && userName) {
+    mentionRegistry.set(displayName, userName);
+  }
+}
+
+function escapeRegExp(text: string) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// "@" + a registered name, at the start or after a separator, not followed by a letter → markdown link
+function mentionLinks(markdown: string) {
+  const names = Array.from(mentionRegistry.keys()).sort(
+    (a, b) => b.length - a.length,
+  );
+  let text = markdown;
+  names.forEach((name) => {
+    const re = new RegExp(
+      `(^|[^\\p{L}\\p{N}_\\[/@])@${escapeRegExp(name)}(?![\\p{L}\\p{N}_])`,
+      'gu',
+    );
+    text = text.replace(
+      re,
+      (_, before) => `${before}[@${name}](/users/${mentionRegistry.get(name)})`,
+    );
+  });
+  return text;
+}
+
+const mentionLinkReg = /\[@[^\]]+\]\(\/users\/([^)\s]+)\)/g;
+
+/**
  * Extract user info from markdown
  * @param markdown string
- * @returns Array<{displayName: string, userName: string}>
+ * @returns Array<{userName: string}>
  */
 function matchedUsers(markdown) {
-  const globalReg = /\B@([\w|]+)/g;
-  const reg = /\B@([\w\\_\\.]+)/;
-
-  const users = markdown.match(globalReg);
-  if (!users) {
-    return [];
+  const users: { userName: string }[] = [];
+  const text = mentionLinks(markdown);
+  let matched = mentionLinkReg.exec(text);
+  while (matched !== null) {
+    users.push({ userName: matched[1] });
+    matched = mentionLinkReg.exec(text);
   }
-  return users.map((user) => {
-    const matched = user.match(reg);
-    return {
-      userName: matched[1],
-    };
-  });
+  return users;
 }
 
 /**
@@ -117,13 +151,15 @@ function matchedUsers(markdown) {
  * @returns string
  */
 function parseUserInfo(markdown) {
-  const globalReg = /\B@([\w\\_\\.\\-]+)/g;
-  return markdown.replace(globalReg, '[@$1](/users/$1)');
+  return mentionLinks(markdown);
 }
 
 function parseEditMentionUser(markdown) {
-  const globalReg = /\[@([^\]]+)\]\([^)]+\)/g;
-  return markdown.replace(globalReg, '@$1');
+  const globalReg = /\[@([^\]]+)\]\(\/users\/([^)\s]+)\)/g;
+  return markdown.replace(globalReg, (_, name, login) => {
+    registerMentionUser(name, login);
+    return `@${name}`;
+  });
 }
 
 function formatUptime(value) {
@@ -313,6 +349,7 @@ export {
   matchedUsers,
   parseUserInfo,
   parseEditMentionUser,
+  registerMentionUser,
   formatUptime,
   escapeRemove,
   handleFormError,

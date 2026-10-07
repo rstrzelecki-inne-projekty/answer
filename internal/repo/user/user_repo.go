@@ -317,6 +317,57 @@ func (ur *userRepo) SearchUserListByName(ctx context.Context, name string, limit
 	return
 }
 
+// likeEscaper [cd] for LIKE … ESCAPE '\\'
+var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
+
+// likePattern [cd] a case-insensitive "contains" pattern
+func likePattern(q string) string {
+	return "%" + likeEscaper.Replace(strings.ToLower(q)) + "%"
+}
+
+// SearchMentionUsers [cd] active users whose display name, login or (byEmail) e-mail contains q
+func (ur *userRepo) SearchMentionUsers(ctx context.Context, q string, limit int, byEmail bool) (userList []*entity.User, err error) {
+	userList = make([]*entity.User, 0)
+	pattern := likePattern(q)
+	cond := builder.Or(
+		builder.Expr("LOWER(display_name) LIKE ? ESCAPE '\\'", pattern),
+		builder.Expr("LOWER(username) LIKE ? ESCAPE '\\'", pattern),
+	)
+	if byEmail {
+		cond = cond.Or(builder.Expr("LOWER(e_mail) LIKE ? ESCAPE '\\'", pattern))
+	}
+	err = ur.data.DB.Context(ctx).Where("status = ?", entity.UserStatusAvailable).And(cond).
+		OrderBy("display_name ASC, username ASC").Limit(limit).Find(&userList)
+	if err != nil {
+		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+	}
+	tryToDecorateUserListFromUserCenter(ctx, ur.data, userList)
+	return userList, nil
+}
+
+// GetByMailbox [cd] the active user with e-mail local@domain; with an empty domain the mailbox name must belong
+// to exactly one active user, otherwise nobody is returned
+func (ur *userRepo) GetByMailbox(ctx context.Context, local, domain string) (userInfo *entity.User, exist bool, err error) {
+	local, domain = strings.ToLower(strings.TrimSpace(local)), strings.ToLower(strings.TrimSpace(domain))
+	if local == "" {
+		return nil, false, nil
+	}
+	list := make([]*entity.User, 0)
+	session := ur.data.DB.Context(ctx).Where("status = ?", entity.UserStatusAvailable)
+	if domain != "" {
+		session.Where("LOWER(e_mail) = ?", local+"@"+domain)
+	} else {
+		session.Where("LOWER(e_mail) LIKE ? ESCAPE '\\'", likeEscaper.Replace(local)+"@%")
+	}
+	if err = session.Limit(2).Find(&list); err != nil {
+		return nil, false, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+	}
+	if len(list) != 1 {
+		return nil, false, nil
+	}
+	return list[0], true, nil
+}
+
 func tryToDecorateUserInfoFromUserCenter(ctx context.Context, data *data.Data, original *entity.User) (err error) {
 	if original == nil {
 		return nil

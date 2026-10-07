@@ -21,6 +21,7 @@ package comment
 
 import (
 	"context"
+	"strings"
 
 	"github.com/apache/answer/internal/service/eventqueue"
 	"github.com/apache/answer/internal/service/review"
@@ -36,11 +37,13 @@ import (
 	"github.com/apache/answer/internal/service/activityqueue"
 	"github.com/apache/answer/internal/service/comment_common"
 	"github.com/apache/answer/internal/service/export"
+	"github.com/apache/answer/internal/service/mention"
 	"github.com/apache/answer/internal/service/noticequeue"
 	"github.com/apache/answer/internal/service/object_info"
 	"github.com/apache/answer/internal/service/permission"
 	usercommon "github.com/apache/answer/internal/service/user_common"
 	"github.com/apache/answer/internal/service/vector_sync"
+	"github.com/apache/answer/pkg/converter"
 	"github.com/apache/answer/pkg/htmltext"
 	"github.com/apache/answer/pkg/token"
 	"github.com/apache/answer/pkg/uid"
@@ -136,6 +139,9 @@ func (cs *CommentService) AddComment(ctx context.Context, req *schema.AddComment
 	comment := &entity.Comment{}
 	_ = copier.Copy(comment, req)
 	comment.Status = entity.CommentStatusAvailable
+	// [cd] 24: "@login", "@mailbox" or "@e-mail" typed by hand become links with the display name; the list of
+	// people to notify comes from the text (links picked from the suggestion list included), not from the client
+	comment.OriginalText, comment.ParsedText, req.MentionUsernameList = cs.rewriteMentions(ctx, req.UserID, req.OriginalText)
 
 	objInfo, err := cs.objectInfoService.GetInfo(ctx, req.ObjectID)
 	if err != nil {
@@ -320,6 +326,7 @@ func (cs *CommentService) UpdateComment(ctx context.Context, req *schema.UpdateC
 		return nil, errors.BadRequest(reason.CommentCannotEditAfterDeadline)
 	}
 
+	req.OriginalText, req.ParsedText, _ = cs.rewriteMentions(ctx, req.UserID, req.OriginalText) // [cd] 24
 	if err = cs.commentRepo.UpdateCommentContent(ctx, old.ID, req.OriginalText, req.ParsedText); err != nil {
 		return nil, err
 	}
@@ -737,6 +744,33 @@ func (cs *CommentService) notificationCommentReply(ctx context.Context, replyUse
 	}
 	externalNotificationMsg.NewCommentTemplateRawData = rawData
 	cs.externalNotificationQueueService.Send(ctx, externalNotificationMsg)
+}
+
+// rewriteMentions [cd] resolves "@token" in the markdown to profile links (see package mention) and returns the
+// markdown, its HTML and the logins of everyone mentioned. Matching by e-mail (full or the part before @) only
+// for authors from MENTION_EMAIL_DOMAINS; by login for everyone.
+func (cs *CommentService) rewriteMentions(ctx context.Context, authorUserID, text string) (string, string, []string) {
+	byEmail := false
+	if author, exist, err := cs.userRepo.GetByUserID(ctx, authorUserID); err == nil && exist {
+		byEmail = mention.EmailVisibleFor(author.EMail)
+	}
+	rewritten, usernames := mention.Rewrite(text, func(token string) (string, string, bool) {
+		token = strings.ToLower(token)
+		local, domain, isEmail := strings.Cut(token, "@")
+		if !isEmail {
+			if u, exist, err := cs.userRepo.GetByUsername(ctx, token); err == nil && exist && u.Status == entity.UserStatusAvailable {
+				return u.DisplayName, u.Username, true
+			}
+		}
+		if !byEmail {
+			return "", "", false
+		}
+		if u, exist, err := cs.userRepo.GetByMailbox(ctx, local, domain); err == nil && exist {
+			return u.DisplayName, u.Username, true
+		}
+		return "", "", false
+	})
+	return rewritten, converter.Markdown2HTML(rewritten), usernames
 }
 
 func (cs *CommentService) notificationMention(
