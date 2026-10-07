@@ -418,8 +418,10 @@ func (qs *QuestionService) AddQuestion(ctx context.Context, req *schema.Question
 		if err != nil {
 			return nil, err
 		}
-		mention.Notify(ctx, mentioned, constant.QuestionObjectType, question.ID, req.UserID, nil,
-			qs.userCommon.GetUserBasicInfoByUserName, qs.notificationQueueService.Send) // [cd] 26
+		if question.Private != entity.QuestionPrivate { // a private thread is not announced to anyone outside it
+			mention.Notify(ctx, mentioned, constant.QuestionObjectType, question.ID, req.UserID, nil,
+				qs.userCommon.GetUserBasicInfoByUserName, qs.notificationQueueService.Send) // [cd] 26
+		}
 	}
 	objectTagData := schema.TagChange{}
 	objectTagData.ObjectID = question.ID
@@ -1127,7 +1129,7 @@ func (qs *QuestionService) UpdateQuestion(ctx context.Context, req *schema.Quest
 		if saveerr != nil {
 			return questionInfo, saveerr
 		}
-		if dbinfo.Status == entity.QuestionStatusAvailable {
+		if dbinfo.Status == entity.QuestionStatusAvailable && dbinfo.Private != entity.QuestionPrivate {
 			mention.Notify(ctx, mentioned, constant.QuestionObjectType, question.ID, req.UserID, nil,
 				qs.userCommon.GetUserBasicInfoByUserName, qs.notificationQueueService.Send) // [cd] 26
 		}

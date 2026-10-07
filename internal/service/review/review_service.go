@@ -326,8 +326,10 @@ func (cs *ReviewService) updateObjectStatus(ctx context.Context, review *entity.
 			}
 			cs.externalNotificationQueueService.Send(ctx,
 				schema.CreateNewQuestionNotificationMsg(questionInfo.ID, questionInfo.Title, questionInfo.UserID, tags))
-			mention.Notify(ctx, converter.GetMentionUsernameList(questionInfo.OriginalText), constant.QuestionObjectType, questionInfo.ID,
-				questionInfo.UserID, nil, cs.userCommon.GetUserBasicInfoByUserName, cs.notificationQueueService.Send) // [cd] 26
+			if questionInfo.Private != entity.QuestionPrivate {
+				mention.Notify(ctx, converter.GetMentionUsernameList(questionInfo.OriginalText), constant.QuestionObjectType, questionInfo.ID,
+					questionInfo.UserID, nil, cs.userCommon.GetUserBasicInfoByUserName, cs.notificationQueueService.Send) // [cd] 26
+			}
 			cs.vectorSyncService.Send(ctx, &vector_sync.Task{Action: vector_sync.ActionUpsert, ObjectType: vector_sync.ObjectTypeQuestion, ObjectID: questionInfo.ID})
 		} else {
 			cs.vectorSyncService.Send(ctx, &vector_sync.Task{Action: vector_sync.ActionDelete, ObjectType: vector_sync.ObjectTypeQuestion, ObjectID: questionInfo.ID})
@@ -367,8 +369,10 @@ func (cs *ReviewService) updateObjectStatus(ctx context.Context, review *entity.
 		if isApprove {
 			cs.notificationAnswerTheQuestion(ctx, questionInfo.UserID, questionInfo.ID, answerInfo.ID,
 				answerInfo.UserID, questionInfo.Title, answerInfo.OriginalText)
-			mention.Notify(ctx, converter.GetMentionUsernameList(answerInfo.OriginalText), constant.AnswerObjectType, answerInfo.ID,
-				answerInfo.UserID, map[string]bool{questionInfo.UserID: true}, cs.userCommon.GetUserBasicInfoByUserName, cs.notificationQueueService.Send) // [cd] 26
+			if questionInfo.Private != entity.QuestionPrivate {
+				mention.Notify(ctx, converter.GetMentionUsernameList(answerInfo.OriginalText), constant.AnswerObjectType, answerInfo.ID,
+					answerInfo.UserID, map[string]bool{questionInfo.UserID: true}, cs.userCommon.GetUserBasicInfoByUserName, cs.notificationQueueService.Send) // [cd] 26
+			}
 			cs.vectorSyncService.Send(ctx, &vector_sync.Task{Action: vector_sync.ActionUpsert, ObjectType: vector_sync.ObjectTypeAnswer, ObjectID: answerInfo.ID})
 		} else {
 			cs.vectorSyncService.Send(ctx, &vector_sync.Task{Action: vector_sync.ActionDelete, ObjectType: vector_sync.ObjectTypeAnswer, ObjectID: answerInfo.ID})
