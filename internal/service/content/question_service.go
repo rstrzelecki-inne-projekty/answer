@@ -45,6 +45,7 @@ import (
 	collectioncommon "github.com/apache/answer/internal/service/collection_common"
 	"github.com/apache/answer/internal/service/config"
 	"github.com/apache/answer/internal/service/export"
+	"github.com/apache/answer/internal/service/mention"
 	metacommon "github.com/apache/answer/internal/service/meta_common"
 	"github.com/apache/answer/internal/service/noticequeue"
 	"github.com/apache/answer/internal/service/notification"
@@ -374,6 +375,10 @@ func (qs *QuestionService) AddQuestion(ctx context.Context, req *schema.Question
 		}
 	}
 
+	// [cd] 26: "@login", "@mailbox", "@e-mail" and links picked from the editor's suggestion list
+	var mentioned []string
+	req.Content, req.HTML, mentioned = qs.userCommon.RewriteMentions(ctx, req.UserID, req.Content)
+
 	question := &entity.Question{}
 	now := time.Now()
 	question.UserID = req.UserID
@@ -413,6 +418,8 @@ func (qs *QuestionService) AddQuestion(ctx context.Context, req *schema.Question
 		if err != nil {
 			return nil, err
 		}
+		mention.Notify(ctx, mentioned, constant.QuestionObjectType, question.ID, req.UserID, nil,
+			qs.userCommon.GetUserBasicInfoByUserName, qs.notificationQueueService.Send) // [cd] 26
 	}
 	objectTagData := schema.TagChange{}
 	objectTagData.ObjectID = question.ID
@@ -1035,6 +1042,11 @@ func (qs *QuestionService) UpdateQuestion(ctx context.Context, req *schema.Quest
 
 	isChange := qs.tagCommon.CheckTagsIsChange(ctx, tagNameList, oldtagNameList)
 
+	// [cd] 26: resolve mentions before the "same content" check; people mentioned for the first time get notified
+	var mentioned []string
+	req.Content, req.HTML, mentioned = qs.userCommon.RewriteMentions(ctx, req.UserID, req.Content)
+	mentioned = mention.NewOnly(mentioned, converter.GetMentionUsernameList(dbinfo.OriginalText))
+
 	// If the content is the same, ignore it
 	if dbinfo.Title == req.Title && dbinfo.OriginalText == req.Content && !isChange {
 		return
@@ -1114,6 +1126,10 @@ func (qs *QuestionService) UpdateQuestion(ctx context.Context, req *schema.Quest
 		saveerr := qs.questionRepo.UpdateQuestion(ctx, question, []string{"title", "original_text", "parsed_text", "updated_at", "post_update_time", "last_edit_user_id"})
 		if saveerr != nil {
 			return questionInfo, saveerr
+		}
+		if dbinfo.Status == entity.QuestionStatusAvailable {
+			mention.Notify(ctx, mentioned, constant.QuestionObjectType, question.ID, req.UserID, nil,
+				qs.userCommon.GetUserBasicInfoByUserName, qs.notificationQueueService.Send) // [cd] 26
 		}
 		objectTagData := schema.TagChange{}
 		objectTagData.ObjectID = question.ID

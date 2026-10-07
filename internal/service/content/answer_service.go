@@ -36,6 +36,7 @@ import (
 	answercommon "github.com/apache/answer/internal/service/answer_common"
 	collectioncommon "github.com/apache/answer/internal/service/collection_common"
 	"github.com/apache/answer/internal/service/export"
+	"github.com/apache/answer/internal/service/mention"
 	"github.com/apache/answer/internal/service/noticequeue"
 	"github.com/apache/answer/internal/service/permission"
 	questioncommon "github.com/apache/answer/internal/service/question_common"
@@ -262,6 +263,10 @@ func (as *AnswerService) Insert(ctx context.Context, req *schema.AnswerAddReq) (
 		err = errors.BadRequest(reason.AnswerCannotAddByClosedQuestion)
 		return "", err
 	}
+	// [cd] 26: "@login", "@mailbox", "@e-mail" and links picked from the editor's suggestion list
+	var mentioned []string
+	req.Content, req.HTML, mentioned = as.userCommon.RewriteMentions(ctx, req.UserID, req.Content)
+
 	insertData := &entity.Answer{}
 	insertData.UserID = req.UserID
 	insertData.OriginalText = req.Content
@@ -323,6 +328,9 @@ func (as *AnswerService) Insert(ctx context.Context, req *schema.AnswerAddReq) (
 	if insertData.Status == entity.AnswerStatusAvailable {
 		as.notificationAnswerTheQuestion(ctx, questionInfo.UserID, questionInfo.ID, insertData.ID, req.UserID, questionInfo.Title,
 			htmltext.FetchExcerpt(insertData.ParsedText, "...", 240))
+		// [cd] 26: the asker already hears about the answer itself
+		mention.Notify(ctx, mentioned, constant.AnswerObjectType, insertData.ID, req.UserID, map[string]bool{questionInfo.UserID: true},
+			as.userCommon.GetUserBasicInfoByUserName, as.notificationQueueService.Send)
 	}
 
 	as.activityQueueService.Send(ctx, &schema.ActivityMsg{
@@ -376,6 +384,11 @@ func (as *AnswerService) Update(ctx context.Context, req *schema.AnswerUpdateReq
 		return "", errors.BadRequest(reason.QuestionNotFound)
 	}
 
+	// [cd] 26: resolve mentions before the "same content" check; people mentioned for the first time get notified
+	var mentioned []string
+	req.Content, req.HTML, mentioned = as.userCommon.RewriteMentions(ctx, req.UserID, req.Content)
+	mentioned = mention.NewOnly(mentioned, converter.GetMentionUsernameList(answerInfo.OriginalText))
+
 	// If the content is the same, ignore it
 	if answerInfo.OriginalText == req.Content {
 		return "", nil
@@ -418,6 +431,10 @@ func (as *AnswerService) Update(ctx context.Context, req *schema.AnswerUpdateReq
 			return insertData.ID, err
 		}
 		as.notificationUpdateAnswer(ctx, questionInfo.UserID, insertData.ID, req.UserID)
+		if answerInfo.Status == entity.AnswerStatusAvailable {
+			mention.Notify(ctx, mentioned, constant.AnswerObjectType, insertData.ID, req.UserID, map[string]bool{questionInfo.UserID: true},
+				as.userCommon.GetUserBasicInfoByUserName, as.notificationQueueService.Send) // [cd] 26
+		}
 		revisionDTO.Status = entity.RevisionReviewPassStatus
 	}
 

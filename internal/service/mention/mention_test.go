@@ -20,8 +20,11 @@
 package mention
 
 import (
+	"context"
 	"testing"
 
+	"github.com/apache/answer/internal/base/constant"
+	"github.com/apache/answer/internal/schema"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -61,6 +64,31 @@ func TestRewrite(t *testing.T) {
 		assert.Equal(t, "zwykły tekst", text)
 		assert.Empty(t, users)
 	})
+}
+
+func TestNewOnly(t *testing.T) {
+	assert.Equal(t, []string{"c"}, NewOnly([]string{"a", "c", "c"}, []string{"a", "b"}))
+	assert.Empty(t, NewOnly([]string{"a"}, []string{"a"}))
+	assert.Equal(t, []string{"a"}, NewOnly([]string{"a"}, nil))
+}
+
+func TestNotify(t *testing.T) {
+	users := map[string]*schema.UserBasicInfo{"a": {ID: "1"}, "b": {ID: "2"}, "author": {ID: "9"}}
+	getUser := func(_ context.Context, username string) (*schema.UserBasicInfo, bool, error) {
+		u, ok := users[username]
+		return u, ok, nil
+	}
+	var sent []*schema.NotificationMsg
+	send := func(_ context.Context, msg *schema.NotificationMsg) { sent = append(sent, msg) }
+	notified := Notify(context.Background(), []string{"a", "b", "author", "nobody"}, constant.QuestionObjectType, "q1", "9",
+		map[string]bool{"2": true}, getUser, send)
+	assert.Equal(t, []string{"1"}, notified)
+	if assert.Len(t, sent, 1) {
+		assert.Equal(t, "1", sent[0].ReceiverUserID)
+		assert.Equal(t, "9", sent[0].TriggerUserID)
+		assert.Equal(t, constant.QuestionObjectType, sent[0].ObjectType)
+		assert.Equal(t, constant.NotificationMentionYou, sent[0].NotificationAction)
+	}
 }
 
 func TestEmailVisibleFor(t *testing.T) {

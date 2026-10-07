@@ -31,6 +31,7 @@ import { Editor } from '../types';
 import { isDarkTheme } from '@/utils/common';
 
 import { createCodeMirrorAdapter } from './codemirror/adapter';
+import { mentionCompletion } from './codemirror/mentions';
 
 const editableCompartment = new Compartment();
 interface htmlRenderConfig {
@@ -172,6 +173,7 @@ export const useEditor = ({
         theme,
         placeholder(placeholderText),
         EditorView.lineWrapping,
+        mentionCompletion(), // [cd] 26
         editableCompartment.of(EditorView.editable.of(true)),
         EditorView.domEventHandlers({
           paste(event) {

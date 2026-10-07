@@ -17,6 +17,7 @@
     "lint-staged": "lint-staged"
   },
   "dependencies": {
+    "@codemirror/autocomplete": "6.18.3",
     "@codemirror/lang-markdown": "^6.2.4",
     "@codemirror/language-data": "^6.5.0",
     "@codemirror/state": "^6.5.0",

@@ -23,11 +23,15 @@
 package mention
 
 import (
+	"context"
 	"os"
 	"regexp"
 	"strings"
 
+	"github.com/apache/answer/internal/base/constant"
+	"github.com/apache/answer/internal/schema"
 	"github.com/apache/answer/pkg/converter"
+	"github.com/segmentfault/pacman/log"
 )
 
 // Lookup finds a user by a token typed after "@"; ok is false when nobody matches (the token is left as is).
@@ -102,6 +106,51 @@ func Rewrite(text string, lookup Lookup) (string, []string) {
 		}
 	}
 	return out, usernames
+}
+
+// NewOnly the logins in current that were not in previous (an edit should not notify people a second time)
+func NewOnly(current, previous []string) []string {
+	seen := map[string]bool{}
+	for _, u := range previous {
+		seen[u] = true
+	}
+	var out []string
+	for _, u := range current {
+		if !seen[u] {
+			seen[u] = true
+			out = append(out, u)
+		}
+	}
+	return out
+}
+
+// Notify sends a "mentioned you" inbox notification about objectID (a question, answer or comment) to every login
+// in usernames except the author and anyone in skip (people already notified another way); returns the user IDs
+// that were notified.
+func Notify(ctx context.Context, usernames []string, objectType, objectID, triggerUserID string, skip map[string]bool,
+	getUser func(ctx context.Context, username string) (*schema.UserBasicInfo, bool, error),
+	send func(ctx context.Context, msg *schema.NotificationMsg)) (notified []string) {
+	for _, username := range usernames {
+		userInfo, exist, err := getUser(ctx, username)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
+		if !exist || userInfo.ID == triggerUserID || skip[userInfo.ID] {
+			continue
+		}
+		msg := &schema.NotificationMsg{
+			ReceiverUserID: userInfo.ID,
+			TriggerUserID:  triggerUserID,
+			Type:           schema.NotificationTypeInbox,
+			ObjectID:       objectID,
+		}
+		msg.ObjectType = objectType
+		msg.NotificationAction = constant.NotificationMentionYou
+		send(ctx, msg)
+		notified = append(notified, userInfo.ID)
+	}
+	return notified
 }
 
 // EmailVisibleFor whether a person with this e-mail may see other people's e-mail addresses in mention

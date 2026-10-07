@@ -31,6 +31,7 @@ import (
 	"github.com/apache/answer/internal/service/activity_log"
 	answercommon "github.com/apache/answer/internal/service/answer_common"
 	commentcommon "github.com/apache/answer/internal/service/comment_common"
+	"github.com/apache/answer/internal/service/mention"
 	"github.com/apache/answer/internal/service/noticequeue"
 	"github.com/apache/answer/internal/service/object_info"
 	questioncommon "github.com/apache/answer/internal/service/question_common"
@@ -39,6 +40,7 @@ import (
 	tagcommon "github.com/apache/answer/internal/service/tag_common"
 	usercommon "github.com/apache/answer/internal/service/user_common"
 	"github.com/apache/answer/internal/service/vector_sync"
+	"github.com/apache/answer/pkg/converter"
 	"github.com/apache/answer/pkg/htmltext"
 	"github.com/apache/answer/pkg/token"
 	"github.com/apache/answer/pkg/uid"
@@ -324,6 +326,8 @@ func (cs *ReviewService) updateObjectStatus(ctx context.Context, review *entity.
 			}
 			cs.externalNotificationQueueService.Send(ctx,
 				schema.CreateNewQuestionNotificationMsg(questionInfo.ID, questionInfo.Title, questionInfo.UserID, tags))
+			mention.Notify(ctx, converter.GetMentionUsernameList(questionInfo.OriginalText), constant.QuestionObjectType, questionInfo.ID,
+				questionInfo.UserID, nil, cs.userCommon.GetUserBasicInfoByUserName, cs.notificationQueueService.Send) // [cd] 26
 			cs.vectorSyncService.Send(ctx, &vector_sync.Task{Action: vector_sync.ActionUpsert, ObjectType: vector_sync.ObjectTypeQuestion, ObjectID: questionInfo.ID})
 		} else {
 			cs.vectorSyncService.Send(ctx, &vector_sync.Task{Action: vector_sync.ActionDelete, ObjectType: vector_sync.ObjectTypeQuestion, ObjectID: questionInfo.ID})
@@ -363,6 +367,8 @@ func (cs *ReviewService) updateObjectStatus(ctx context.Context, review *entity.
 		if isApprove {
 			cs.notificationAnswerTheQuestion(ctx, questionInfo.UserID, questionInfo.ID, answerInfo.ID,
 				answerInfo.UserID, questionInfo.Title, answerInfo.OriginalText)
+			mention.Notify(ctx, converter.GetMentionUsernameList(answerInfo.OriginalText), constant.AnswerObjectType, answerInfo.ID,
+				answerInfo.UserID, map[string]bool{questionInfo.UserID: true}, cs.userCommon.GetUserBasicInfoByUserName, cs.notificationQueueService.Send) // [cd] 26
 			cs.vectorSyncService.Send(ctx, &vector_sync.Task{Action: vector_sync.ActionUpsert, ObjectType: vector_sync.ObjectTypeAnswer, ObjectID: answerInfo.ID})
 		} else {
 			cs.vectorSyncService.Send(ctx, &vector_sync.Task{Action: vector_sync.ActionDelete, ObjectType: vector_sync.ObjectTypeAnswer, ObjectID: answerInfo.ID})
