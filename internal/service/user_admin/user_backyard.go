@@ -289,7 +289,8 @@ func (us *UserAdminService) AddUser(ctx context.Context, req *schema.AddUserReq)
 	userInfo.DisplayName = req.DisplayName
 	userInfo.Pass = string(hashPwd)
 
-	userInfo.Username, err = us.userCommonService.MakeUsername(ctx, userInfo.DisplayName)
+	// [cd] 25: the login is transliterated to ASCII (upstream passed the raw name, so "Rafał" failed validation)
+	userInfo.Username, err = us.importUsername(ctx, userInfo.DisplayName, userInfo.EMail)
 	if err != nil {
 		return err
 	}
@@ -387,7 +388,7 @@ func (us *UserAdminService) formatBulkAddUsers(ctx context.Context, req *schema.
 		userInfo.DisplayName = user.DisplayName
 		hashPwd, _ := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 		userInfo.Pass = string(hashPwd)
-		userInfo.Username, err = us.userCommonService.MakeUsername(ctx, userInfo.DisplayName)
+		userInfo.Username, err = us.importUsername(ctx, userInfo.DisplayName, userInfo.EMail) // [cd] 25
 		if err != nil {
 			errorData.Field = "name"
 			errorData.Line = line + 1
