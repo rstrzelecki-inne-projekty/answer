@@ -21,6 +21,7 @@ package badge
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/apache/answer/internal/base/constant"
@@ -156,21 +157,23 @@ func (bs *BadgeAwardService) GetBadgeAwardList(
 
 // Award award badge
 func (bs *BadgeAwardService) Award(ctx context.Context, badgeID string, userID string, awardKey string) (err error) {
-	return bs.award(ctx, badgeID, userID, awardKey, activity_log.UserSystem)
-}
-
-// award grants a badge; actorID is the admin for manual awards, UserSystem for badge rules ([cd] activity log)
-func (bs *BadgeAwardService) award(ctx context.Context, badgeID, userID, awardKey, actorID string) (err error) {
 	badgeData, exists, err := bs.badgeRepo.GetByID(ctx, badgeID)
 	if err != nil {
 		return err
 	}
-
 	if !exists || badgeData.Status == entity.BadgeStatusInactive {
 		return errors.BadRequest(reason.BadgeObjectNotFound)
 	}
+	return bs.award(ctx, badgeData, userID, awardKey, badgeData.Single, activity_log.UserSystem)
+}
 
-	alreadyAwarded, err := bs.badgeAwardRepo.CheckIsAward(ctx, badgeID, userID, awardKey, badgeData.Single)
+// award grants a badge; actorID is the admin for manual awards, UserSystem for badge rules ([cd] activity log).
+// [cd] checkMode is how an earlier award is detected: BadgeSingleAward = any award of this badge,
+// BadgeMultiAward = an award with the same key (manual awards of a non-rank badge can repeat).
+func (bs *BadgeAwardService) award(ctx context.Context, badgeData *entity.Badge, userID, awardKey string,
+	checkMode int8, actorID string) (err error) {
+	badgeID := badgeData.ID
+	alreadyAwarded, err := bs.badgeAwardRepo.CheckIsAward(ctx, badgeID, userID, awardKey, checkMode)
 	if err != nil {
 		return err
 	}
@@ -320,6 +323,9 @@ func (bs *BadgeAwardService) validateUserByUsername(ctx context.Context, userNam
 
 // AdminAward awards a badge to a user manually (admin action). Unlike Award it reports an error when the badge
 // was already awarded, so the admin gets feedback instead of a silent no-op.
+// [cd] A badge can be awarded by hand many times (another "Smile" for another good answer): without an explicit
+// key every award gets its own "admin-<time>" key and is counted as ×N. Ranks are the exception, a rank is a
+// position, not a collection, so a rank is awarded once with the key "admin".
 func (bs *BadgeAwardService) AdminAward(ctx context.Context, req *schema.AdminAwardBadgeReq) (err error) {
 	req.BadgeID = uid.DeShortID(req.BadgeID) // UI sends short IDs
 	req.UserID, err = bs.validateUserByUsername(ctx, req.Username)
@@ -333,14 +339,17 @@ func (bs *BadgeAwardService) AdminAward(ctx context.Context, req *schema.AdminAw
 	if !exists || badgeData.Status == entity.BadgeStatusInactive {
 		return errors.BadRequest(reason.BadgeObjectNotFound)
 	}
+	checkMode := int8(entity.BadgeMultiAward)
 	awardKey := req.AwardKey
-	if len(awardKey) == 0 {
-		awardKey = "admin"
-		if badgeData.Single != entity.BadgeSingleAward {
-			awardKey = time.Now().Format("2006-01-02")
+	if isRankBadge(badgeData) {
+		checkMode = entity.BadgeSingleAward
+		if len(awardKey) == 0 {
+			awardKey = "admin"
 		}
+	} else if len(awardKey) == 0 {
+		awardKey = "admin-" + time.Now().Format("20060102-150405.000000")
 	}
-	alreadyAwarded, err := bs.badgeAwardRepo.CheckIsAward(ctx, req.BadgeID, req.UserID, awardKey, badgeData.Single)
+	alreadyAwarded, err := bs.badgeAwardRepo.CheckIsAward(ctx, req.BadgeID, req.UserID, awardKey, checkMode)
 	if err != nil {
 		return err
 	}
@@ -351,7 +360,13 @@ func (bs *BadgeAwardService) AdminAward(ctx context.Context, req *schema.AdminAw
 	if actor == "" {
 		actor = activity_log.UserSystem
 	}
-	return bs.award(ctx, req.BadgeID, req.UserID, awardKey, actor)
+	return bs.award(ctx, badgeData, req.UserID, awardKey, checkMode, actor)
+}
+
+// isRankBadge [cd] ranks are the single award badges behind a "Reach..." threshold handler
+// (same rule as the tiered badges in the badge event rules)
+func isRankBadge(b *entity.Badge) bool {
+	return b.Single == entity.BadgeSingleAward && strings.HasPrefix(b.Handler, "Reach")
 }
 
 // AdminRevoke removes a badge award from a user (admin action).

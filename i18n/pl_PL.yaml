@@ -340,7 +340,7 @@ backend:
       object_not_found:
         other: Nie znaleziono obiektu odznaki
       already_awarded:
-        other: Ta odznaka jest już przyznana temu użytkownikowi.
+        other: Ten użytkownik ma już ten stopień albo przyznanie z tym kluczem.
       award_not_found:
         other: Użytkownik nie ma takiego przyznania odznaki.
   reason:
@@ -2217,7 +2217,7 @@ ui:
       badge_placeholder: Wybierz odznakę…
       key: Klucz przyznania (opcjonalnie)
       key_placeholder: np. 2026-09
-      key_help: Tylko dla odznak zdobywanych wielokrotnie — okres lub data odróżniająca to przyznanie.
+      key_help: Zostaw puste, żeby przyznać odznakę kolejny raz — każde przyznanie się liczy (×2, ×3…). Wpisz (np. miesiąc) tylko wtedy, gdy przyznanie za ten okres nie może się powtórzyć. Stopień przyznaje się raz.
       submit: Przyznaj
       success: Odznaka przyznana użytkownikowi {{ username }}.
       failed: Nie udało się przyznać odznaki.

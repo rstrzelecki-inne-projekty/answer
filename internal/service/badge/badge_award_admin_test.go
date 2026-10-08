@@ -26,6 +26,7 @@ package badge
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -73,6 +74,9 @@ func (f *fakeBadgeAwardRepo) CheckIsAward(_ context.Context, badgeID, userID, aw
 func (f *fakeBadgeAwardRepo) AwardBadgeForUser(_ context.Context, a *entity.BadgeAward) error {
 	a.ID = "award-1"
 	f.awards = append(f.awards, a)
+	if f.awarded != nil {
+		f.awarded[a.BadgeID+"|"+a.UserID+"|"+a.AwardKey] = true
+	}
 	return nil
 }
 
@@ -115,9 +119,11 @@ func reasonOf(err error) string {
 
 func TestAdminAward(t *testing.T) {
 	badges := map[string]*entity.Badge{
-		"10030000000000100": {ID: "10030000000000100", Name: "Pomocna dłoń", Status: entity.BadgeStatusActive, Single: entity.BadgeSingleAward, BadgeGroupID: 1},
+		"10030000000000100": {ID: "10030000000000100", Name: "Uśmiech", Status: entity.BadgeStatusActive, Single: entity.BadgeSingleAward, Handler: "FirstReactedPost", BadgeGroupID: 1},
 		"10030000000000200": {ID: "10030000000000200", Name: "Miesiąc bez flag", Status: entity.BadgeStatusActive, Single: entity.BadgeMultiAward, BadgeGroupID: 1},
 		"10030000000000300": {ID: "10030000000000300", Name: "Wyłączona", Status: entity.BadgeStatusInactive, Single: entity.BadgeSingleAward},
+		"10030000000000400": {ID: "10030000000000400", Name: "Porucznik", Status: entity.BadgeStatusActive, Single: entity.BadgeSingleAward,
+			Handler: "ReachAnswerAcceptedAmount", Param: `{"amount":10}`, BadgeGroupID: 2},
 	}
 
 	t.Run("unknown user", func(t *testing.T) {
@@ -136,37 +142,87 @@ func TestAdminAward(t *testing.T) {
 		}
 	})
 
-	t.Run("single badge awarded once, short id accepted, key admin", func(t *testing.T) {
+	t.Run("single badge can be awarded again by hand, short id accepted", func(t *testing.T) {
 		awardRepo := &fakeBadgeAwardRepo{awarded: map[string]bool{}}
 		svc := newTestService(t, &fakeBadgeRepo{badges: badges}, awardRepo)
 		if err := svc.AdminAward(context.Background(), &schema.AdminAwardBadgeReq{BadgeID: uid.EnShortID("10030000000000100"), Username: "alice"}); err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if len(awardRepo.awards) != 1 || awardRepo.awards[0].BadgeID != "10030000000000100" || awardRepo.awards[0].UserID != "u-alice" || awardRepo.awards[0].AwardKey != "admin" {
+		time.Sleep(time.Microsecond)
+		if err := svc.AdminAward(context.Background(), &schema.AdminAwardBadgeReq{BadgeID: "10030000000000100", Username: "alice"}); err != nil {
+			t.Fatalf("second award: unexpected error: %v", err)
+		}
+		if len(awardRepo.awards) != 2 {
+			t.Fatalf("want 2 awards, got %+v", awardRepo.awards)
+		}
+		for _, a := range awardRepo.awards {
+			if a.BadgeID != "10030000000000100" || a.UserID != "u-alice" || !strings.HasPrefix(a.AwardKey, "admin-") || len(a.AwardKey) > 32 {
+				t.Fatalf("unexpected award: %+v", a)
+			}
+		}
+		if awardRepo.awards[0].AwardKey == awardRepo.awards[1].AwardKey {
+			t.Fatalf("repeated awards share the key %q", awardRepo.awards[0].AwardKey)
+		}
+	})
+
+	t.Run("rank is a position: awarded once, key admin", func(t *testing.T) {
+		awardRepo := &fakeBadgeAwardRepo{awarded: map[string]bool{}}
+		svc := newTestService(t, &fakeBadgeRepo{badges: badges}, awardRepo)
+		if err := svc.AdminAward(context.Background(), &schema.AdminAwardBadgeReq{BadgeID: "10030000000000400", Username: "alice"}); err != nil {
+			t.Fatal(err)
+		}
+		if len(awardRepo.awards) != 1 || awardRepo.awards[0].AwardKey != "admin" {
 			t.Fatalf("unexpected award: %+v", awardRepo.awards)
 		}
 		// second time: explicit error instead of the silent no-op of Award()
-		awardRepo.awarded["10030000000000100|u-alice|admin"] = true
-		err := svc.AdminAward(context.Background(), &schema.AdminAwardBadgeReq{BadgeID: "10030000000000100", Username: "alice"})
+		err := svc.AdminAward(context.Background(), &schema.AdminAwardBadgeReq{BadgeID: "10030000000000400", Username: "alice"})
 		if reasonOf(err) != reason.BadgeAlreadyAwarded {
 			t.Fatalf("want %s, got %v", reason.BadgeAlreadyAwarded, err)
 		}
 	})
 
-	t.Run("multi-award badge defaults key to today, explicit key kept", func(t *testing.T) {
+	t.Run("explicit key stays idempotent", func(t *testing.T) {
 		awardRepo := &fakeBadgeAwardRepo{awarded: map[string]bool{}}
 		svc := newTestService(t, &fakeBadgeRepo{badges: badges}, awardRepo)
-		if err := svc.AdminAward(context.Background(), &schema.AdminAwardBadgeReq{BadgeID: "10030000000000200", Username: "alice"}); err != nil {
+		req := func() *schema.AdminAwardBadgeReq {
+			return &schema.AdminAwardBadgeReq{BadgeID: "10030000000000200", Username: "alice", AwardKey: "2026-09"}
+		}
+		if err := svc.AdminAward(context.Background(), req()); err != nil {
 			t.Fatal(err)
 		}
-		if err := svc.AdminAward(context.Background(), &schema.AdminAwardBadgeReq{BadgeID: "10030000000000200", Username: "alice", AwardKey: "2026-09"}); err != nil {
-			t.Fatal(err)
-		}
-		if got := awardRepo.awards[0].AwardKey; got != time.Now().Format("2006-01-02") {
-			t.Fatalf("default award key = %q", got)
-		}
-		if got := awardRepo.awards[1].AwardKey; got != "2026-09" {
+		if got := awardRepo.awards[0].AwardKey; got != "2026-09" {
 			t.Fatalf("explicit award key = %q", got)
+		}
+		if err := svc.AdminAward(context.Background(), req()); reasonOf(err) != reason.BadgeAlreadyAwarded {
+			t.Fatalf("want %s, got %v", reason.BadgeAlreadyAwarded, err)
+		}
+	})
+
+	t.Run("multi-award badge can be awarded twice on the same day", func(t *testing.T) {
+		awardRepo := &fakeBadgeAwardRepo{awarded: map[string]bool{}}
+		svc := newTestService(t, &fakeBadgeRepo{badges: badges}, awardRepo)
+		for i := 0; i < 2; i++ {
+			time.Sleep(time.Microsecond)
+			if err := svc.AdminAward(context.Background(), &schema.AdminAwardBadgeReq{BadgeID: "10030000000000200", Username: "alice"}); err != nil {
+				t.Fatalf("award %d: %v", i+1, err)
+			}
+		}
+		if len(awardRepo.awards) != 2 {
+			t.Fatalf("want 2 awards, got %+v", awardRepo.awards)
+		}
+	})
+
+	t.Run("badge rules still award a single badge only once", func(t *testing.T) {
+		awardRepo := &fakeBadgeAwardRepo{awarded: map[string]bool{}}
+		svc := newTestService(t, &fakeBadgeRepo{badges: badges}, awardRepo)
+		if err := svc.AdminAward(context.Background(), &schema.AdminAwardBadgeReq{BadgeID: "10030000000000100", Username: "alice"}); err != nil {
+			t.Fatal(err)
+		}
+		if err := svc.Award(context.Background(), "10030000000000100", "u-alice", "10010000000000999"); err != nil {
+			t.Fatal(err)
+		}
+		if len(awardRepo.awards) != 1 {
+			t.Fatalf("badge rule awarded a single badge again: %+v", awardRepo.awards)
 		}
 	})
 }
