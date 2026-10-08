@@ -71,7 +71,7 @@ func (f *fakeBadgeAwardRepo) CheckIsAward(_ context.Context, badgeID, userID, aw
 	return f.awarded[badgeID+"|"+userID+"|"+awardKey], nil
 }
 
-func (f *fakeBadgeAwardRepo) AwardBadgeForUser(_ context.Context, a *entity.BadgeAward) error {
+func (f *fakeBadgeAwardRepo) AwardBadgeForUser(_ context.Context, a *entity.BadgeAward, _ int8) error {
 	a.ID = "award-1"
 	f.awards = append(f.awards, a)
 	if f.awarded != nil {

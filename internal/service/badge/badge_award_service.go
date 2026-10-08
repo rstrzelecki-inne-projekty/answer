@@ -43,7 +43,7 @@ import (
 
 type BadgeAwardRepo interface {
 	CheckIsAward(ctx context.Context, badgeID string, userID string, awardKey string, singleOrMulti int8) (isAward bool, err error)
-	AwardBadgeForUser(ctx context.Context, badgeAward *entity.BadgeAward) (err error)
+	AwardBadgeForUser(ctx context.Context, badgeAward *entity.BadgeAward, checkMode int8) (err error)
 
 	CountByUserIdAndBadgeId(ctx context.Context, userID string, badgeID string) (awardCount int64)
 	CountByBadgeID(ctx context.Context, badgeID string) (awardCount int64, err error)
@@ -188,7 +188,7 @@ func (bs *BadgeAwardService) award(ctx context.Context, badgeData *entity.Badge,
 		BadgeGroupID:   badgeData.BadgeGroupID,
 		IsBadgeDeleted: entity.IsBadgeNotDeleted,
 	}
-	err = bs.badgeAwardRepo.AwardBadgeForUser(ctx, badgeAward)
+	err = bs.badgeAwardRepo.AwardBadgeForUser(ctx, badgeAward, checkMode)
 	if err != nil {
 		return err
 	}

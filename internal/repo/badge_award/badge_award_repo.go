@@ -47,7 +47,9 @@ func NewBadgeAwardRepo(data *data.Data, uniqueIDRepo unique.UniqueIDRepo) badge.
 }
 
 // AwardBadgeForUser award badge for user
-func (r *badgeAwardRepo) AwardBadgeForUser(ctx context.Context, badgeAward *entity.BadgeAward) (err error) {
+// [cd] checkMode decides what counts as a duplicate (as in CheckIsAward): BadgeSingleAward = any award of
+// a single award badge, BadgeMultiAward = an award with the same key (repeated manual awards).
+func (r *badgeAwardRepo) AwardBadgeForUser(ctx context.Context, badgeAward *entity.BadgeAward, checkMode int8) (err error) {
 	badgeAward.ID, err = r.uniqueIDRepo.GenUniqueIDStr(ctx, entity.BadgeAward{}.TableName())
 	if err != nil {
 		return err
@@ -70,7 +72,7 @@ func (r *badgeAwardRepo) AwardBadgeForUser(ctx context.Context, badgeAward *enti
 			BadgeID:        badgeAward.BadgeID,
 			IsBadgeDeleted: entity.IsBadgeNotDeleted,
 		}
-		if badgeInfo.Single != entity.BadgeSingleAward {
+		if badgeInfo.Single != entity.BadgeSingleAward || checkMode != entity.BadgeSingleAward {
 			old.AwardKey = badgeAward.AwardKey
 		}
 		exist, err = session.Get(old)
